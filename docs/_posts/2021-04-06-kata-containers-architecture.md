@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "<Kata Containers> 1. Architecture"
+title:  "[Kata Containers] 1. Architecture"
 date:   2021-04-06
 excerpt: "Kata Containers 1.x 与 2.x 架构概述"
 project: true
@@ -398,4 +398,3 @@ Kata-Shim 的出现主要是考虑了 VM 内有多个容器的情况。在此之
 <figure>
 	<a href="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/process.png"><img src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/process.png"></a>
 </figure>
-
