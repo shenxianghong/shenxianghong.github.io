@@ -49,7 +49,7 @@ rootfs 的构建过程中至少需要两个必要组件：
 
 所以在以 rootfs 作为镜像引导的 Guest OS 中是可以看到完整的进程关系大致为：
 
-![](https://github.com/shenxianghong/shenxianghong.github.io/tree/main/docs/_posts/assert/img/kata-containers/rootfs.png)
+![](assert/img/kata-containers/rootfs.png)
 
 ```shell
 $ ps -ef
