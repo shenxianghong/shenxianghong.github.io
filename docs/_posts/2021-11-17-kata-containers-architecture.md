@@ -12,7 +12,28 @@ tag:
 comments: false
 ---
 
-[TOC]
+* [Overview](#overview)
+* [Glossary](#glossary)
+   * [Guest](#guest)
+      * [Kernel](#kernel)
+      * [Image](#image)
+   * [osbuilder](#osbuilder)
+      * [Rootfs](#rootfs)
+      * [Initrd](#initrd)
+   * [Virtualization](#virtualization)
+      * [Qemu](#qemu)
+      * [Virtio](#virtio)
+      * [Vhost](#vhost)
+      * [Vhost-user](#vhost-user)
+      * [Virtio-fs](#virtio-fs)
+      * [VSOCK](#vsock)
+      * [Networking](#networking)
+   * [Kata-Runtime (v1)](#kata-runtime-v1)
+   * [Kata-Agent (v1 &amp; v2)](#kata-agent-v1--v2)
+   * [Kata-Proxy (v1)](#kata-proxy-v1)
+   * [Kata-Shim (v1)](#kata-shim-v1)
+   * [Containerd-Shim-Kata-V2 (v1 &amp; v2)](#containerd-shim-kata-v2-v1--v2)
+* [Archiecture](#archiecture)
 
 # Overview
 
@@ -357,4 +378,3 @@ Kata-Shim 的出现主要是考虑了 VM 内有多个容器的情况。在此之
 | [trace-forwarder](https://github.com/kata-containers/kata-containers/blob/main/src/trace-forwarder) | utility        | Agent tracing helper.                                        |
 
 ![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/process.png)
-
