@@ -70,6 +70,14 @@ rootfs 的构建过程中至少需要两个必要组件：
 
 所以在以 rootfs 作为镜像引导的 Guest OS 中是可以看到完整的进程关系大致为：
 
+```html
+<figure class="half">
+    <a href="/assert/img/kata-containers/rootfs.png“><img src="/assert/img/kata-containers/rootfs.png"></a>
+    <a href="/assert/img/kata-containers/rootfs.png"><img src="/assert/img/kata-containers/rootfs.png"></a>
+    <figcaption>Caption describing these two images.</figcaption>
+</figure>
+```
+
 ![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/rootfs.png)
 
 ```shell
