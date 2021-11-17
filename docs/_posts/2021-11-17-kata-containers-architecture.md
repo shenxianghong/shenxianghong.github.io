@@ -83,7 +83,7 @@ initrd 的构建过程中至少需要一个必要组件：
 
 所以在以 initrd 作为镜像引导的 Guest OS 中是可以看到完整的进程关系大致为：
 
-![](.\assert\img\kata-containers\initrd.png)
+![](assert\img\kata-containers\initrd.png)
 
 ```shell
 $ ps -ef
