@@ -159,7 +159,7 @@ Swap:             0           0           0
 # Cgroup
 
 从 Kubernetes 角度来讲，Cgroup 指的是 Pod Cgroup，由 Kubelet 创建，限制的是 Pod 的资源；
-从 Container 角度来讲，Cgroup 指的是 Container Cgroup，由对应的 runtime 创建，限制的是 Container 的资源。
+从 Container 角度来讲，Cgroup 指的是 container Cgroup，由对应的 runtime 创建，限制的是 container 的资源。
 
 但是为了可以获取到更准确的容器资源，Kubelet 会根据 Container Cgroup 去调整 Pod Cgroup。在传统的 runtime 中，两者没有太大的区别。而 Kata Containers 引入 VM 的概念，所以针对这种情况有两种处理方式：
 
@@ -173,14 +173,36 @@ Swap:             0           0           0
 | host      | Pod                | overhead + limit | overhead + limit | overhead + limit |
 | host      | Infra container    | -1               | -1               | -1               |
 | host      | workload container | limit            | /                | limit            |
-| Container | /                  | limit            | limit            | limit            |
+| container | /                  | limit            | limit            | limit            |
 | VM        | Pod                | /                | -1               | -1               |
 | VM        | Infra container    | /                | -1               | -1               |
 | VM        | workload container | /                | limit            | limit            |
 
-location 表示 cgroup 文件的位置
+### Task
 
-- host 表示位于宿主机的 Cgroup 目录
-- Container 表示位于容器里 Cgroup 目录
-- VM 表示位于 Kata VM 中的 Cgroup 目录
+| Location  | Kind               | runC     | Kata (true)             | Kata (false) |
+| --------- | ------------------ | -------- | ----------------------- | ------------ |
+| host      | Pod                | 无       | 无                      | 无           |
+| host      | Infra container    | pause    | viriofsd, containerd 等 | 无           |
+| host      | workload container | workload | workload                | 无           |
+| Container | /                  | workload | workload                | workload     |
+| VM        | Pod                | /        | 无                      | 无           |
+| VM        | Infra container    | /        | pause                   | pause        |
+| VM        | workload container | /        | workload                | workload     |
+
+*Location 表示 Cgroup 文件的位置，分别为宿主机、容器、Kata VM*
+
+*Kind 表示 Cgroup 中的层级信息，Pod 为 `/sys/fs/cgroup/cpu/kubepods/<pod id>`，Infra Container 为 `/sys/fs/cgroup/cpu/kubepods/<pod id>/<infra id>`，workload container 为 `/sys/fs/cgroup/cpu/kubepods/<pod id>/<workload id>`*
+
+*/ 表示在该模式下，不存在此对象，无 表示文件是空*
+
+**总结**
+
+从 host 视角来看，在 Kata 没有开启 SandboxCgroupOnly 的时候，可以看到有两个容器（infra 和 workload）的 Cgroup 策略文件，结构模式类似于 runC，但是并没有找到有关限制进程信息的 task 文件。
+
+从 container 视角看，三种情况表象一致，均为 Pod 工作负载的最大资源限量。
+
+从 VM 视角看，无论是否开启 SandboxCgroupOnly，都可以看到有两个容器（infra 和 workload）的 Cgroup 策略文件，VM 中的 Cgroup 都是针对工作负载做的限制，而这个视图更像是 runC 中看到的一切。
+
+而其实，当 host 的 Cgroup 把所有的容器资源统一限制的情况下，Container 和 VM 的 Cgroup 都变得意义不大了，而在 Kata Containers 的场景下，业务进程以及容器 pause 均运行在 VM 中，所以 host 不会存在容器进程。
 
