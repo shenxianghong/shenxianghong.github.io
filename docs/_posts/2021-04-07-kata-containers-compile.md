@@ -12,6 +12,37 @@ tag:
 comments: false
 ---
 
+* [环境要求](#环境要求)
+* [Kata 组件编译](#kata-组件编译)
+   * [版本依赖](#版本依赖)
+   * [rust 安装（可选）](#rust-安装可选)
+   * [编译组件](#编译组件)
+* [其余组件编译](#其余组件编译)
+   * [构建引导镜像](#构建引导镜像)
+      * [构建 rootfs 镜像](#构建-rootfs-镜像)
+         * [构建 osbuilder](#构建-osbuilder)
+         * [构建目标镜像](#构建目标镜像)
+         * [安装镜像](#安装镜像)
+      * [构建 initrd 镜像](#构建-initrd-镜像)
+         * [构建 osbuilder](#构建-osbuilder-1)
+         * [构建镜像](#构建镜像)
+         * [安装镜像](#安装镜像-1)
+      * [配置引导镜像](#配置引导镜像)
+   * [编译 Kata 容器内核](#编译-kata-容器内核)
+      * [安装依赖](#安装依赖)
+      * [准备配置](#准备配置)
+      * [编译内核](#编译内核)
+      * [安装内核](#安装内核)
+   * [Qemu 编译](#qemu-编译)
+      * [安装依赖](#安装依赖-1)
+      * [Qemu 代码准备](#qemu-代码准备)
+      * [编译](#编译)
+* [自定义配置](#自定义配置)
+* [检查工作](#检查工作)
+   * [check](#check)
+   * [Env](#env)
+* [FAQ](#faq)
+
 Kata Containers 目前在 centos8 支持 yum 直接安装，除此之外还支持 snap，kata-manager 等多种安装方式，源码编译仅做记录与流程参考。
 
 # 环境要求
@@ -58,38 +89,40 @@ rustc 1.47.0 (18bf6b4f0 2020-10-07)
 
 编译结果一共有
 
-> Summary:
->   ``destination ``install` `path (DESTDIR) : /
->   ``binary installation path (BINDIR) : ``/usr/local/bin
->   ``binaries to ``install` `:
->    ``- ``/usr/local/bin/kata-runtime
->    ``- ``/usr/local/bin/containerd-shim-kata-v2
->    ``- ``/usr/local/bin/kata-monitor
->    ``- ``/usr/libexec/kata-containers/kata-netmon
->    ``- ``/usr/local/bin/data/kata-collect-data``.sh
->   ``configs to ``install` `(CONFIGS) :
->    ``- cli``/config/configuration-acrn``.toml
->    ``- cli``/config/configuration-clh``.toml
->    ``- cli``/config/configuration-fc``.toml
->    ``- cli``/config/configuration-qemu``.toml
->   ``install` `paths (CONFIG_PATHS) :
->    ``- ``/usr/share/defaults/kata-containers/configuration-acrn``.toml
->    ``- ``/usr/share/defaults/kata-containers/configuration-clh``.toml
->    ``- ``/usr/share/defaults/kata-containers/configuration-fc``.toml
->    ``- ``/usr/share/defaults/kata-containers/configuration-qemu``.toml
->   ``alternate config paths (SYSCONFIG_PATHS) :
->    ``- ``/etc/kata-containers/configuration-acrn``.toml
->    ``- ``/etc/kata-containers/configuration-clh``.toml
->    ``- ``/etc/kata-containers/configuration-fc``.toml
->    ``- ``/etc/kata-containers/configuration-qemu``.toml
->   ``default ``install` `path ``for` `qemu (CONFIG_PATH) : ``/usr/share/defaults/kata-containers/configuration``.toml
->   ``default alternate config path (SYSCONFIG) : ``/etc/kata-containers/configuration``.toml
->   ``qemu hypervisor path (QEMUPATH) : ``/usr/bin/qemu-system-x86_64
->   ``cloud-hypervisor hypervisor path (CLHPATH) : ``/usr/bin/cloud-hypervisor
->   ``firecracker hypervisor path (FCPATH) : ``/usr/bin/firecracker
->   ``acrn hypervisor path (ACRNPATH) : ``/usr/bin/acrn-dm
->   ``assets path (PKGDATADIR) : ``/usr/share/kata-containers
->   ``shim path (PKGLIBEXECDIR) : ``/usr/libexec/kata-containers
+```
+• Summary:
+    destination install path (DESTDIR) : /
+    binary installation path (BINDIR) : /usr/local/bin
+    binaries to install :
+     - /usr/local/bin/kata-runtime
+     - /usr/local/bin/containerd-shim-kata-v2
+     - /usr/local/bin/kata-monitor
+     - /usr/libexec/kata-containers/kata-netmon
+     - /usr/local/bin/data/kata-collect-data.sh
+    configs to install (CONFIGS) :
+     - cli/config/configuration-acrn.toml
+     - cli/config/configuration-clh.toml
+     - cli/config/configuration-fc.toml
+     - cli/config/configuration-qemu.toml
+    install paths (CONFIG_PATHS) :
+     - /usr/share/defaults/kata-containers/configuration-acrn.toml
+     - /usr/share/defaults/kata-containers/configuration-clh.toml
+     - /usr/share/defaults/kata-containers/configuration-fc.toml
+     - /usr/share/defaults/kata-containers/configuration-qemu.toml
+    alternate config paths (SYSCONFIG_PATHS) :
+     - /etc/kata-containers/configuration-acrn.toml
+     - /etc/kata-containers/configuration-clh.toml
+     - /etc/kata-containers/configuration-fc.toml
+     - /etc/kata-containers/configuration-qemu.toml
+    default install path for qemu (CONFIG_PATH) : /usr/share/defaults/kata-containers/configuration.toml
+    default alternate config path (SYSCONFIG) : /etc/kata-containers/configuration.toml
+    qemu hypervisor path (QEMUPATH) : /usr/bin/qemu-system-x86_64
+    cloud-hypervisor hypervisor path (CLHPATH) : /usr/bin/cloud-hypervisor
+    firecracker hypervisor path (FCPATH) : /usr/bin/firecracker
+    acrn hypervisor path (ACRNPATH) : /usr/bin/acrn-dm
+    assets path (PKGDATADIR) : /usr/share/kata-containers
+    shim path (PKGLIBEXECDIR) : /usr/libexec/kata-containers
+```
 
 ```shell
 $ go get -d -u github.com /kata-containers/kata-containers
@@ -186,7 +219,7 @@ $ ll /usr/share/kata-containers/
 lrwxrwxrwx 1 root root        58 May  7 10:57 kata-containers.img -> kata-containers-2021-05-07-10:57:42.903708982+0800-3e81373
 ```
 
-#### 构建 initrd 镜像
+### 构建 initrd 镜像
 
 #### 构建 osbuilder
 
