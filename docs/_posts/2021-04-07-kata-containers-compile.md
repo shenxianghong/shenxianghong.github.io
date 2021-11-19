@@ -21,22 +21,22 @@ comments: false
    * [构建引导镜像](#构建引导镜像)
       * [构建 rootfs 镜像](#构建-rootfs-镜像)
          * [构建 osbuilder](#构建-osbuilder)
-         * [构建目标镜像](#构建目标镜像)
+         * [构建镜像](#构建镜像)
          * [安装镜像](#安装镜像)
       * [构建 initrd 镜像](#构建-initrd-镜像)
          * [构建 osbuilder](#构建-osbuilder-1)
-         * [构建镜像](#构建镜像)
+         * [构建镜像](#构建镜像-1)
          * [安装镜像](#安装镜像-1)
       * [配置引导镜像](#配置引导镜像)
    * [编译 Kata 容器内核](#编译-kata-容器内核)
       * [安装依赖](#安装依赖)
-      * [准备配置](#准备配置)
+      * [配置准备](#配置准备)
       * [编译内核](#编译内核)
       * [安装内核](#安装内核)
    * [Qemu 编译](#qemu-编译)
-      * [安装依赖](#安装依赖-1)
-      * [Qemu 代码准备](#qemu-代码准备)
-      * [编译](#编译)
+      * [依赖安装](#依赖安装)
+      * [代码准备](#代码准备)
+      * [编译 Qemu](#编译-qemu)
 * [自定义配置](#自定义配置)
 * [检查工作](#检查工作)
    * [check](#check)
@@ -180,7 +180,7 @@ centos-rootfs-osbuilder      latest    18bdd0cb48ea   17 minutes ago   2.1GB
 registry.centos.org/centos   7         a1bb412b2847   5 months ago     202MB
 ```
 
-#### 构建目标镜像
+#### 构建镜像
 
 ```shell
 $ cd $GOPATH/src/github.com/kata-containers/kata-containers/tools/osbuilder/image-builder
@@ -304,7 +304,7 @@ machine_type = "pc"
 $ yum -y install flex bison bc elfutils-libelf-devel patch
 ```
 
-### 准备配置
+### 配置准备
 
 生成的配置文件位于 $GOPATH/src/github.com/kata-containers/kata-containers/tools/packaging/kernel/configs/fragments/x86_64/.config
 
@@ -368,7 +368,7 @@ lrwxrwxrwx 1 root root 18 May  7 09:39 /usr/share/kata-containers/vmlinuz.contai
 
 按照[版本说明](https://github.com/kata-containers/kata-containers/blob/main/versions.yaml)中关于 QEMU 的版本信息，Kata Containers 2.1 版本采用 QEMU 5.2.0 版本。Kata Containers 社区基于上游 QEMU 代码进行了定制化 patch，补丁位于 https://github.com/kata-containers/kata-containers/tree/main/tools/packaging/qemu/patches。
 
-### 安装依赖
+### 依赖安装
 
 配置 ceph 源（非必须）
 
@@ -409,14 +409,14 @@ $ yum -y install bc python3 libseccomp-devel libcap-ng-devel glib2-devel librbd-
 apt-get install -y librbd-dev
 ```
 
-### Qemu 代码准备
+### 代码准备
 
 ```shell
 $ wget https://download.qemu.org/qemu-5.2.0.tar.xz
 $ tar xvf qemu-5.2.0.tar.xz
 ```
 
-### 编译
+### 编译 Qemu
 
 生成配置参数 kata.cfg，加载 patch 补丁
 
