@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "[ Kata Containers ] 2. With K8s"
+title:  "[ Kata Containers ] 3. With K8s"
 date:   2021-04-08
 excerpt: "Kata Containers 与 Kubernetes 集成的基础用法"
 project: true

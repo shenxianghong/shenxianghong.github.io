@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "[ Kata Containers ] 4. Compile"
-date:   2021-04-09
+title:  "[ Kata Containers ] 2. Build from source"
+date:   2021-04-07
 excerpt: "Kata Containers 源码编译"
 project: true
 tag:
