@@ -480,7 +480,7 @@ curl -o /etc/ssl/certs/ca.crt http://<mirror-address>/ca.crt
 
 #### Custom
 
-Kata Containers 可以通过 Pod annotation 的方式实现定制化每一个 Pod 的底层 Kata 参数。需要做的是上层 CRI 将 Pod annotation 透传至底层 runtime，同时 Kata Containers 开启识别特定的 Pod annotation。
+Kata Containers 可以通过 Pod annotation 的方式实现定制化每一个 Pod 的底层 Kata 参数。需要做的是上层 CRI 将 Pod annotation 透传至底层 runtime，同时 Kata Containers 开启识别特定的 Pod annotation，并且 CRI 需要支持此功能（如 Containerd 依赖 1.4.x 以上的版本才可以）
 
 **Kata 支持的 annotation 配置**
 
@@ -576,6 +576,8 @@ Kata Containers 可以通过 Pod annotation 的方式实现定制化每一个 Po
 | `io.katacontainers.container.resource.swap_in_bytes"` | `uint64`   | specify the `Resources.Memory.Swap`       |
 
 **example**
+
+示例是通过 Pod Annotation 启动一个忽略底层默认大小的，具有 5C 的容器
 
 *Kata Containers*
 
@@ -678,3 +680,6 @@ scheduling:
 在 Kubernetes 中，Pod 的开销是根据与 Pod 的 [RuntimeClass](https://kubernetes.io/zh/docs/concepts/containers/runtime-class/) 相关联的开销在 [准入](https://kubernetes.io/zh/docs/reference/access-authn-authz/extensible-admission-controllers/#what-are-admission-webhooks) 时设置的。
 
 如果启用了 Pod Overhead，在调度 Pod 时，除了考虑容器资源请求的总和外，还要考虑 Pod 开销。 类似地，kubelet 将在确定 Pod cgroups 的大小和执行 Pod 驱逐排序时也会考虑 Pod 开销。
+
+*关于 overhead 的更多介绍参考 https://shenxianghong.github.io/kata-containers-resource-limation/*
+
