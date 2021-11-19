@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "[ Kata Containers ] 2. with K8s"
+title:  "[ Kata Containers ] 2. With K8s"
 date:   2021-04-08
-excerpt: "Kata Containers 与 Kubernetes 集成基础用法"
+excerpt: "Kata Containers 与 Kubernetes 集成的基础用法"
 project: true
 tag:
 - Cloud Native
@@ -232,14 +232,12 @@ disabled_plugins = ["cri"]
 #  level = "info"
 ```
 
-可以通过 Containerd 提供的方式，生成默认的配置文件
+可以通过 Containerd 提供的方式，生成默认的配置文件，配置文件的格式取决于 Containerd 版本
 
 ```shell
 $ sudo mkdir -p /etc/containerd
 $ containerd config default | sudo tee /etc/containerd/config.toml
 ```
-
-生成出的配置文件的格式取决于 Containerd 版本的
 
 **低版本**
 
@@ -673,11 +671,10 @@ scheduling:
 
 如果 node 需要阻止某些需要特定 RuntimeClass 的 pod，可以在 `tolerations` 中指定。 与 `nodeSelector` 一样，tolerations 也在 admission 阶段与 pod 的 tolerations 合并，取二者的并集。
 
-## Overhead
+## overhead
 
 在节点上运行 Pod 时，Pod 本身占用大量系统资源。这些资源是运行 Pod 内容器所需资源的附加资源。Overhead 是一个特性，用于计算 Pod 基础设施在容器请求和限制之上消耗的资源。
 
 在 Kubernetes 中，Pod 的开销是根据与 Pod 的 [RuntimeClass](https://kubernetes.io/zh/docs/concepts/containers/runtime-class/) 相关联的开销在 [准入](https://kubernetes.io/zh/docs/reference/access-authn-authz/extensible-admission-controllers/#what-are-admission-webhooks) 时设置的。
 
 如果启用了 Pod Overhead，在调度 Pod 时，除了考虑容器资源请求的总和外，还要考虑 Pod 开销。 类似地，kubelet 将在确定 Pod cgroups 的大小和执行 Pod 驱逐排序时也会考虑 Pod 开销。
-
