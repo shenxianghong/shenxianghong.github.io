@@ -157,11 +157,13 @@ service ImageService {
 - Low-Level Runtime **实现了 OCI 开放容器标准**，负责**容器的生命周期管理**
 - High-Level Runtime 除了管理容器之外，还提供了一系列的上层高级特性，比如**管理镜像，与 Shim 交互**等
 
-## Kata Containers with Kubernetes
+# CRI Configuration
 
-### Containerd as CRI
+## Containerd
 
-#### Chain
+*/etc/containerd/config.toml*
+
+### Chain
 
 <figure>
 	<a href="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/containerd-chain.png"><img src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/containerd-chain.png"></a>
@@ -175,9 +177,9 @@ Containerd 在 1.0 及以前版本将 dockershim 和 docker daemon 替换为 cri
 
 Containerd 内置的 CRI 插件实现了 Kubelet CRI 接口中的 Image Service 和 Runtime Service，通过内部接口管理镜像和容器环境，并通过 CNI 插件给 Pod 配置网络。
 
-#### Configuration
+### Configuration
 
-##### Containerd
+#### Basic
 
 Containerd 的配置取决于它所处的角色**非 CRI** 时，配置文件大致为：
 
@@ -463,13 +465,13 @@ oom_score = 0
 curl -o /etc/ssl/certs/ca.crt http://<mirror-address>/ca.crt
 ```
 
-##### Per-Pod
+#### Custom
 
 Kata Containers 可以通过 Pod annotation 的方式实现定制化每一个 Pod 的底层 Kata 参数。需要做的是上层 CRI 将 Pod annotation 透传至底层 runtime，同时 Kata Containers 开启识别特定的 Pod annotation。
 
 **Kata 支持的 annotation 配置**
 
-***Global Options***
+*Global Options*
 
 | Key                                        | Value Type | Comments                                                     |
 | ------------------------------------------ | ---------- | ------------------------------------------------------------ |
@@ -477,7 +479,7 @@ Kata Containers 可以通过 Pod annotation 的方式实现定制化每一个 Po
 | `io.katacontainers.pkg.oci.bundle_path`    | string     | OCI bundle path                                              |
 | `io.katacontainers.pkg.oci.container_type` | string     | OCI container type. Only accepts `pod_container` and `pod_sandbox` |
 
-***Runtime Options***
+*Runtime Options*
 
 | Key                                                      | Value Type | Comments                                                     |
 | -------------------------------------------------------- | ---------- | ------------------------------------------------------------ |
@@ -488,7 +490,7 @@ Kata Containers 可以通过 Pod annotation 的方式实现定制化每一个 Po
 | `io.katacontainers.config.runtime.sandbox_cgroup_only`   | `boolean`  | determines if Kata processes are managed only in sandbox cgroup |
 | `io.katacontainers.config.runtime.enable_pprof`          | `boolean`  | enables Golang `pprof` for `containerd-shim-kata-v2` process |
 
-***Agent Options***
+*Agent Options*
 
 | Key                                                  | Value Type | Comments                                                     |
 | ---------------------------------------------------- | ---------- | ------------------------------------------------------------ |
@@ -496,7 +498,7 @@ Kata Containers 可以通过 Pod annotation 的方式实现定制化每一个 Po
 | `io.katacontainers.config.agent.container_pipe_size` | uint32     | specify the size of the std(in/out) pipes created for containers |
 | `io.katacontainers.config.agent.kernel_modules`      | string     | the list of kernel modules and their parameters that will be loaded in the guest kernel. Semicolon separated list of kernel modules and their parameters. These modules will be loaded in the guest kernel using `modprobe`(8). E.g., `e1000e InterruptThrottleRate=3000,3000,3000 EEE=1; i915 enable_ppgtt=0` |
 
-***Hypervisor Options***
+*Hypervisor Options*
 
 | Key                                                          | Value Type                                                   | Comments                                                     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -553,29 +555,16 @@ Kata Containers 可以通过 Pod annotation 的方式实现定制化每一个 Po
 | `io.katacontainers.config.hypervisor.virtio_fs_extra_args`   | string                                                       | extra options passed to `virtiofs` daemon                    |
 | `io.katacontainers.config.hypervisor.enable_guest_swap`      | `boolean`                                                    | enable swap in the guest                                     |
 
-***Container Options***
+*Container Options*
 
 | Key                                                   | Value Type | Comments                                  |
 | ----------------------------------------------------- | ---------- | ----------------------------------------- |
 | `io.katacontainers.container.resource.swappiness"`    | `uint64`   | specify the `Resources.Memory.Swappiness` |
 | `io.katacontainers.container.resource.swap_in_bytes"` | `uint64`   | specify the `Resources.Memory.Swap`       |
 
-Containerd 需要修改配置文件以支持 annotation 的透传
-
-```shell
-$ cat /etc/containerd/config
-....
-
-         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
-           runtime_type = "io.containerd.kata.v2"
-           pod_annotations = ["io.katacontainers.*"]
-           container_annotations = ["io.katacontainers.*"]
-....
-```
-
 **example**
 
-***Kata Containers***
+*Kata Containers*
 
 ```toml
 [hypervisor.qemu]
@@ -591,7 +580,7 @@ enable_annotations = ["default_vcpus"]
 default_vcpus = 1
 ```
 
-***Containerd***
+*Containerd*
 
 ```toml
 [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
@@ -599,9 +588,10 @@ default_vcpus = 1
           privileged_without_host_devices = true
           shim_debug = true
           pod_annotations = ["io.katacontainers.*"]  
+          container_annotations = ["io.katacontainers.*"]
 ```
 
-***Pod***
+*Pod*
 
 ```yaml
 apiVersion: v1
@@ -618,9 +608,61 @@ spec:
       command: ["/bin/sh", "-c", "uname -r && tail -f /dev/null"]
 ```
 
-##### kubernetes
+### CRI-O
 
-### CRI-O as CRI
+*/etc/crio/crio.conf*
 
 TODO
+
+# RuntimeClass
+
+RuntimeClass 是一个用于选择容器运行时配置的特性，容器运行时配置用于运行 Pod 中的容器。
+
+```yaml
+apiVersion: node.k8s.io/v1beta1
+kind: RuntimeClass
+metadata:
+  name: kata-containers
+handler: kata-containers
+overhead:
+  podFixed:
+    memory: "140Mi"
+    cpu: "250m"
+scheduling:
+  nodeSelector:
+    runtime: kata
+```
+
+## handler
+
+需要和 CRI 中注册的 handler 保持一致
+
+**Containerd**
+
+```toml
+[plugins."io.containerd.grpc.v1.cri".containerd.runtimes.${HANDLER_NAME}]
+```
+
+**CRI-O**
+
+```toml
+[crio.runtime.runtimes.${HANDLER_NAME}]
+  runtime_path = "${PATH_TO_BINARY}"
+```
+
+## schedule
+
+通过为 RuntimeClass 指定 `scheduling` 字段， 可以通过设置约束，确保运行该 RuntimeClass 的 Pod 被调度到支持该 RuntimeClass 的节点上。 如果未设置 `scheduling`，则假定所有节点均支持此 RuntimeClass 。
+
+为了确保 pod 会被调度到支持指定运行时的 node 上，每个 node 需要设置一个通用的 label 用于被 `runtimeclass.scheduling.nodeSelector` 挑选。在 admission 阶段，RuntimeClass 的 nodeSelector 将会与 pod 的 nodeSelector 合并，取二者的交集。如果有冲突，pod 将会被拒绝。
+
+如果 node 需要阻止某些需要特定 RuntimeClass 的 pod，可以在 `tolerations` 中指定。 与 `nodeSelector` 一样，tolerations 也在 admission 阶段与 pod 的 tolerations 合并，取二者的并集。
+
+## Overhead
+
+在节点上运行 Pod 时，Pod 本身占用大量系统资源。这些资源是运行 Pod 内容器所需资源的附加资源。Overhead 是一个特性，用于计算 Pod 基础设施在容器请求和限制之上消耗的资源。
+
+在 Kubernetes 中，Pod 的开销是根据与 Pod 的 [RuntimeClass](https://kubernetes.io/zh/docs/concepts/containers/runtime-class/) 相关联的开销在 [准入](https://kubernetes.io/zh/docs/reference/access-authn-authz/extensible-admission-controllers/#what-are-admission-webhooks) 时设置的。
+
+如果启用了 Pod Overhead，在调度 Pod 时，除了考虑容器资源请求的总和外，还要考虑 Pod 开销。 类似地，kubelet 将在确定 Pod cgroups 的大小和执行 Pod 驱逐排序时也会考虑 Pod 开销。
 
