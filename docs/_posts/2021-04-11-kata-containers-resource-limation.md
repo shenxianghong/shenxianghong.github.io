@@ -168,15 +168,19 @@ Swap:             0           0           0
 
 ## Resource
 
-| Location  | Kind               | runC             | Kata sandbox_cgroup_only = true | Kata  sandbox_cgroup_only = false |
-| --------- | ------------------ | ---------------- | ------------------------------- | --------------------------------- |
-| host      | Pod                | overhead + limit | overhead + limit                | overhead + limit                  |
-| host      | Infra container    | -1               | -1                              | -1                                |
-| host      | workload container | limit            | /                               | limit                             |
-| Container | /                  | limit            | limit                           | limit                             |
-| VM        | Pod                | /                | -1                              | -1                                |
-| VM        | Infra container    | /                | -1                              | -1                                |
-| VM        | workload container | /                | limit                           | limit                             |
+| Location  | Kind               | runC             | Kata (true)      | Kata (false)     |
+| --------- | ------------------ | ---------------- | ---------------- | ---------------- |
+| host      | Pod                | overhead + limit | overhead + limit | overhead + limit |
+| host      | Infra container    | -1               | -1               | -1               |
+| host      | workload container | limit            | /                | limit            |
+| Container | /                  | limit            | limit            | limit            |
+| VM        | Pod                | /                | -1               | -1               |
+| VM        | Infra container    | /                | -1               | -1               |
+| VM        | workload container | /                | limit            | limit            |
 
-[^Location]: host 代表
+location 表示 cgroup 文件的位置
+
+- host 表示位于宿主机的 Cgroup 目录
+- Container 表示位于容器里 Cgroup 目录
+- VM 表示位于 Kata VM 中的 Cgroup 目录
 
