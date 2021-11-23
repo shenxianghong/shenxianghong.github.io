@@ -21,7 +21,7 @@ comments: false
 
 # Overhead
 
-通过 `overhead.podFixed` 指定额外的 1C，2G 资源，这部分资源可以被 K8s 控制面感知，并体现在数据面，在 Pod 调度、ResourceQuota 以及 Pod 驱逐等场景下均会受到影响。但是，需要注意的是，overhead 的资源仅用作上层编排、调度等，并不会作用于底层 VM 的实际大小。
+通过 `overhead.podFixed` 指定额外的 1C，2G 资源，这部分资源可以被 K8s 控制面感知，并体现在数据面，具体包括在 Pod 调度、ResourceQuota 以及 Pod 驱逐等场景下均会受到影响。但是，需要注意的是，overhead 的资源仅用作上层（K8s 层面）编排、调度等，并不会作用于底层 VM 的实际大小。
 
 ```yaml
 apiVersion: node.k8s.io/v1beta1
@@ -150,6 +150,8 @@ default_memory = 2048
 - default_maxvcpus 表示 Kata VM 中的最多的 CPU 个数，默认为 0，即 host 上的所有 CPU
 - default_memory 表示 Kata VM 中的内存大小，默认为 2G
 
+**默认情况，Kata VM 最小的资源大小是 1C 256M，内存低于 256M 时，会默认为 2G**
+
 Kata Pod 中额外对资源的限制是通过 `hotplug` 的方式实现。资源目前特指 CPU 和 Memory。Pod requests 影响到调度等控制层面的行为，不同于 Limits，它不会对 Kata VM 的资源造成影响。而**最终的 VM 资源大小为 limit + default，其中 limit 为 Pod 声明的 limit，而非包含 overhead 在内的最终限制**。
 
 以上述的 guaranteed Pod 为例，可以看到，最终的 VM 是一个 2C，3G 的规格大小，是因为 Pod limit（1C，1G）+ Kata Config（1C，2G）
@@ -163,7 +165,7 @@ Mem:           3009          38        2941          29          30        2913
 Swap:             0           0           0
 ```
 
-总结一下，Kubernetes 新增了 Kata Containers 作为底层 runtime 后，对于 runtime 运行环境的额外开销不容忽视，但是 K8s 角度又无法感知到这部分资源，而 overhead 的设计就弥补了这一缺陷，并且 overhead 对于资源的额外声明，是会统计在 Cgroup 中的。
+**总结一下，Kubernetes 新增了 Kata Containers 作为底层 runtime 后，对于 runtime 运行环境的额外开销不容忽视，但是 K8s 角度又无法感知到这部分资源，而 overhead 的设计就弥补了这一缺陷，并且 overhead 对于资源的额外声明，是会统计在 Cgroup 中的，所以即使底层 Kata Containers 的配置即使很高，也可以通过 limit 实现资源限额，因为 Kata 对于资源并不是完全占用，不同的 Kata VM 之间会存在资源抢占现象。**
 
 # Cgroup
 
@@ -213,5 +215,106 @@ Swap:             0           0           0
 
 从 VM 视角看，无论是否开启 SandboxCgroupOnly，都可以看到有两个容器（infra 和 workload）的 Cgroup 策略文件，VM 中的 Cgroup 都是针对工作负载做的限制，而这个视图更像是 runC 中看到的一切。
 
-而其实，当 host 的 Cgroup 把所有的容器资源统一限制的情况下，Container 和 VM 的 Cgroup 都变得意义不大了，而在 Kata Containers 的场景下，业务进程以及容器 pause 均运行在 VM 中，所以 host 不会存在容器进程。
+## 场景验证
 
+那么举例做一个说明
+
+**RuntimeClass**
+
+*声明了一个 1C 的额外资源*
+
+```yaml
+apiVersion: node.k8s.io/v1beta1
+kind: RuntimeClass
+metadata:
+  name: kata-runtime
+handler: kata
+overhead:
+  podFixed:
+    memory: "1000Mi"
+    cpu: "1000m"
+```
+
+**Pod**
+
+*声明了一个最大 2C 的业务容器*
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: guaranteed
+spec:
+  runtimeClassName: kata-runtime
+  containers:
+    - name: uname
+      image: busybox
+      command: ["/bin/sh", "-c", "uname -r && tail -f /dev/null"]
+      resources:
+        requests:
+          memory: "1000Mi"
+          cpu: "2"
+        limits:
+          memory: "1000Mi"
+          cpu: "2"
+```
+
+**模拟高计算服务**
+
+```bash
+#! /bin/sh 
+# filename killcpu.sh
+if [ $# != 1 ] ; then
+  echo "USAGE: $0 <CPUs>"
+  exit 1;
+fi
+for i in `seq $1`
+do
+  echo -ne " 
+i=0; 
+while true
+do
+i=i+1; 
+done" | /bin/sh &
+  pid_array[$i]=$! ;
+done
+ 
+for i in "${pid_array[@]}"; do
+  echo 'kill ' $i ';';
+done
+```
+
+根据以上结论存在：
+
+- 1C 的额外资源会作用于 Kata Containers 的额外开销，**不会作用在**业务负载容器中
+- 2C 的容器资源为容器的最大使用上限
+- VM 中的 CPU 个数为 3C，也就是说虚机的最大使用上限为 3
+
+**查看 Pod 的资源限制**
+
+可以看到，pod 的 cpu limit 最终为 1（overhead） + 2（limit）
+
+```
+[root@archcnstcm5403 kata]# kubectl describe node | grep guaranteed
+  default       guaranteed                 3 (6%)        3 (6%)      2000Mi (1%)      2000Mi (1%)    26s
+```
+
+**Pod 中运行高负载应用**
+
+在 host 上通过 top 可以看到，进程占用了 2C ，而并不是上步骤看到的 3C 的最大使用量
+
+```shell
+PID   USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND                                                     28239 root      20   0 3948324 192908 177888 S 197.7  0.1   0:21.27 qemu-system-x86 
+```
+
+**VM 中运行高负载应用**
+
+在 host 上通过 top 可以看到，进程占用了 3C
+
+```shell
+PID   USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND                                                     28239 root      20   0 3948324 195244 180212 S 298.3  0.1   8:43.44 qemu-system-x86 
+```
+
+**总结**
+
+也就是说，Pod limit 最终作用的对象就是业务容器的资源限制，而 overhead 作用的对象是附加在业务容器之上的，但是两者之和最终会决定调度等场景下的决策。
