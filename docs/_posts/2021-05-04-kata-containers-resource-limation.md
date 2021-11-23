@@ -39,7 +39,7 @@ overhead:
 
 # Pod QoS
 
-overhead 的注入不会影响到 Pod 的 QoS。overhead 中申请的额外资源，会追加到 Pod 的 request 值，从而影响到控制面的调度等场景，如果 Pod 声明了 limit，同样的也会追加到 limit 中。
+overhead 的注入不会影响到 Pod 的 QoS。overhead 中申请的额外资源，会追加到 Pod 的 request 值，从而影响到控制面的调度等场景，如果 Pod 声明了 limit，同样的也会追加到 limit 中。需要注意的是：虽然 overhead 最终会影响到 pod limit 和 request，但是**不会影响到 Pod 绑核**，Pod 的绑核仍然依据 request 和 limit。
 
 *guaranteed*
 
@@ -110,8 +110,6 @@ spec:
   default                     guaranteed                                2 (4%)        2 (4%)      3000Mi (2%)      3000Mi (2%)   
 ```
 
-需要注意的是：虽然 overhead 最终会影响到 pod limit 和 request，但是**不会影响到 Pod 绑核**，Pod 的绑核仍然依据 request 和 limit。
-
 # Kata VM
 
 */etc/kata-containers/configuration.toml*
@@ -150,9 +148,9 @@ default_memory = 2048
 - default_maxvcpus 表示 Kata VM 中的最多的 CPU 个数，默认为 0，即 host 上的所有 CPU
 - default_memory 表示 Kata VM 中的内存大小，默认为 2G
 
-**默认情况，Kata VM 最小的资源大小是 1C 256M，内存低于 256M 时，会默认为 2G**
+**默认情况，Kata VM 最小的资源是 1C 256M，内存低于 256M 时，会默认为 2G**
 
-Kata Pod 中额外对资源的限制是通过 `hotplug` 的方式实现。资源目前特指 CPU 和 Memory。Pod requests 影响到调度等控制层面的行为，不同于 Limits，它不会对 Kata VM 的资源造成影响。而**最终的 VM 资源大小为 limit + default，其中 limit 为 Pod 声明的 limit，而非包含 overhead 在内的最终限制**。
+Kata Pod 中额外对资源的限制是通过 `hotplug` 的方式实现。资源目前特指 CPU 和 Memory。Pod requests 影响到调度等控制层面的行为，不同于 Limits，它不会对 Kata VM 的资源造成影响。而**最终的 VM 资源大小为 limit + default，其中 limit 为 Pod 声明的 limit，而不包含 overhead 在内**。
 
 以上述的 guaranteed Pod 为例，可以看到，最终的 VM 是一个 2C，3G 的规格大小，是因为 Pod limit（1C，1G）+ Kata Config（1C，2G）
 
@@ -164,8 +162,6 @@ bash-5.0# free -m
 Mem:           3009          38        2941          29          30        2913
 Swap:             0           0           0
 ```
-
-**总结一下，Kubernetes 新增了 Kata Containers 作为底层 runtime 后，对于 runtime 运行环境的额外开销不容忽视，但是 K8s 角度又无法感知到这部分资源，而 overhead 的设计就弥补了这一缺陷，并且 overhead 对于资源的额外声明，是会统计在 Cgroup 中的，所以即使底层 Kata Containers 的配置即使很高，也可以通过 limit 实现资源限额，因为 Kata 对于资源并不是完全占用，不同的 Kata VM 之间会存在资源抢占现象。**
 
 # Cgroup
 
@@ -215,9 +211,16 @@ Swap:             0           0           0
 
 从 VM 视角看，无论是否开启 SandboxCgroupOnly，都可以看到有两个容器（infra 和 workload）的 Cgroup 策略文件，VM 中的 Cgroup 都是针对工作负载做的限制，而这个视图更像是 runC 中看到的一切。
 
-## 场景验证
+# 场景验证
 
 那么举例做一个说明
+
+**Kata Config**
+
+```toml
+default_vcpus = 5
+default_memory = 2048
+```
 
 **RuntimeClass**
 
@@ -284,11 +287,12 @@ for i in "${pid_array[@]}"; do
 done
 ```
 
-根据以上结论存在：
+根据以上结论理应存在：
 
 - 1C 的额外资源会作用于 Kata Containers 的额外开销，**不会作用在**业务负载容器中
 - 2C 的容器资源为容器的最大使用上限
-- VM 中的 CPU 个数为 3C，也就是说虚机的最大使用上限为 3
+- overhead 的 1C + Pod 的 2C 一共作为 VM 的最大使用量
+- VM 中的 CPU 个数为 7C
 
 **查看 Pod 的资源限制**
 
@@ -317,4 +321,20 @@ PID   USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND     
 
 **总结**
 
-也就是说，Pod limit 最终作用的对象就是业务容器的资源限制，而 overhead 作用的对象是附加在业务容器之上的，但是两者之和最终会决定调度等场景下的决策。
+也就是说，Pod limit 最终作用的对象就是业务容器的资源限制，而 overhead 作用的对象是附加在业务容器之上的，两者之和是最终 VM 的资源限制。
+
+# Overhead 值的把控
+
+Kubernetes 新增了 Kata Containers 作为底层 runtime 后，对于 runtime 运行环境的额外开销不容忽视，但是 K8s 角度又无法感知到这部分资源，而 overhead 的设计就弥补了这一缺陷，并且 overhead 对于资源的额外声明，是会统计在 Cgroup 中的，所以即使底层 Kata Containers 的配置即使很高，也可以通过 limit 实现资源限额，这是因为 Kata 对于资源并不是完全占用，不同的 Kata VM 之间会存在资源抢占现象。
+
+## Overhead == Kata Config
+
+两者相等的情况，Kata VM 的资源大小就是 VM 可以用到的资源大小。
+
+但是默认的 1C 2G 在大多数场景下过于浪费，在 Kata Containers 和 runC 的比较下来看，资源大小难以统一管理。
+
+## Overhead << Kata Config
+
+在 overhead 远小于 Kata Config 的时候，可以根据 Pod request 的值动态的调整 overhead 的大小，也就是随着业务负载请求资源的变大，可以理解成需要 Kata VM，OS，Kernel 做更多的工作来满足服务开销。
+
+但是从 VM 视角来看的话，VM 的大小并不是真实的可用大小（比如一个 4C 8G 的 VM，其真实可用的大小或许只有 1C 2G）。不过，这种情况也不会浪费资源，因为 Kata 对于资源仍然是抢占而不是独占。
