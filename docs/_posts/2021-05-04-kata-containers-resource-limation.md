@@ -110,6 +110,8 @@ spec:
   default                     guaranteed                                2 (4%)        2 (4%)      3000Mi (2%)      3000Mi (2%)   
 ```
 
+需要注意的是：虽然 overhead 最终会影响到 pod limit 和 request，但是**不会影响到 Pod 绑核**，Pod 的绑核仍然依据 request 和 limit。
+
 # Kata VM
 
 */etc/kata-containers/configuration.toml*
@@ -161,7 +163,7 @@ Mem:           3009          38        2941          29          30        2913
 Swap:             0           0           0
 ```
 
-总结一下，Kubernetes 新增了 Kata Containers 作为底层 runtime 后，对于 runtime 运行环境的额外开销不容忽视，但是 K8s 角度又无法感知到这部分资源，而 overhead 的设计就弥补了这一缺陷，并且 overhead 对于资源的额外声明，是会统计在 Cgroup 中的
+总结一下，Kubernetes 新增了 Kata Containers 作为底层 runtime 后，对于 runtime 运行环境的额外开销不容忽视，但是 K8s 角度又无法感知到这部分资源，而 overhead 的设计就弥补了这一缺陷，并且 overhead 对于资源的额外声明，是会统计在 Cgroup 中的。
 
 # Cgroup
 
