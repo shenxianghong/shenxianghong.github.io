@@ -602,8 +602,8 @@ default_vcpus = 1
           runtime_type = "io.containerd.kata.v2"
           privileged_without_host_devices = true
           shim_debug = true
-          pod_annotations = ["io.katacontainers.*"]  
           container_annotations = ["io.katacontainers.*"]
+          pod_annotations = ["io.katacontainers.*"]  
 ```
 
 *Pod*
