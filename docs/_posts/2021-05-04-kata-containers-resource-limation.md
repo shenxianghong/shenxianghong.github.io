@@ -312,7 +312,8 @@ done
 在 host 上通过 top 可以看到，进程占用了 2C ，而并不是上步骤看到的 3C 的最大使用量
 
 ```shell
-PID   USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND                                                     28239 root      20   0 3948324 192908 177888 S 197.7  0.1   0:21.27 qemu-system-x86 
+PID   USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+28239 root      20   0 3948324 192908 177888 S 197.7  0.1   0:21.27 qemu-system-x86 
 ```
 
 **VM 中运行高负载应用**
@@ -320,7 +321,8 @@ PID   USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND     
 在 host 上通过 top 可以看到，进程占用了 3C
 
 ```shell
-PID   USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND                                                     28239 root      20   0 3948324 195244 180212 S 298.3  0.1   8:43.44 qemu-system-x86 
+PID   USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+28239 root      20   0 3948324 195244 180212 S 298.3  0.1   8:43.44 qemu-system-x86 
 ```
 
 **总结**
