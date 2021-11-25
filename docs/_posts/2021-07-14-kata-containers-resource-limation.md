@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "[ Kata Containers ] 4. Resource Limitation"
-date:   2021-05-04
+date:   2021-07-14
 excerpt: "Kata Containers 在 K8s 中资源限制问题"
 project: true
 tag:

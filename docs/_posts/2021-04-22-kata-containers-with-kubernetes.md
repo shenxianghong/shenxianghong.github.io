@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "[ Kata Containers ] 3. With Kubernetes"
-date:   2021-04-08
+date:   2021-04-22
 excerpt: "Kata Containers 与 Kubernetes 集成的基础用法"
 project: true
 tag:
