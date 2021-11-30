@@ -43,7 +43,7 @@ overhead:
 
 # Pod QoS
 
-overhead 的注入不会影响到 Pod 的 QoS。overhead 中申请的额外资源，会追加到 Pod 的 request 值，从而影响到控制面的调度等场景，如果 Pod 声明了 limit，同样的也会追加到 limit 中。需要注意的是：虽然 overhead 最终会影响到 pod limit 和 request，但是**不会影响到 Pod 绑核**，Pod 的绑核仍然依据 request 和 limit。
+overhead 的注入不会影响到 Pod 的 QoS。overhead 中申请的额外资源，会追加到 Pod 的 request 值（即使 Pod 没有设置 request 值），从而影响到控制面的调度等场景，如果 Pod 声明了 limit，同样的也会追加到 limit 中。需要注意的是：虽然 overhead 最终会影响到 pod limit 和 request，但是**不会影响到 Pod 绑核**，Pod 的绑核仍然依据 request 和 limit。
 
 *guaranteed*
 
@@ -214,6 +214,8 @@ Swap:             0           0           0
 从 container 视角看，三种情况表象一致，均为 Pod 工作负载的最大资源限量。
 
 从 VM 视角看，无论是否开启 SandboxCgroupOnly，都可以看到有两个容器（infra 和 workload）的 Cgroup 策略文件，VM 中的 Cgroup 都是针对工作负载做的限制，而这个视图更像是 runC 中看到的一切。
+
+**从进程服务来讲，overhead 提供了额外的资源消耗的空间，但是并不代表额外的资源消耗会严格遵守这部分空间，而是会与业务进程进行资源抢占；但是业务进程的 cgroup 做了更细粒度的划分，只能使用 Pod limit 中限制的资源量。而当没有任何资源使用约束条件时，Kata 容器使用的最大资源量就是 Kata 配置文件中的默认大小。**
 
 # Example
 
