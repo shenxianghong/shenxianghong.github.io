@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "[ Elegant Code ] Web Structure Learning From Kubewebhook"
+title:  "[ Elegant Code ] Web Structure"
 date:   2021-12-01
 excerpt: "记一次在 Kubewebhook 开源项目中学到的 web 代码结构"
 project: true
