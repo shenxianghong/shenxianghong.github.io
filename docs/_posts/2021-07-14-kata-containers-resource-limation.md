@@ -177,6 +177,8 @@ Swap:             0           0           0
 - 启用 SandboxCgroupOnly，Kubelet 在调整 Pod Cgroup 的大小时，会将 sandbox 的开销统计进去
 - 禁用 SandboxCgroupOnly，sandbox 的开销和 Pod Cgroup 分开计算，独立存在
 
+**host 上 Pod 的 Cgroup 限制，虽然会收到 overhead 的影响，但是仅限于 request 和 limit 本身就存在的情况。如果 request 不存在，那么 overhead 不会被追加进去。**
+
 ## Resource
 
 | Location  | Kind               | runC             | Kata (true)      | Kata (false)     |

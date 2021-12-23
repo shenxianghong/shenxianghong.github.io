@@ -37,6 +37,7 @@ comments: false
       * [依赖安装](#依赖安装)
       * [代码准备](#代码准备)
       * [编译 Qemu](#编译-qemu)
+   * [编译 UEFI 启动文件](#编译 UEFI 启动文件)
 * [自定义配置](#自定义配置)
 * [检查工作](#检查工作)
    * [check](#check)
@@ -53,6 +54,8 @@ Kata Containers 需要 CPU 支持以下之一的虚拟化技术
 - ARM Hyp mode (virtualization extension).
 - IBM Power Systems.
 - IBM Z mainframes.
+
+文档中的 Kata Containers 编译版本为 2.1.1
 
 # Kata 组件编译
 
@@ -406,7 +409,7 @@ EOF
 $ yum -y install bc python3 libseccomp-devel libcap-ng-devel glib2-devel librbd-devel libpmem-devel pixman-devel bzip2 zlib-devel ninja-build
 
 # ubuntu 环境下
-apt-get install -y librbd-dev
+apt-get install -y librbd-dev libcap-ng-dev libattr1-dev
 ```
 
 ### 代码准备
@@ -434,6 +437,27 @@ kata.cfg 示例
 
 ```
 --disable-sheepdog --disable-live-block-migration --disable-brlapi --disable-docs --disable-curses --disable-gtk --disable-opengl --disable-sdl --disable-spice --disable-vte --disable-vnc --disable-vnc-jpeg --disable-vnc-png --disable-vnc-sasl --disable-auth-pam --disable-fdt --disable-glusterfs --disable-libiscsi --disable-libnfs --disable-libssh --disable-bzip2 --disable-lzo --disable-snappy --disable-tpm --disable-slirp --disable-libusb --disable-usb-redir --disable-tcg --disable-debug-tcg --disable-tcg-interpreter --disable-qom-cast-debug --disable-tcmalloc --disable-curl --disable-rdma --disable-tools --disable-bsd-user --disable-linux-user --disable-sparse --disable-vde --disable-xfsctl --disable-libxml2 --disable-nettle --disable-xen --disable-linux-aio --disable-capstone --disable-virglrenderer --disable-replication --disable-smartcard --disable-guest-agent --disable-guest-agent-msi --disable-vvfat --disable-vdi --disable-qed --disable-qcow1 --disable-bochs --disable-cloop --disable-dmg --disable-parallels --enable-kvm --enable-vhost-net --enable-rbd --enable-virtfs --enable-attr --enable-cap-ng --enable-seccomp --enable-avx2 --enable-avx512f --enable-libpmem --enable-malloc-trim --target-list=x86_64-softmmu --extra-cflags=" -O3 -falign-functions=32 -D_FORTIFY_SOURCE=2 -fPIE" --extra-ldflags=" -pie -z noexecstack -z relro -z now" --prefix=/usr --libdir=/usr/lib/kata-qemu --libexecdir=/usr/libexec/kata-qemu --datadir=/usr/share/kata-qemu
+```
+
+### 编译 UEFI 启动文件
+
+*本步骤仅在 ARM 环境上，做设备热插拔情况下需要*
+
+默认情况下，编译结果位于 /usr/share/kata-containers/ 目录下，名为 kata-flash0.img 与 kata-flash1.img
+
+```shell
+$ go get -d github.com/kata-containers/tests
+$ pushd $GOPATH/src/github.com/kata-containers/tests
+$ sudo .ci/aarch64/install_rom_aarch64.sh
+$ popd
+```
+
+**使用方式**
+
+在 Kata 的配置文件中 pflashes 一项
+
+```shell
+pflashes = ["/opt/kata/share/kata-containers/kata-flash0.img", "/opt/kata/share/kata-containers/kata-flash1.img"]
 ```
 
 # 自定义配置
