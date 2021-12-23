@@ -439,7 +439,7 @@ kata.cfg 示例
 --disable-sheepdog --disable-live-block-migration --disable-brlapi --disable-docs --disable-curses --disable-gtk --disable-opengl --disable-sdl --disable-spice --disable-vte --disable-vnc --disable-vnc-jpeg --disable-vnc-png --disable-vnc-sasl --disable-auth-pam --disable-fdt --disable-glusterfs --disable-libiscsi --disable-libnfs --disable-libssh --disable-bzip2 --disable-lzo --disable-snappy --disable-tpm --disable-slirp --disable-libusb --disable-usb-redir --disable-tcg --disable-debug-tcg --disable-tcg-interpreter --disable-qom-cast-debug --disable-tcmalloc --disable-curl --disable-rdma --disable-tools --disable-bsd-user --disable-linux-user --disable-sparse --disable-vde --disable-xfsctl --disable-libxml2 --disable-nettle --disable-xen --disable-linux-aio --disable-capstone --disable-virglrenderer --disable-replication --disable-smartcard --disable-guest-agent --disable-guest-agent-msi --disable-vvfat --disable-vdi --disable-qed --disable-qcow1 --disable-bochs --disable-cloop --disable-dmg --disable-parallels --enable-kvm --enable-vhost-net --enable-rbd --enable-virtfs --enable-attr --enable-cap-ng --enable-seccomp --enable-avx2 --enable-avx512f --enable-libpmem --enable-malloc-trim --target-list=x86_64-softmmu --extra-cflags=" -O3 -falign-functions=32 -D_FORTIFY_SOURCE=2 -fPIE" --extra-ldflags=" -pie -z noexecstack -z relro -z now" --prefix=/usr --libdir=/usr/lib/kata-qemu --libexecdir=/usr/libexec/kata-qemu --datadir=/usr/share/kata-qemu
 ```
 
-### 编译 UEFI 启动文件
+## 编译 UEFI 启动文件
 
 *本步骤仅在 ARM 环境上，做设备热插拔情况下需要*
 
