@@ -1,0 +1,34 @@
+apiVersion: v1
+items:
+- apiVersion: velero.io/v1
+  kind: BackupStorageLocation
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: velero
+    name: sftp
+    namespace: velero
+  spec:
+    config:
+      server: 178.104.162.64
+      sshPort: "22"
+      storeRoot: /tmp/
+    default: true
+    objectStorage:
+      bucket: ake
+    provider: ake.io/sftp
+- apiVersion: velero.io/v1
+  kind: BackupStorageLocation
+  metadata:
+    creationTimestamp: null
+    labels:
+      component: velero
+    name: nfs
+    namespace: velero
+  spec:
+    config:
+      storeRoot: /data/nfs
+    objectStorage:
+      bucket: ake
+    provider: ake.io/local
+kind: List
