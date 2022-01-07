@@ -4,10 +4,10 @@
 # ---------------------------------------------------------------
 
 # Site
-title: NexT
+title: 🐾Corgi
 subtitle:
-description:
-author: John Doe
+description: Take a gamble that love exists, and do a loving act.
+author: Shen Xianghong
 # Support language: de, en, fr-FR, id, ja, ko, pt-BR, pt, ru, zh-Hans, zh-hk, zh-tw
 language: en
 date_format: '%Y-%m-%d'
@@ -232,8 +232,8 @@ social_icons:
 
 
 # Sidebar Avatar
-# in directory: /assets/images/avatar.gif
-#avatar:
+# in directory: /assets/images/avatar.jpg
+avatar: /assets/images/avatar.jpg
 
 
 # Table Of Contents in the Sidebar
