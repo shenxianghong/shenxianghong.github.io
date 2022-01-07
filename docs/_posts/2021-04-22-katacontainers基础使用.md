@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "[ Kata Containers ] 3 基础使用"
+title:  "[ Kata Containers ]   3 基础使用"
 date:   2021-04-22
-excerpt: "OCI 和 CRI 介绍以及 Kata Containers 在 Kubernetes 的基础使用示例"
+excerpt: "Kata Containers 在 K8s 中的基础使用示例"
 tag:
 - Cloud Native
 - Kubernetes
