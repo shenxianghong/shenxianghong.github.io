@@ -317,9 +317,9 @@ post_meta:
 # Post wordcount display settings
 post_wordcount:
   item_text: true
-  wordcount: false
+  wordcount: true
   min2read: true
-  separated_meta: false
+  separated_meta: true
 
 # Wechat Subscriber
 #wechat_subscriber:
