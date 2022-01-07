@@ -3,37 +3,13 @@ layout: post
 title:  "[ Kata Containers ] 1 Kata Containers 架构"
 date:   2021-04-06
 excerpt: "Kata Containers 1.x 与 2.x 架构概述"
-project: true
 tag:
 - Cloud Native
 - Kubernetes
 - Kata Containers
 - Container Runtime
-comments: false
+categories: Kata Containers
 ---
-
-* [Overview](#overview)
-* [Glossary](#glossary)
-   * [Guest](#guest)
-      * [Kernel](#kernel)
-      * [Image](#image)
-   * [osbuilder](#osbuilder)
-      * [Rootfs](#rootfs)
-      * [Initrd](#initrd)
-   * [Virtualization](#virtualization)
-      * [Qemu](#qemu)
-      * [Virtio](#virtio)
-      * [Vhost](#vhost)
-      * [Vhost-user](#vhost-user)
-      * [Virtio-fs](#virtio-fs)
-      * [VSOCK](#vsock)
-      * [Networking](#networking)
-   * [Kata-Runtime (v1)](#kata-runtime-v1)
-   * [Kata-Agent (v1 &amp; v2)](#kata-agent-v1--v2)
-   * [Kata-Proxy (v1)](#kata-proxy-v1)
-   * [Kata-Shim (v1)](#kata-shim-v1)
-   * [Containerd-Shim-Kata-V2 (v1 &amp; v2)](#containerd-shim-kata-v2-v1--v2)
-* [Archiecture](#archiecture)
 
 # Overview
 
