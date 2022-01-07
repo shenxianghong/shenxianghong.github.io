@@ -2,49 +2,17 @@
 layout: post
 title:  "[ Kata Containers ] 2 源码编译"
 date:   2021-04-15
-excerpt: "源码编译 Kata Containers 流程"
-project: true
+excerpt: "源码编译 Kata Containers 流程，包括 Kata 组件、虚拟化组件、Kenerl 相关等。Kata Containers 目前在 Centos8 支持 rpm 安装，除此之外还支持 snap，kata-manager 等多种安装方式，源码编译仅做记录与流程参考。"
+photos:
+- https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg
 tag:
 - Cloud Native
 - Kubernetes
 - Kata Containers
 - Container Runtime
-comments: false
+categories:
+- Kata Containers
 ---
-
-* [环境要求](#环境要求)
-* [Kata 组件编译](#kata-组件编译)
-   * [版本依赖](#版本依赖)
-   * [rust 安装（可选）](#rust-安装可选)
-   * [编译组件](#编译组件)
-* [其余组件编译](#其余组件编译)
-   * [构建引导镜像](#构建引导镜像)
-      * [构建 rootfs 镜像](#构建-rootfs-镜像)
-         * [构建 osbuilder](#构建-osbuilder)
-         * [构建镜像](#构建镜像)
-         * [安装镜像](#安装镜像)
-      * [构建 initrd 镜像](#构建-initrd-镜像)
-         * [构建 osbuilder](#构建-osbuilder-1)
-         * [构建镜像](#构建镜像-1)
-         * [安装镜像](#安装镜像-1)
-      * [配置引导镜像](#配置引导镜像)
-   * [编译 Kata 容器内核](#编译-kata-容器内核)
-      * [安装依赖](#安装依赖)
-      * [配置准备](#配置准备)
-      * [编译内核](#编译内核)
-      * [安装内核](#安装内核)
-   * [Qemu 编译](#qemu-编译)
-      * [依赖安装](#依赖安装)
-      * [代码准备](#代码准备)
-      * [编译 Qemu](#编译-qemu)
-   * [编译 UEFI 启动文件](#编译-uefi-启动文件)
-* [自定义配置](#自定义配置)
-* [检查工作](#检查工作)
-   * [check](#check)
-   * [Env](#env)
-* [FAQ](#faq)
-
-Kata Containers 目前在 centos8 支持 yum 直接安装，除此之外还支持 snap，kata-manager 等多种安装方式，源码编译仅做记录与流程参考。
 
 # 环境要求
 
