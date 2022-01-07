@@ -1,14 +1,16 @@
 ---
 layout: post
-title:  "[ Kata Containers ] 1 Kata Containers 架构"
+title:  "[ Kata Containers ] 1 架构概述"
 date:   2021-04-06
 excerpt: "Kata Containers 1.x 与 2.x 架构概述"
+photos:
+- https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg
 tag:
 - Cloud Native
 - Kubernetes
 - Kata Containers
 - Container Runtime
-categories: Kata Containers
+categories: KataContainers
 ---
 
 # Overview
