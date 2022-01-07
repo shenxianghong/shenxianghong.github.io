@@ -3,8 +3,6 @@ layout: post
 title: "[ Kata Containers ] 1 架构与组件概述"
 date: 2021-04-06
 excerpt: "Kata Containers 1.x 与 2.x 版本差异对比、术语名词、整体架构与组件功能概述"
-photos:
-- https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg
 tag:
 - Cloud Native
 - Kubernetes
@@ -13,6 +11,8 @@ tag:
 categories:
 - Kata Containers
 ---
+
+![](https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg)
 
 # Overview
 

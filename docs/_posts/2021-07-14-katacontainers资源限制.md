@@ -3,8 +3,6 @@ layout: post
 title:  "[ Kata Containers ] 4 资源限制"
 date:   2021-07-14
 excerpt: "Kata Containers 在 K8s 中资源限制问题"
-photos:
-- https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg
 tag:
 - Cloud Native
 - Kubernetes
@@ -13,6 +11,8 @@ tag:
 categories:
 - Kata Containers
 ---
+
+![](https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg)
 
 # Overhead
 

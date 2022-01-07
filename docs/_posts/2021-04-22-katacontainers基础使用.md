@@ -3,8 +3,6 @@ layout: post
 title:  "[ Kata Containers ] 3 基础使用"
 date:   2021-04-22
 excerpt: "OCI 和 CRI 介绍以及 Kata Containers 在 Kubernetes 的基础使用示例"
-photos:
-- https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg
 tag:
 - Cloud Native
 - Kubernetes
@@ -14,21 +12,7 @@ categories:
 - Kata Containers
 ---
 
-* [Overview](#overview)
-* [High-Level Runtime &amp; Low-Level Runtime](#high-level-runtime--low-level-runtime)
-   * [OCI](#oci)
-   * [CRI](#cri)
-* [CRI Configuration](#cri-configuration)
-   * [Containerd](#containerd)
-      * [Chain](#chain)
-      * [Configuration](#configuration)
-         * [Basic](#basic)
-         * [Custom](#custom)
-      * [CRI-O](#cri-o)
-* [RuntimeClass](#runtimeclass)
-   * [handler](#handler)
-   * [schedule](#schedule)
-   * [Overhead](#overhead)
+![](https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg)
 
 # Overview
 
