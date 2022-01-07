@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "[ Elegant Code ]   Golang Web Server 代码结构"
+title:  "「 Elegant Code 」 Golang Web Server 代码结构"
 date:   2021-12-01
 excerpt: "记一次在 Kubewebhook 中学到的 web 代码结构"
 tag:

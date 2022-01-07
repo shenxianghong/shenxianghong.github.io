@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "[ Kata Containers ]   2 源码编译"
+title:  "「 Kata Containers 」 2 源码编译"
 date:   2021-04-15
 excerpt: "使用源码编译 Kata Containers 的参考流程，包括 Kata 组件、虚拟化组件、Kenerl 相关等"
 tag:
