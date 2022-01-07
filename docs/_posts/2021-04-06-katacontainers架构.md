@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "[ Kata Containers ] 1 架构概述"
+title:  "[ Kata Containers ] 1 架构与组件概述"
 date:   2021-04-06
-excerpt: "Kata Containers 1.x 与 2.x 架构概述"
+excerpt: "Kata Containers 1.x 与 2.x 版本差异对比、整体架构与组件功能概述"
 photos:
 - https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg
 tag:
@@ -47,6 +47,8 @@ rootfs 的构建过程中至少需要两个必要组件：
 - 类似于 systemd 用于在 VM 中启动 Kata Agent 的 **init** 进程，位于 /sbin/init
 
 所以在以 rootfs 作为镜像引导的 Guest OS 中是可以看到完整的进程关系大致为：
+
+![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/rootfs.png)
 
 <figure>
 	<a href="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/rootfs.png"><img src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/rootfs.png"></a>
