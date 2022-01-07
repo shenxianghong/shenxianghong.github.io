@@ -2,7 +2,7 @@
 layout: post
 title:  "[ Kata Containers ] 2 源码编译"
 date:   2021-04-15
-excerpt: "源码编译 Kata Containers 流程，包括 Kata 组件、虚拟化组件、Kenerl 相关等。Kata Containers 目前在 Centos8 支持 rpm 安装，除此之外还支持 snap，kata-manager 等多种安装方式，源码编译仅做记录与流程参考。"
+excerpt: "使用 Kata Containers 源码编译流程，包括 Kata 组件、虚拟化组件、Kenerl 相关等。Kata Containers 目前在 Centos8 支持 rpm 安装，除此之外还支持 snap，kata-manager 等多种安装方式，源码编译仅做记录与流程参考"
 photos:
 - https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg
 tag:

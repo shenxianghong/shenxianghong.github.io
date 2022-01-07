@@ -2,14 +2,16 @@
 layout: post
 title:  "[ Kata Containers ] 3 基础使用"
 date:   2021-04-22
-excerpt: "Kata Containers 在 Kubernetes 中的定位与使用"
-project: true
+excerpt: "OCI 和 CRI 介绍以及 Kata Containers 在 Kubernetes 的基础使用示例"
+photos:
+- https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg
 tag:
 - Cloud Native
 - Kubernetes
 - Kata Containers
 - Container Runtime
-comments: false
+categories:
+- Kata Containers
 ---
 
 * [Overview](#overview)
@@ -30,15 +32,12 @@ comments: false
 
 # Overview
 
-<figure>
-	<a href="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/with-kubernetes.png"><img src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/with-kubernetes.png"></a>
-</figure>
+![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/with-kubernetes.png)
 
 # High-Level Runtime & Low-Level Runtime
 
-<figure>
-	<a href="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/CRIs.png"><img src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/CRIs.png"></a>
-</figure>
+![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/CRIs.png)
+
 
 docker 中的 containerd 和单独的 containerd 项目等价，但是 docker 中的 containerd 组件会禁用其作为 CRI 的功能，这部分功能由 kubelet docker-shim 完成。
 
@@ -171,9 +170,8 @@ service ImageService {
 | container pause   | unsupport  | unsupport |
 | container restart | unsupport  | unsupport |
 
-<figure>
-	<a href="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/oci-runtime.png"><img src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/oci-runtime.png"></a>
-</figure>
+![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/oci-runtime.png)
+
 
 - High-Level Runtime 和 Low-Level Runtime 在交互的时候使用的就是 shim 类的组件，如 Containerd 或者 docker 中的 containerd-shim，cri-o 中的 conmon
 - Low-Level Runtime **实现了 OCI 开放容器标准**，负责**容器的生命周期管理**
@@ -187,15 +185,11 @@ service ImageService {
 
 ### Chain
 
-<figure>
-	<a href="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/containerd-chain.png"><img src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/containerd-chain.png"></a>
-</figure>
+![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/containerd-chain.png)
 
 Containerd 在 1.0 及以前版本将 dockershim 和 docker daemon 替换为 cri-containerd + containerd，而在 1.1 版本直接将 cri-containerd 内置在 Containerd 中，简化为一个 CRI 插件。
 
-<figure>
-	<a href="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/containerd-chain-detail.png"><img src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/containerd-chain-detail.png"></a>
-</figure>
+![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/containerd-chain-detail.png)
 
 Containerd 内置的 CRI 插件实现了 Kubelet CRI 接口中的 Image Service 和 Runtime Service，通过内部接口管理镜像和容器环境，并通过 CNI 插件给 Pod 配置网络。
 

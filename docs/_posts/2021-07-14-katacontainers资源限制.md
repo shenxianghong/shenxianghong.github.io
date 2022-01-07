@@ -3,25 +3,16 @@ layout: post
 title:  "[ Kata Containers ] 4 资源限制"
 date:   2021-07-14
 excerpt: "Kata Containers 在 K8s 中资源限制问题"
-project: true
+photos:
+- https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg
 tag:
 - Cloud Native
 - Kubernetes
 - Kata Containers
 - Container Runtime
-comments: false
+categories:
+- Kata Containers
 ---
-
-* [Overhead](#overhead)
-* [Pod QoS](#pod-qos)
-* [Kata VM](#kata-vm)
-* [Cgroup](#cgroup)
-   * [Resource](#resource)
-   * [Task](#task)
-* [Example](#example)
-* [Overhead.Podfixed](#overheadpodfixed)
-   * [Overhead.Podfixed == Kata Config](#overheadpodfixed--kata-config)
-   * [Overhead.Podfixed &lt;&lt; Kata Config](#overheadpodfixed--kata-config-1)
 
 # Overhead
 
@@ -337,13 +328,13 @@ PID   USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
 
 Kubernetes 新增了 Kata Containers 作为底层 runtime 后，对于 runtime 运行环境的额外开销不容忽视，但是 K8s 角度又无法感知到这部分资源，而 overhead 的设计就弥补了这一缺陷，并且 overhead 对于资源的额外声明，是会统计在 Cgroup 中的，所以即使底层 Kata Containers 的配置即使很高，也可以通过 limit 实现资源限额，这是因为 Kata 对于资源并不是完全占用，不同的 Kata VM 之间会存在资源抢占现象。
 
-## Overhead.Podfixed == Kata Config
+## Overhead.Podfixed 等于 Kata Config
 
 两者相等的情况，Kata VM 的资源大小就是 VM 可以用到的资源大小。
 
 但是默认的 1C 2G 在大多数场景下过于浪费，在 Kata Containers 和 runC 的比较下来看，资源大小难以统一管理。
 
-## Overhead.Podfixed << Kata Config
+## Overhead.Podfixed 小于 Kata Config
 
 在 overhead 远小于 Kata Config 的时候，可以根据 Pod request 的值动态的调整 overhead 的大小，也就是随着业务负载请求资源的变大，可以理解成需要 Kata VM，OS，Kernel 做更多的工作来满足服务开销。
 
