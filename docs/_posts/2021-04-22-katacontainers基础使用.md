@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "[ Kata Containers ] 3. With Kubernetes"
+title:  "[ Kata Containers ] 3 基础使用"
 date:   2021-04-22
-excerpt: "Kata Containers 与 Kubernetes 集成的基础用法"
+excerpt: "Kata Containers 在 Kubernetes 中的定位与使用"
 project: true
 tag:
 - Cloud Native

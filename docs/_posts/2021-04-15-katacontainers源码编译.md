@@ -1,8 +1,8 @@
 ---
 layout: post
-title:  "[ Kata Containers ] 2. Build from source"
+title:  "[ Kata Containers ] 2 源码编译"
 date:   2021-04-15
-excerpt: "Kata Containers 源码编译"
+excerpt: "源码编译 Kata Containers 流程"
 project: true
 tag:
 - Cloud Native

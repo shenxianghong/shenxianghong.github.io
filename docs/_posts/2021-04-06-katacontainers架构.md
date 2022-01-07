@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "[ Kata Containers ] 1. Architecture"
+title:  "[ Kata Containers ] 1 Kata Containers 架构"
 date:   2021-04-06
 excerpt: "Kata Containers 1.x 与 2.x 架构概述"
 project: true
