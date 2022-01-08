@@ -2,7 +2,7 @@
 layout: post
 title:  "「 Rust 」 1.4 Cargo"
 date:   2022-01-08
-excerpt: "Rust 简介、安装与简单示例"
+excerpt: "Rust 包管理工具 Cargo 的介绍与使用"
 tag:
 - Rust
 categories:
