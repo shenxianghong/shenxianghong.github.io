@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "「 Rust 」 1.4 Cargo"
-date:   2022-01-02
+date:   2022-01-08
 excerpt: "Rust 简介、安装与简单示例"
 tag:
 - Rust
