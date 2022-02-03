@@ -118,15 +118,13 @@ $ kata-runtime -version
   ``OCI specs: 1.0.1-dev
 ```
 
-# 其余组件编译
-
-## 构建引导镜像
+# 构建引导镜像
 
 镜像的构建采用官方提供的脚本，构建过程可以借助于 docker，要确保 docker 服务正在运行并且 docker runtime 是 runC。
 
-### 构建 rootfs 镜像
+## 构建 rootfs 镜像
 
-#### 构建 osbuilder
+### 构建 osbuilder
 
 支持的 distro 有 alpine，centos，clearlinux，debian，euleros，fedora，suse，ubuntu
 
@@ -151,7 +149,7 @@ centos-rootfs-osbuilder      latest    18bdd0cb48ea   17 minutes ago   2.1GB
 registry.centos.org/centos   7         a1bb412b2847   5 months ago     202MB
 ```
 
-#### 构建镜像
+### 构建镜像
 
 ```shell
 $ cd $GOPATH/src/github.com/kata-containers/kata-containers/tools/osbuilder/image-builder
@@ -176,7 +174,7 @@ registry.fedoraproject.org/fedora   latest    5f05951e2065   12 days ago      18
 registry.centos.org/centos          7         a1bb412b2847   5 months ago     202MB
 ```
 
-#### 安装镜像
+### 安装镜像
 
 ```shell
 $ commit=$(git log --format=%h -1 HEAD)
@@ -190,9 +188,9 @@ $ ll /usr/share/kata-containers/
 lrwxrwxrwx 1 root root        58 May  7 10:57 kata-containers.img -> kata-containers-2021-05-07-10:57:42.903708982+0800-3e81373
 ```
 
-### 构建 initrd 镜像
+## 构建 initrd 镜像
 
-#### 构建 osbuilder
+### 构建 osbuilder
 
 支持的 distro 有 alpine，centos，clearlinux，euleros，fedora；
 AGENT_INIT 参数表示是否使用 kata-agent 作为 guest kernel 的 init 进程，**创建 initrd 镜像时，AGENT_INIT 必须为 yes**
@@ -219,7 +217,7 @@ centos-rootfs-osbuilder      latest    5f323e966873   22 minutes ago   2.1GB
 registry.centos.org/centos   7         a1bb412b2847   5 months ago     202MB
 ```
 
-#### 构建镜像
+### 构建镜像
 
 ```shell
 $ cd $GOPATH/src/github.com/kata-containers/kata-containers/tools/osbuilder/initrd-builder
@@ -237,7 +235,7 @@ centos-rootfs-osbuilder      latest    5f323e966873   22 minutes ago   2.1GB
 registry.centos.org/centos   7         a1bb412b2847   5 months ago     202MB
 ```
 
-#### 安装镜像
+### 安装镜像
 
 ```shell
 $ commit=$(git log --format=%h -1 HEAD)
@@ -251,7 +249,7 @@ $ ll /usr/share/kata-containers/
 lrwxrwxrwx 1 root root        65 May  7 12:19 kata-containers-initrd.img -> kata-containers-initrd-2021-05-07-12:18:52.216347708+0800-3e81373
 ```
 
-### 配置引导镜像
+## 配置引导镜像
 
 Kata Containers 必须要指定系统引导镜像，可选有 initrd（10MB+）和 rootfs（100MB+）
 
@@ -267,15 +265,15 @@ image = "/usr/share/kata-containers/kata-containers.img"
 machine_type = "pc"
 ```
 
-## 编译 Kata 容器内核
+# 编译 Kata 容器内核
 
-### 安装依赖
+## 安装依赖
 
 ```shell
 $ yum -y install flex bison bc elfutils-libelf-devel patch
 ```
 
-### 配置准备
+## 配置准备
 
 生成的配置文件位于 $GOPATH/src/github.com/kata-containers/kata-containers/tools/packaging/kernel/configs/fragments/x86_64/.config
 
@@ -292,7 +290,7 @@ INFO: Kernel version: 5.10.25
 Kernel source ready: /root/go/src/github.com/kata-containers/kata-containers/tools/packaging/kernel/kata-linux-5.10.25-85
 ```
 
-### 编译内核
+## 编译内核
 
 *如果 gcc 版本低于 4.9，则要升级，升级方法仅供参考*
 
@@ -318,7 +316,7 @@ $ ./build-kernel.sh build
 Kernel: arch/x86/boot/bzImage is ready  (#1)
 ```
 
-### 安装内核
+## 安装内核
 
 ```shell
 $ ./build-kernel.sh install
@@ -335,11 +333,11 @@ lrwxrwxrwx 1 root root 18 May  7 09:39 /usr/share/kata-containers/vmlinux.contai
 lrwxrwxrwx 1 root root 18 May  7 09:39 /usr/share/kata-containers/vmlinuz.container -> vmlinuz-5.10.25-84
 ```
 
-## Qemu 编译
+# Qemu 编译
 
 按照[版本说明](https://github.com/kata-containers/kata-containers/blob/main/versions.yaml)中关于 QEMU 的版本信息，Kata Containers 2.1 版本采用 QEMU 5.2.0 版本。Kata Containers 社区基于上游 QEMU 代码进行了定制化 patch，补丁位于 https://github.com/kata-containers/kata-containers/tree/main/tools/packaging/qemu/patches。
 
-### 依赖安装
+## 依赖安装
 
 配置 ceph 源（非必须）
 
@@ -380,14 +378,14 @@ $ yum -y install bc python3 libseccomp-devel libcap-ng-devel glib2-devel librbd-
 apt-get install -y librbd-dev libcap-ng-dev libattr1-dev
 ```
 
-### 代码准备
+## 代码准备
 
 ```shell
 $ wget https://download.qemu.org/qemu-5.2.0.tar.xz
 $ tar xvf qemu-5.2.0.tar.xz
 ```
 
-### 编译 Qemu
+## 编译 Qemu
 
 生成配置参数 kata.cfg，加载 patch 补丁
 
@@ -407,7 +405,7 @@ kata.cfg 示例
 --disable-sheepdog --disable-live-block-migration --disable-brlapi --disable-docs --disable-curses --disable-gtk --disable-opengl --disable-sdl --disable-spice --disable-vte --disable-vnc --disable-vnc-jpeg --disable-vnc-png --disable-vnc-sasl --disable-auth-pam --disable-fdt --disable-glusterfs --disable-libiscsi --disable-libnfs --disable-libssh --disable-bzip2 --disable-lzo --disable-snappy --disable-tpm --disable-slirp --disable-libusb --disable-usb-redir --disable-tcg --disable-debug-tcg --disable-tcg-interpreter --disable-qom-cast-debug --disable-tcmalloc --disable-curl --disable-rdma --disable-tools --disable-bsd-user --disable-linux-user --disable-sparse --disable-vde --disable-xfsctl --disable-libxml2 --disable-nettle --disable-xen --disable-linux-aio --disable-capstone --disable-virglrenderer --disable-replication --disable-smartcard --disable-guest-agent --disable-guest-agent-msi --disable-vvfat --disable-vdi --disable-qed --disable-qcow1 --disable-bochs --disable-cloop --disable-dmg --disable-parallels --enable-kvm --enable-vhost-net --enable-rbd --enable-virtfs --enable-attr --enable-cap-ng --enable-seccomp --enable-avx2 --enable-avx512f --enable-libpmem --enable-malloc-trim --target-list=x86_64-softmmu --extra-cflags=" -O3 -falign-functions=32 -D_FORTIFY_SOURCE=2 -fPIE" --extra-ldflags=" -pie -z noexecstack -z relro -z now" --prefix=/usr --libdir=/usr/lib/kata-qemu --libexecdir=/usr/libexec/kata-qemu --datadir=/usr/share/kata-qemu
 ```
 
-## 编译 UEFI 启动文件
+# 编译 UEFI 启动文件
 
 *本步骤仅在 ARM 环境上，做设备热插拔情况下需要*
 
