@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "「 Velero 」 5.4 源码走读 — 其他"
+title: "「 Velero 」 5.4 源码走读 — Request 和 GC"
 date: 2022-02-05
 excerpt: "Velero 中与 DownloadRequest、ServerStatusRequest、GC 相关的源码走读"
 tag:
