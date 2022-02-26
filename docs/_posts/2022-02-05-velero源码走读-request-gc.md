@@ -21,14 +21,14 @@ categories:
 
 代表着要从 BackupStorageLocation 中下载的文件，映射关系如下
 
-| DownloadTargetKind    | BackupStorageLocation 中的文件（*backup* 代表备份名称） |
-| --------------------- | ------------------------------------------------------- |
-| BackupLog             | backups/*backup*/*backup*-logs.gz                       |
-| BackupContents        | backups/*backup*/*backup*.tar.gz                        |
-| BackupVolumeSnapshots | backups/*backup*/*backup*-volumesnapshots.json.gz       |
-| BackupResourceList    | backups/*backup*/*backup*-resource-list.json.gz         |
-| RestoreLog            | restores/*restore*/restore-*restore*-logs.gz            |
-| RestoreResults        | restores/*restore*/restore-*restore*-results.gz         |
+| DownloadTargetKind    | BackupStorageLocation 中的文件                        |
+| --------------------- | ----------------------------------------------------- |
+| BackupLog             | backups/\<backup\>/\<backup\>-logs.gz                 |
+| BackupContents        | backups/\<backup\>/\<backup\>.tar.gz                  |
+| BackupVolumeSnapshots | backups/\<backup\>/\<backup\>-volumesnapshots.json.gz |
+| BackupResourceList    | backups/\<backup\>/\<backup\>-resource-list.json.gz   |
+| RestoreLog            | restores/\<restore\>/restore-\<restore\>-logs.gz      |
+| RestoreResults        | restores/\<restore\>/restore-\<restore\>-results.gz   |
 
 # ServerStatusRequest
 
