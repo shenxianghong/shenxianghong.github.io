@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "「 Velero 」 3 操作卷数据"
+title: "「 Velero 」 3 操作卷数据（Restic）"
 date: 2022-01-06
-excerpt: "借助 Restic 实现对容器卷数据的快速、安全和高效备份"
+excerpt: "借助 Restic 实现对容器卷数据的快速、安全和高效备份与恢复"
 tag:
 - Cloud Native
 - Kubernetes
