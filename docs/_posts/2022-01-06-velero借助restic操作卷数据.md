@@ -372,7 +372,7 @@ spec:
   volumeNamespace: default
 ```
 
-在 backend 中的存储方式如下：
+在 BackupStorageLocation 中的存储方式如下：
 
 **velero.io/aws**
 
