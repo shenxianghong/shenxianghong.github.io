@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "「 Velero 」 5.3 源码走读 — 恢复"
+title: "「 Velero 」 5.3 源码走读 — Restore"
 date: 2022-02-04
 excerpt: "Velero 中与 Restore 相关的源码走读"
 tag:
@@ -305,7 +305,7 @@ type backupInfo struct {
 
 工厂函数
 
-1. 注册 Generic Controller 中的 syncHandler
+1. 注册 Generic Controller 中的 syncHandler，并将 PodVolumeRestore、Pod 和 PVC 添加到 cacheSyncWaiters，等待同步完成
 2. 监听 PodVolumeRestore 资源的 Add 和 Update 事件，根据状态是 New 的 PodVolumeRestore 资源获取到相关联的 Pod，如果 Pod 运行在本节点，并且 Restic Init Container 处于 Running，则将 PodVolumeRestore 以 key（namespace/name） 的形式加入 Generic Controller 的 queue 中<br>*restic-wait 处于运行状态表示，该 Pod 正在等待 Restic 为其恢复卷数据*
 3. 监听 Pod 资源的 Add 和 Update 事件，针对运行在本节点，并且 Restic Init Container 处于 Running，获取到相关联的 PodVolumeRestore 资源，将状态是 New 的 PodVolumeRestore 以 key（namespace/name） 的形式加入 Generic Controller 的 queue 中
 

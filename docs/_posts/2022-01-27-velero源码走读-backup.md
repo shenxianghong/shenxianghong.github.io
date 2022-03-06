@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "「 Velero 」 5.2 源码走读 — 备份"
+title: "「 Velero 」 5.2 源码走读 — Backup"
 date: 2022-01-17
 excerpt: "Velero 中与 Backup 相关的源码走读"
 tag:
@@ -352,7 +352,7 @@ type Request struct {
 
 工厂函数
 
-1. 注册 Generic Controller 中的 syncHandler
+1. 注册 Generic Controller 中的 syncHandler，并将 PodVolumeBackup、Pod 和 PVC 添加到 cacheSyncWaiters，等待同步完成
 2. 监听 PodVolumeBackup 资源的 Add 和 Update 事件，将状态是空或者 New 并且位于当前节点的 PodVolumeBackup 资源以 key （namespace/name） 的形式加入 Generic Controller 的 queue 中<br>*PodVolumeBackup Controller 运行在 DaemonSet 形式的 Restic 服务中，挂载所在节点的 Pod 卷，因此 PodVolumeBackup 具有节点属性，PodVolumeBackup Controller 仅处理当前节点的 PodVolumeBackup 对象*
 
 ## processQueueItem
@@ -517,3 +517,35 @@ type Request struct {
 11. 设置 VolumeSnapshotContent 的 resourceVersion 等信息，并在集群中创建
 12. 删除孤儿 Backup，也就是在集群中存在，状态为 Completed，但是在 BackupStorageLocation 中不存在的 Backup
 13. 更新集群中该 BackupStorageLocation 的上次同步时间<br>*实际上步骤 4 获取 BackupStorageLocation 的 Backup 时可以作为同步操作*
+
+# GC Controller
+
+*<u>pkg/controller/gc_controller.go</u>*
+
+## NewGCController
+
+[NewGCController 源码](https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/gc_controller.go#L58)
+
+工厂函数
+
+1. 注册 Generic Controller 中的 syncHandler 和 resyncFunc
+2. 监听 Backup 资源的 Add 和 Update 事件，将 Backup 以 key（namespace/name）的形式加入 Generic Controller 的 queue 中
+
+## processQueueItem
+
+[processQueueItem 源码](https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/gc_controller.go#L104)
+
+注册在 Generic Controller 中 syncHandler 的实现
+
+1. 函数入参就是 Generic Controller 的 queue 中待处理的 Backup key，通过解析获取的 namespace 和 name 查询到集群中的 Backup 对象
+2. 仅处理已经过期的 Backup 对象
+3. 获取 Backup 所属的 BackupStorageLocation，判断其模式是否为 ReadWrite
+4. 获取集群中和该 Backup 相关的 DeleteBackupRequest 对象，如果其中存在状态为空、New 和 InProgress 的，则认为正在删除，本次不做处理；否则，构建一个 DeleteBackupRequest 对象，下发至集群中创建，后续由 BackupDeletion Controller 负责维护 
+
+## enqueueAllBackups
+
+[enqueueAllBackups 源码](https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/gc_controller.go#L90)
+
+注册在 Generic Controller 中 resyncFunc 的实现，周期为 1 小时
+
+1. 获取集群中所有的 Backup 对象，全量加入到 Generic Controller 的 queue 中

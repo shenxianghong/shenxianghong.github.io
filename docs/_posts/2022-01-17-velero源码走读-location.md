@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "「 Velero 」 5.1 源码走读 — location 与 repository"
+title: "「 Velero 」 5.1 源码走读 — Location"
 date: 2022-01-17
 excerpt: "Velero 中与 location 和 repository 相关的源码走读"
 tag:

@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "「 Velero 」 5.4 源码走读 — Request 和 GC"
+title: "「 Velero 」 5.4 源码走读 — Request"
 date: 2022-02-05
-excerpt: "Velero 中与 DownloadRequest、ServerStatusRequest、GC 相关的源码走读"
+excerpt: "Velero 中与 DownloadRequest 和 ServerStatusRequest 相关的源码走读"
 tag:
 - Cloud Native
 - Kubernetes
@@ -92,38 +92,6 @@ ServerStatusRequest 不支持通过命令行手动创建，而是在获取 Veler
 应用的场景包括
 
 - velero plugin get
-
-# GC Controller
-
-*<u>pkg/controller/gc_controller.go</u>*
-
-## NewGCController
-
-[NewGCController 源码](https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/gc_controller.go#L58)
-
-工厂函数
-
-1. 注册 Generic Controller 中的 syncHandler 和 resyncFunc
-2. 监听 Backup 资源的 Add 和 Update 事件，将 Backup 以 key（namespace/name）的形式加入 Generic Controller 的 queue 中
-
-## processQueueItem
-
-[processQueueItem 源码](https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/gc_controller.go#L104)
-
-注册在 Generic Controller 中 syncHandler 的实现
-
-1. 函数入参就是 Generic Controller 的 queue 中待处理的 Backup key，通过解析获取的 namespace 和 name 查询到集群中的 Backup 对象
-2. 仅处理已经过期的 Backup 对象
-3. 获取 Backup 所属的 BackupStorageLocation，判断其模式是否为 ReadWrite
-4. 获取集群中和该 Backup 相关的 DeleteBackupRequest 对象，如果其中存在状态为空、New 和 InProgress 的，则认为正在删除，本次不做处理；否则，构建一个 DeleteBackupRequest 对象，下发至集群中创建，后续由 BackupDeletion Controller 负责维护 
-
-## enqueueAllBackups
-
-[enqueueAllBackups 源码](https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/gc_controller.go#L90)
-
-注册在 Generic Controller 中 resyncFunc 的实现，周期为 1 小时
-
-1. 获取集群中所有的 Backup 对象，全量加入到 Generic Controller 的 queue 中
 
 
 
