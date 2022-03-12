@@ -228,7 +228,7 @@ type backupInfo struct {
 3. 如果 Velero 开启了 APIGroupVersions 特性，调用 [chooseAPIVersionsToRestore](https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/restore/prioritize_group_version.go#L46) 对多 API Group Versions 的资源选择一个要恢复的版本
 4. 生成 update 队列，用于记录 Restore 状态信息，同时启动一个 Goroutine 监听队列，每秒钟获取一次 update 队列中的进度并更新至集群的 Restore 中
 5. 首先恢复 CRD 资源，调用 **getOrderedResourceCollection** 先获取要恢复的 CRD 资源集合，调用 **processSelectedResource** 开始恢复
-6. 接下来调用 **getOrderedResourceCollection** 获取剩余待恢复资源的有序集合，并调用 **processSelectedResource** 恢复
+6. 接下来调用 **getOrderedResourceCollection** 获取剩余待恢复资源的有序集合，并调用 **processSelectedResource** 恢复<br>*内置的恢复顺序为：<br>1. customresourcedefinitions<br />2. namespaces<br />3. storageclasses<br />4. volumesnapshotclass.snapshot.storage.k8s.io<br />5. volumesnapshotcontents.snapshot.storage.k8s.io<br />6. volumesnapshots.snapshot.storage.k8s.io<br />7. persistentvolumes<br />8. persistentvolumeclaims<br />9. secrets<br />10. configmaps<br />11. serviceaccounts<br />12. limitranges<br />13. pods<br />14. replicasets.apps<br />15. clusters.cluster.x-k8s.io<br />16. clusterresourcesets.addons.cluster.x-k8s.io*
 7. 元数据恢复已经完成，更新集群中 Restore 的进度信息
 8. 等待 Restic 恢复所有的 Pod 卷数据<br>*PodVolumeRestore 的创建位于步骤 6 中*
 9. 等待 post restore exec hook 执行完毕

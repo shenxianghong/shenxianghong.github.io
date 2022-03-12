@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "「 Velero 」 5.6 源码走读 — ControlPlane"
+title: "「 Velero 」 5.6 源码走读 — Server"
 date: 2022-03-06
-excerpt: "Velero 中控制面相关的源码走读"
+excerpt: "Velero 中与 Server 等控制面相关的源码走读"
 tag:
 - Cloud Native
 - Kubernetes
@@ -55,4 +55,6 @@ Generic Controller 的核心逻辑
       - 如果处理成功，则在 queue 中移除（Forget）
       - 如果处理失败，则限制速率重新加入 queue 中（AddRateLimited）
 4. 每隔 resyncPeriod 执行一次 resyncFunc 逻辑<br>*resyncFunc 的处理不一定和 Key 相关，可以执行一些指标上报等操作，例如 Backup Controller 的 resyncFunc 实现*
+
+# Velero Server
 
