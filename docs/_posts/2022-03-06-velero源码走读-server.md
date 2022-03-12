@@ -58,3 +58,39 @@ Generic Controller 的核心逻辑
 
 # Velero Server
 
+*pkg/cmd/server/server.go*
+
+本质上是 velero cli 的 server 子命令，根据 install 以及更多的自定义参数，启动 Velero 服务。
+
+## newServer
+
+[newServer 源码](https://github.com/vmware-tanzu/velero/blob/3c49ec4fb4ff7f5aaa4ed56e8f7ff1a26f966d72/pkg/cmd/server/server.go#L246)
+
+工厂函数
+
+1. 设置 client 的 QPS 和 Burst，最终会作用在 KubeClient，VeleroClient 和 DynamicClient
+2. 初始化 KubeClient，VeleroClient 和 DynamicClient
+3. 初始化 PluginRegistry，发现注册在 /plugins 目录下的所有插件
+4. 如果 Velero 开启了 CSI 特性，则初始化 CSISnapshotClient
+5. 初始化 CredentialFileStore，用于操作 /tmp/credentials 目录下的认证文件信息
+6. 根据以上内容，构建 server 对象
+
+## run
+
+[run 源码](https://github.com/vmware-tanzu/velero/blob/3c49ec4fb4ff7f5aaa4ed56e8f7ff1a26f966d72/pkg/cmd/server/server.go#L352)
+
+server 运行的主体逻辑
+
+1. 如果配置了 profile 地址，则启动 pprof 服务
+2. 检查 Velero namespace 是否存在，如果不存在则报错
+3. 初始化 DiscoveryHelper，每 5 分钟刷新一次，获取可以备份的对象信息
+4. 检查 Velero 服务所需要的 CRD 是否存在，如果不存在则报错
+5. 检查 Restic 是否存在，如果不存在则输出 warning 信息，确保 restic 所需要的 secret 存在（即 velero-restic-credentials），初始化 RepositoryManager
+6. 调用 runControllers，启动所有的 Controller
+
+## runControllers
+
+[runControllers 源码](https://github.com/vmware-tanzu/velero/blob/3c49ec4fb4ff7f5aaa4ed56e8f7ff1a26f966d72/pkg/cmd/server/server.go#L566)
+
+
+
