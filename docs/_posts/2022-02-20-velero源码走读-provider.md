@@ -13,7 +13,7 @@ categories:
 
 ![](https://velero.io/img/Velero.svg)
 
-# StorageProvider
+# Storage Provider
 
 *<u>pkg/persistence/object_store.go</u>*
 
@@ -260,5 +260,5 @@ GetObject(\<bucket\>, \<prefix\>/backups/\<backup\>/\<backup\>.tar.gz)
 
 - DownloadRequest Controller 在处理 DownloadRequest 对象时，会通过该接口构建 DownloadURL，并回写至 DownloadRequest 对象中
 
-# SnapshotProvider
+# Snapshot Provider
 
