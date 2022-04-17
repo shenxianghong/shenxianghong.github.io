@@ -19,7 +19,7 @@ categories:
 
 *Velero 无该内置类型的 plugin，具体参考 [ velero-plugin-for-aws](https://github.com/vmware-tanzu/velero-plugin-for-aws)、[velero-plugin-for-microsoft-azure](https://github.com/vmware-tanzu/velero-plugin-for-microsoft-azure)、[ velero-plugin-for-gcp](https://github.com/vmware-tanzu/velero-plugin-for-gcp)。*
 
-ObjectStore 包含八个接口
+ObjectStore 包含以下接口
 
 - Init
 
@@ -39,21 +39,11 @@ ObjectStore 包含八个接口
 
 - ListCommonPrefixes
 
-  获取具有公共前缀的 key
-
-  ```
-  // For example, if the bucket contains the following keys:
-  //    a-prefix/foo-1/bar
-  //        a-prefix/foo-1/baz
-  //    a-prefix/foo-2/baz
-  //        some-other-prefix/foo-3/bar
-  // and the provided prefix arg is "a-prefix/", and the delimiter is "/",
-  // this will return the slice {"a-prefix/foo-1/", "a-prefix/foo-2/"}.
-  ```
+  获取满足给定公共前缀的所有 key
 
 - ListObjects
 
-  获取给定前缀的 key
+  获取满足给定前缀的所有 key
 
 - DeleteObject
 
@@ -69,7 +59,7 @@ ObjectStore 包含八个接口
 
 *Velero 无该内置类型的 plugin，具体参考 [ velero-plugin-for-aws](https://github.com/vmware-tanzu/velero-plugin-for-aws)、[velero-plugin-for-microsoft-azure](https://github.com/vmware-tanzu/velero-plugin-for-microsoft-azure)、[ velero-plugin-for-gcp](https://github.com/vmware-tanzu/velero-plugin-for-gcp)。*
 
-VolumeSnapshotter 包含七个接口
+VolumeSnapshotter 包含以下接口
 
 - Init
 
@@ -77,7 +67,9 @@ VolumeSnapshotter 包含七个接口
 
 - CreateVolumeFromSnapshot
 
-  根据指定的 zone、IOPS 信息从快照恢复卷
+  根据指定的 zone、IOPS 信息从快照恢复卷<br>
+
+  *Velero 创建卷的动作为同步处理，会一直等待，直至完成或者失败*
 
 - GetVolumeID
 
@@ -93,7 +85,7 @@ VolumeSnapshotter 包含七个接口
 
 - CreateSnapshot
 
-  对指定的卷创建快照
+  对指定的卷创建快照<br>*Velero 创建 PV 快照的动作为同步处理，会一直等待，直至完成或者失败*
 
 - DeleteSnapshot
 
@@ -105,7 +97,7 @@ VolumeSnapshotter 包含七个接口
 
 *Velero 无该内置类型的 plugin。*
 
-DeleteItemAction 包含两个接口
+DeleteItemAction 包含以下接口
 
 - AppliesTo
 
@@ -119,7 +111,7 @@ DeleteItemAction 包含两个接口
 
 *<u>pkg/plugin/velero/backup_item_action.go</u>*
 
-BackupItemAction 包含两个接口
+BackupItemAction 包含以下接口
 
 - AppliesTo
 
@@ -188,7 +180,7 @@ IncludedResources: customresourcedefinition.apiextensions.k8s.io
 
 *<u>pkg/plugin/velero/restore_item_action.go</u>*
 
-RestoreItemAction 包含两个接口
+RestoreItemAction 包含以下接口
 
 - AppliesTo
 

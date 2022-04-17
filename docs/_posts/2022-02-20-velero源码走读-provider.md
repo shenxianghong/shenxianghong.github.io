@@ -262,3 +262,43 @@ GetObject(\<bucket\>, \<prefix\>/backups/\<backup\>/\<backup\>.tar.gz)
 
 # Snapshot Provider
 
+*<u>pkg/backup/item_backupper.go</u>*<br>*<u>pkg/restore/pv_restorer.go</u>*
+
+Velero 并未像 Storage Provider 封装一些上层接口，而是将底层接口的调用简单封装了以下两个函数，用于备份和恢复时，对于 PV 类型的资源做的快照和恢复的操作。
+
+## takePVSnapshot
+
+**调用接口**
+
+- init(snapshotLocation.Spec.Config)
+- GetVolumeID(\<Unstructured PV\>)
+- GetVolumeInfo(\<volumeID\>, \<volumeZone\>)
+- CreateSnapshot(\<volumeID\>, \<volumeZone\>, \<tags\>)
+
+**主体逻辑**
+
+1. 判断 Backup 的 SnapshotVolumes 是否开启，如果开启则表示需要对卷做快照，继续执行以下逻辑
+2. 如果 PV 已经被认领，则需要判断是否被 Restic 已经备份（没有被认领的 PV 肯定不会被 Restic 备份），如果已经备份，则不会再次创建卷快照
+3. 通过 PV 的 label 获取 PV 的 zone 信息（topology.kubernetes.io/zone 或者 failure-domain.beta.kubernetes.io/zone）
+4. 针对 backup 中每一个 Snapshot Location，初始化一个 volumeSnapshotter，调用 GetVolumeID 尝试获取 VolumeID<br>*PV 卷肯定是由 Snapshot Provider 创建出来的，所以 GetVolumeID 肯定会有记录保存*
+5. 根据 Backup 的 label 创建 Tag，并追加 velero.io/backup=\<backupName\> 和 velero.io/pv=\<pvName\>
+6. 调用 GetVolumeInfo 接口，获取到卷信息，包括卷类型和 IOPS
+7. 根据以上信息构建 volumeSnapshot 对象，调用 CreateSnapshot 接口，创建快照
+8. 更新 volumeSnapshot 状态等信息
+
+## executePVAction
+
+**调用接口**
+
+- init(snapshotLocation.Spec.Config)
+- CreateVolumeFromSnapshot(\<snapshotID\>, \<volumeType\>, \<volumeZone\>,  \<volumeIOPS\>)
+- SetVolumeID(\<pv\>, \<VolumeID\>)
+
+**主体逻辑**
+
+1. 校验 PV 的合法性，判断名称是否存在
+2. 判断是否需要通过快照恢复卷，即 Backup 中是否指定了备份卷（backup.snapshotVolumes）以及 Restore 中是否指定了恢复卷（restore.restorePVs）
+3. 根据 PV 名称以及 Restore 相关信息获取 snapshot 对象
+4. 如果获取到 Snapshot 对象，则初始化 volumeSnapshotter
+5. 根据 snapshot 对象中的卷信息，如卷类型，zone，IOPS 等信息，调用 CreateVolumeFromSnapshot 创建卷，并获取 VolumeID 信息
+6. 调用 SetVolumeID，给 PV 设置 VolumeID，并返回 PV 的解构类型

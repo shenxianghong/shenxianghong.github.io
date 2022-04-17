@@ -317,7 +317,7 @@ type Request struct {
 4. 执行 pre hook 动作（只有类型是 Pod 的 资源才会真正的处理 pre hook），hook 作用的对象需要满足 BackupItemAction 中定义的 applyTo 接口的标签选择，hook command 的执行（即 execute 接口）是通过 K8s rest API exec 实现
 5. 针对类型是 Pod 的资源，在 spec.Volumes 中获取需要借助 Restic 备份的卷<br>*由于 PV 和 PVC 是 1 对 1，PVC 和 Pod 是 1 对 n 的关系，所以在这里通过跟踪 PVC 的备份情况即可判断卷是否被备份过，备份过的卷，会在相关的 tracker 中以 PVC 为 key 作记录*
 6. 调用 BackupItemAction 的 execute 接口，进行额外的操作，如更新资源等，此后的流程基于接口返回的对象继续操作，执行失败时，会执行 post hook 动作
-7. 针对类型是 PV 的资源，调用 [takePVSnapshot](https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/backup/item_backupper.go#L404)，忽略已经被 Restic 备份的 PV，初始化 SnapshotProvider，通过一系列的接口，完成卷快照的操作，并将快照信息记录在 request 的 VolumeSnapshots 中<br>*在 Velero 开启 CSI 特性时，需要额外加载一个 Plugin（https://github.com/vmware-tanzu/velero-plugin-for-csi），该 plugin 就是 SnapshotProvider 类型。因此在这步时，便会对 PV 做快照操作*
+7. 针对类型是 PV 的资源，调用 takePVSnapshot，忽略已经被 Restic 备份的 PV，初始化 SnapshotProvider，通过一系列的接口，完成卷快照的操作，并将快照信息记录在 request 的 VolumeSnapshots 中<br>*在 Velero 开启 CSI 特性时，需要额外加载一个 plugin（https://github.com/vmware-tanzu/velero-plugin-for-csi），该 plugin 就是 SnapshotProvider 类型。因此在这步时，便会对 PV 做快照操作*
 8. 针对类型是 Pod 的资源，调用 **BackupPodVolumes**，借助 Restic 能力实现对 Pod 卷数据的备份
 9. 执行 post hook 动作
 10. 在 resources 目录下写入备份的资源信息，资源会根据 kind、 namepace 等信息归类，文件内容为 item 的 runtime.Unstructured 形式，以 json 格式存储<br>*文件是上层调用传入的 Content 文件*
@@ -460,7 +460,7 @@ type Request struct {
 5. 至此，校验工作已经完成，将 DeleteBackupRequest 状态设置为 InProgress，并设置 velero.io/backup-name 和 velero.io/backup-uid 标签
 6. 设置 Backup 的状态为 Deleting
 7. 获取注册的 DeleteItemAction 插件，如果获取到了，则下载 BackupStorageLocation 中的 Content 文件，构建运行 DeleteItemAction 所需要环境变量信息，调用 **InvokeDeleteActions** 处理 DeleteItemAction 中定义的逻辑
-8. 调用 StorageProvider 的 GetBackupVolumeSnapshots 方法获取 BackupVolumeSnapshotsKey（也就是 backup-volumesnapshots.json.gz） 的内容，调用 SnapshotShotter 的 DeleteSnapshot 接口删除 PV 快照信息
+8. 调用 StorageProvider 的 GetBackupVolumeSnapshots 方法获取 BackupVolumeSnapshotsKey（也就是 backup-volumesnapshots.json.gz） 的内容，调用 SnapshotProvider 的 DeleteSnapshot 接口删除 PV 快照信息
 9. 获取到与 Backup 相关联的 PodVolumeBackup 信息，进而获取到 Restic 的 snapshots，执行 restic forget 删除快照<br>*创建备份的时候，会根据 Pod 卷创建 PodVolumeBackup 对象，并会设置 velero.io/backup-name 标签*
 10. 调用 StorageProvider 的 DeleteBackup 接口删除 BackupStorageLocation 中 Backup 所在的目录
 11. 如果 Velero 开启了 CSI 特性，那么也会删除与 Backup 相关联的 VolumeSnapshot 和 VolumeSnapshotContent 对象<br>*删除之前会将 VolumeSnapshotContent 回收策略置为 Delete*

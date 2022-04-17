@@ -283,7 +283,7 @@ type backupInfo struct {
      - 认领重名 PV 的 PVC 处于删除状态，等待直至超时
      - 认领重名 PV 的 PVC 所在命名空间不存在或者处于删除状态，等待直至超时
      - *默认超时时间为 10 分钟，未超时期间内会周期性判断，一旦超时则表示不应该被恢复*
-     如果 PV 应该被恢复，则重置之前的绑定信息，调用 SnapshotProvider 的一系列接口恢复卷数据信息，参考 [executePVAction](https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/restore/pv_restorer.go#L44)，并根据需要重命名 PV
+     如果 PV 应该被恢复，则重置之前的绑定信息，调用 SnapshotProvider 的一系列接口恢复卷数据信息，参考 executePVAction，并根据需要重命名 PV
    - 如果要恢复的 PV 的卷数据是由 Restic 负责备份的（即 PodVolumeBackup annotation 信息中记录了 pv.Spec.ClaimRef.Name），则不会恢复，而是交给 StorageClass 重新动态供应
    - 如果要恢复的 PV 的回收策略为 Delete，则不会恢复，而是交给 StorageClass 重新动态供应
    - 如果并非以上任意场景，则不需要额外的特殊操作，重置绑定信息，进行后续流程直接恢复即可
