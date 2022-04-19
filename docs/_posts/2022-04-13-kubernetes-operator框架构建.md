@@ -165,6 +165,19 @@ $ kubebuilder create api --group android --version v1 --kind AnImage --controlle
 | --resource   | 是否不询问默认生成 resource，默认为 true                     |
 | --version    | 资源版本信息，如 v1，v1beta1                                 |
 
+最终的资源结构为
+
+```yaml
+apiVersion: android.huayun.io/v1
+kind: AnImage
+metadata:
+  name: animage-sample
+spec:
+  # TODO(user): Add fields here
+```
+
+make manifest 会在 ./config/crd/bases 下根据 API 声明信息生成 CRD 的基础模板，在 API 变动后需要更新。
+
 ## 生成 webhook
 
 TODO
@@ -238,13 +251,13 @@ $ tree
 15 directories, 44 files
 ```
 
-## 细微调整
+## Markers
 
-### api 目录
-
-参考了 Kubernetes，Velero 等开源项目风格，将 apis 目录移至 pkg 层级下。
+Kubebuilder 提供了众多 Markers，支持对 CRD 的校验，生成等操作，具体可以参考[官方文档](https://book.kubebuilder.io/reference/markers.html)。
 
 # Code Generator
+
+参考了 Kubernetes，Velero 等开源项目风格，将 apis 目录移至 pkg 层级下。
 
 ## 文件准备
 
