@@ -316,8 +316,23 @@ IncludedResources: persistentvolumeclaims, persistentvolumes
 
 **Execute**
 
-1. 获取集群中有关 StorageClass 映射关系的唯一的 ConfigMap 信息（即 ConfigMap label 中有 velero.io/plugin-config=velero.io/change-storage-class，如果不存在则不做映射关系），根据 PV 或 PVC 中的 StorageClassName 获得映射后的新 StorageClassName，更新 PV 或 PVC，并返回
+1. 获取集群中有关 StorageClass 映射关系的唯一的 ConfigMap 信息（即 ConfigMap label 中有 velero.io/plugin-config="" 和 velero.io/change-storage-class=RestoreItemAction，如果不存在则不做映射关系），根据 PV 或 PVC 中的 StorageClassName 获得映射后的新 StorageClassName，更新 PV 或 PVC，并返回
+
+   ```yaml
+   apiVersion: v1
+   kind: ConfigMap
+   metadata:
+     name: change-storage-class
+     namespace: velero
+     labels: 
+       velero.io/plugin-config: ""
+       velero.io/change-storage-class: RestoreItemAction
+   data:
+     ussvd-sc: local-sc
+   ```
+
 2. 无额外操作的对象
+
 3. skipRestore 为 false
 
 ## velero.io/role-bindings
@@ -372,7 +387,7 @@ IncludedResources: persistentvolumeclaims
 
 **Execute**
 
-1. 获取集群中有关 PVC NodeSelector 映射关系的唯一 ConfigMap 信息（即 ConfigMap label 中有 velero.io/plugin-config=velero.io/change-pvc-node-selector），根据 PVC annotation 中的 volume.kubernetes.io/selected-node 获得映射后的新 Node，如果存在映射关系，则认为新的 Node 存在；如果不存在映射关系，则判断旧 Node 是否存在，不存在则删除 volume.kubernetes.io/selected-node 信息，存在则设置 PVC annotation nodeSelector 为旧 Node。无论怎样，均更新 PVC，并返回
+1. 获取集群中有关 PVC NodeSelector 映射关系的唯一 ConfigMap 信息，根据 PVC annotation 中的 volume.kubernetes.io/selected-node 获得映射后的新 Node，如果存在映射关系，则认为新的 Node 存在；如果不存在映射关系，则判断旧 Node 是否存在，不存在则删除 volume.kubernetes.io/selected-node 信息，存在则设置 PVC annotation nodeSelector 为旧 Node。无论怎样，均更新 PVC，并返回
 2. 无额外操作的对象
 3. skipRestore 为 false
 
