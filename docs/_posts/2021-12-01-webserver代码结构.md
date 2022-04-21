@@ -10,7 +10,7 @@ categories:
 - Elegant Coding
 ---
 
-# Open-Source
+# Open Source
 
 https://github.com/slok/kubewebhook（Go framework to create Kubernetes mutating and validating webhooks.）。是一个用于创建 Kubernetes mutating 和 validating webhook 的 Golang 框架，其中提供了用于生产环境的[示例模板](https://github.com/slok/k8s-webhook-example)。
 

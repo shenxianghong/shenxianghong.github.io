@@ -42,6 +42,14 @@ func (e *Enum) Set(s string) error {
 	return errors.Errorf("invalid value: %q", s)
 }
 
+// Type returns a string representation of the Enum type.
+func (e *Enum) Type() string {
+	// we don't want the help text to display anything regarding
+	// the type because the usage text for the flag should capture
+	// the possible options.
+	return ""
+}
+
 // AllowedValues returns a slice of the flag's valid
 // values.
 func (e *Enum) AllowedValues() []string {
