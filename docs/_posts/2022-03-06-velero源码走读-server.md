@@ -13,6 +13,12 @@ categories:
 
 ![](https://velero.io/img/Velero.svg)
 
+# Config
+
+*<u>pkg/client/factory.go</u>*<br>*<u>pkg/client/config.go</u>*<br>*<u>pkg/cmd/velero/velero.go</u>*<br>
+
+Velero 的全局配置参数，比如 namespaces，features，cacert 和 colorized 等信息，是在初始化 velero 根 command 时，解析位于 host 的 \<HOME\>/.config/velero/config.json 的配置文件获取配置对象，初始化 factory 对象，将其透传给下级子 command 实现，由于 velero 服务的启动也是 velero 的子命令（即 velero server），因此实现了全局配置透传功能。
+
 # Generic Controller
 
 *<u>pkg/controller/generic_controller.go</u>*<br>*<u>pkg/controller/interface.go</u>*<br>*<u>internal/util/managercontroller/managercontroller.go</u>*
