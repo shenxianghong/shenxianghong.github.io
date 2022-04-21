@@ -1,22 +1,22 @@
 ---
 layout: post
-title:  "「 Elegant Code 」 Golang Web Server 代码结构"
+title:  "「 Elegant Coding 」 Golang Web Server 代码结构"
 date:   2021-12-01
 excerpt: "记一次在 Kubewebhook 中学到的 web 代码结构"
 tag:
 - Golang
-- Elegant Code
+- Elegant Coding
 categories:
-- Elegant Code
+- Elegant Coding
 ---
 
 # Open-Source
 
 https://github.com/slok/kubewebhook（Go framework to create Kubernetes mutating and validating webhooks.）。是一个用于创建 Kubernetes mutating 和 validating webhook 的 Golang 框架，其中提供了用于生产环境的[示例模板](https://github.com/slok/k8s-webhook-example)。
 
-# Demo
+# Sample
 
-https://github.com/shenxianghong/shenxianghong.github.io/tree/main/web-structure
+https://github.com/shenxianghong/shenxianghong.github.io/tree/main/elegant-code/web-structure
 
 # Structure
 
@@ -115,9 +115,10 @@ web 框架的上层对象，包括配置和根路由 handler 的生成等
 package web
 
 import (
+	"elegant-coding/handlers"
+
 	"errors"
 	"net/http"
-	"webstructure/handlers"
 )
 
 // 配置信息
@@ -180,9 +181,11 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"webstructure/handlers"
-	"webstructure/web"
+
+	"elegant-coding/handlers"
+	"elegant-coding/web"
 )
+
 
 func main() {
     // 根路由的 handler 函数
