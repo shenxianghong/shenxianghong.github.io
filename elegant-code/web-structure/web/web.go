@@ -1,9 +1,10 @@
 package web
 
 import (
+	"elegant-coding/handlers"
+
 	"errors"
 	"net/http"
-	"webstructure/handlers"
 )
 
 type Config struct {

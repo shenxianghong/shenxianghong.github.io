@@ -3,8 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"webstructure/handlers"
-	"webstructure/web"
+
+	"elegant-coding/handlers"
+	"elegant-coding/web"
 )
 
 func main() {
