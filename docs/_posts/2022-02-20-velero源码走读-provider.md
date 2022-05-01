@@ -11,7 +11,9 @@ categories:
 - Velero
 ---
 
-<img src="https://velero.io/img/Velero.svg" style="zoom:25%;" />
+<div align=center><img width="300" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+
+------
 
 # Storage Provider
 

@@ -11,7 +11,9 @@ categories:
 - Velero
 ---
 
-![](https://velero.io/img/Velero.svg)
+<div align=center><img width="300" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+
+------
 
 # 与 Restic 集成安装
 
