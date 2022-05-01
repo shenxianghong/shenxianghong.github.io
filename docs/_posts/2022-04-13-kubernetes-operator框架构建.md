@@ -11,7 +11,9 @@ categories:
 - Kubebuilder
 ---
 
-![](https://book.kubebuilder.io/logos/logo-single-line.png)
+<div align=center><img width="150" style="border: 0px" src="https://book.kubebuilder.io/logos/logo-single-line.png"></div>
+
+------
 
 # Overview
 
