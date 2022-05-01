@@ -11,7 +11,7 @@ categories:
 - Velero
 ---
 
-![](https://velero.io/img/Velero.svg)
+<img src="https://velero.io/img/Velero.svg" style="zoom:25%;" />
 
 # Storage Provider
 
