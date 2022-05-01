@@ -14,6 +14,8 @@ categories:
 
 <div align=center><img width="300" height="150" padding=0 border=0 src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
 
+------
+
 # Overview
 
 ![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/with-kubernetes.png)
