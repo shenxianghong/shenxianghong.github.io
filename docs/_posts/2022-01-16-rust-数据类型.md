@@ -9,7 +9,7 @@ categories:
 - Rust
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://www.rust-lang.org/static/images/rust-logo-blk.svg"></div>
+<div align=center><img width="150" style="border: 0px" src="https://www.rust-lang.org/static/images/rust-logo-blk.svg"></div>
 
 ------
 
