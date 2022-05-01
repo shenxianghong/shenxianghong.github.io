@@ -12,7 +12,9 @@ categories:
 - Kata Containers
 ---
 
-![](https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg)
+<div align=center><img width="300" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+
+------
 
 # 环境要求
 
