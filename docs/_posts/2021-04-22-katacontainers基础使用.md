@@ -6,8 +6,8 @@ excerpt: "Kata Containers 在 K8s 中的基础使用示例"
 tag:
 - Cloud Native
 - Kubernetes
-- Kata Containers
 - Container Runtime
+- Kata Containers
 categories:
 - Kata Containers
 ---

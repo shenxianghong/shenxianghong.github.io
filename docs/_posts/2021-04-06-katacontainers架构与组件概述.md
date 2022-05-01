@@ -6,8 +6,8 @@ excerpt: "Kata Containers 1.x 与 2.x 版本差异对比、整体架构与组件
 tag:
 - Cloud Native
 - Kubernetes
-- Kata Containers
 - Container Runtime
+- Kata Containers
 categories:
 - Kata Containers
 ---

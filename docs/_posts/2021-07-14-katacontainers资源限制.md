@@ -6,8 +6,8 @@ excerpt: "Kata Containers 在 K8s 中资源限制问题"
 tag:
 - Cloud Native
 - Kubernetes
-- Kata Containers
 - Container Runtime
+- Kata Containers
 categories:
 - Kata Containers
 ---

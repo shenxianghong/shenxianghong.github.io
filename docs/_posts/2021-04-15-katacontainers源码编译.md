@@ -6,8 +6,8 @@ excerpt: "使用源码编译 Kata Containers 的参考流程，包括 Kata 组�
 tag:
 - Cloud Native
 - Kubernetes
-- Kata Containers
 - Container Runtime
+- Kata Containers
 categories:
 - Kata Containers
 ---
