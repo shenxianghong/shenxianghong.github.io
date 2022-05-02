@@ -1,7 +1,7 @@
 ---
 layout: post
-title:  "「 Rust 」 1.4 Cargo"
-date:   2022-01-08
+title: "「 Rust 」 1.4 Cargo"
+date: 2022-01-08
 excerpt: "Rust 包管理工具 Cargo 的介绍与使用"
 tag:
 - Rust
