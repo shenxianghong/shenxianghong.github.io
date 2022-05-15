@@ -29,7 +29,7 @@ categories:
 | BackupContents        | backups/\<backup\>/\<backup\>.tar.gz                  |
 | BackupVolumeSnapshots | backups/\<backup\>/\<backup\>-volumesnapshots.json.gz |
 | BackupResourceList    | backups/\<backup\>/\<backup\>-resource-list.json.gz   |
-| RestoreLog            |                                                       |
+| RestoreLog            | restores/\<restore\>/\<restore\>-logs.gz              |
 | RestoreResults        | restores/\<restore\>/restore-\<restore\>-results.gz   |
 
 # ServerStatusRequest
