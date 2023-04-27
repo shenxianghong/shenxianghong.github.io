@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Velero 」 1 基础使用 - Hexo</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Hexo"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Hexo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Velero 概述与基础使用"><meta property="og:type" content="blog"><meta property="og:title" content="「 Velero 」 1 基础使用"><meta property="og:url" content="http://example.com/2021/06/07/2021-06-07-Velero%20%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"><meta property="og:site_name" content="Hexo"><meta property="og:description" content="Velero 概述与基础使用"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://velero.io/img/Velero.svg"><meta property="article:published_time" content="2021-06-06T16:00:00.000Z"><meta property="article:modified_time" content="2022-11-16T07:43:03.651Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Cloud Native"><meta property="article:tag" content="Velero"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://velero.io/img/Velero.svg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2021/06/07/2021-06-07-Velero%20%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"},"headline":"「 Velero 」 1 基础使用","image":[],"datePublished":"2021-06-06T16:00:00.000Z","dateModified":"2022-11-16T07:43:03.651Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"Hexo","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"Velero 概述与基础使用"}</script><link rel="canonical" href="http://example.com/2021/06/07/2021-06-07-Velero%20%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2021-06-06T16:00:00.000Z" title="2021/6/7 00:00:00">2021-06-07</time></span><span class="level-item">Updated&nbsp;<time dateTime="2022-11-16T07:43:03.651Z" title="2022/11/16 15:43:03">2022-11-16</time></span><span class="level-item"><a class="link-muted" href="/categories/Velero/">Velero</a></span><span class="level-item">34 minutes read (About 5133 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Velero 」 1 基础使用</h1><div class="content"><div align=center><img width="300" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v1.6.3</strong></p>
+</blockquote>
+<h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>Velero 可以提供备份和还原 Kubernetes 集群资源和持久卷的能力，可以在公有云或本地搭建的私有云环境安装 Velero，可以提供以下能力：</p>
+<ul>
+<li>备份集群数据，并在集群故障的情况下进行还原</li>
+<li>将集群资源迁移到其他集群</li>
+<li>将生产集群复制到开发和测试集群</li>
+</ul>
+<p>Velero 包含一个在集群上运行的服务器端和在本地运行的命令行客户端。</p>
+<p><a target="_blank" rel="noopener" href="https://velero.io/">Velero 官方文档</a></p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h2 id="install"><a href="#install" class="headerlink" title="install"></a>install</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero install</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–backup-location-config</td>
+<td>描述 BackupStorageLocation 的配置信息</td>
+</tr>
+<tr>
+<td>–bucket</td>
+<td>BackupStorageLocation 中 bucket 信息，参考对象存储中的概念<br><em>和 no-default-backup-location 必须存在其一</em></td>
+</tr>
+<tr>
+<td>–cacert</td>
+<td>连接 BackupStorageLocation 时所需要的 TLS 证书</td>
+</tr>
+<tr>
+<td>–crds-only</td>
+<td>仅生成 CRD 资源类别，默认为 false<br><em>主要用于已经安装 Velero 的集群升级 CRD</em></td>
+</tr>
+<tr>
+<td>–crds-version</td>
+<td>默认为 v1，指定 CRD 的 resource version</td>
+</tr>
+<tr>
+<td>–default-restic-prune-frequency</td>
+<td>对 Restic repo 执行 restic prune 的默认周期，默认为 1 周</td>
+</tr>
+<tr>
+<td>–default-volumes-to-restic</td>
+<td>全局参数，表示是否由 Restic 备份所有的 Pod 卷，默认为 false</td>
+</tr>
+<tr>
+<td>–dry-run</td>
+<td>生成资源，但是不会实际创建<br><em>通常会和 -o 参数一起使用，指定默认输出格式</em></td>
+</tr>
+<tr>
+<td>–image</td>
+<td>Velero 和 Restic Pod 的镜像，默认和 Velero binary 版本一致</td>
+</tr>
+<tr>
+<td>–label-columns</td>
+<td>在 table 样式下，自定义表格栏展示</td>
+</tr>
+<tr>
+<td>–no-default-backup-location</td>
+<td>表示是否创建默认的 BackupStorageLocation，默认为 false<br><em>和 provider &amp; bucket 必须存在其一</em></td>
+</tr>
+<tr>
+<td>–no-secret</td>
+<td>不为 BackupStorageLocation 生成认证 Secret<br><em>和 –secret-file 必须存在其一</em></td>
+</tr>
+<tr>
+<td>–output</td>
+<td>dry run，指定生成配置文件的格式，可选的有 table，json 和 yaml</td>
+</tr>
+<tr>
+<td>–plugins</td>
+<td>Velero plugin 的镜像</td>
+</tr>
+<tr>
+<td>–pod-annotations</td>
+<td>Velero 和 Restic Pod 中追加的注释信息</td>
+</tr>
+<tr>
+<td>–prefix</td>
+<td>BackupStorageLocation 中 prefix 信息，参考对象存储中的概念</td>
+</tr>
+<tr>
+<td>–provider</td>
+<td>指定 StorageProvider，例如 aws, gcp 等<br /><em>和 no-default-backup-location 必须存在其一</em></td>
+</tr>
+<tr>
+<td>–restic-pod-cpu-limit&#x2F;–restic-pod-cpu-request&#x2F;<br />–restic-pod-mem-limit&#x2F;–restic-pod-mem-request</td>
+<td>Restic Pod 的资源限制信息</td>
+</tr>
+<tr>
+<td>–restore-only</td>
+<td>是否以 Restore-Only 形式运行服务，即 Backup、Schedule 和 GC controller 都会被禁用，仅启动 Restore Controller<br><em>参数已经废弃，取而代之的是将 BackupStorageLocation 设为 ReadOnly</em></td>
+</tr>
+<tr>
+<td>–sa-annotations</td>
+<td>Velero 的 ServiceAccount 中追加的注释信息</td>
+</tr>
+<tr>
+<td>–secret-file</td>
+<td>BackupStorageLocation 所需要的认证文件<br><em>Velero 会将该文件以 Secret 形式创建，并挂载在 Velero 的 &#x2F;cloud&#x2F;credentials；和 –no-secret 必须存在其一</em></td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+<tr>
+<td>–snapshot-location-config</td>
+<td>描述 VolumeSnapshotLocation 的配置信息</td>
+</tr>
+<tr>
+<td>–use-restic</td>
+<td>是否同时创建 Restic 服务</td>
+</tr>
+<tr>
+<td>–use-volume-snapshots</td>
+<td>是否自动创建一个 SnapshotLocation，默认为 true</td>
+</tr>
+<tr>
+<td>–velero-pod-cpu-limit&#x2F;–velero-pod-cpu-request&#x2F;<br />–velero-pod-mem-limit&#x2F;–velero-pod-mem-request</td>
+<td>Velero Pod 的资源限制信息</td>
+</tr>
+<tr>
+<td>–wait</td>
+<td>阻塞直至 Velero deployment 是 Ready<br><em>手动退出等待可以 ctrl-c，并不会影响到安装流程</em></td>
+</tr>
+</tbody></table>
+<h2 id="uninstall"><a href="#uninstall" class="headerlink" title="uninstall"></a>uninstall</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero uninstall</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–force</td>
+<td>是否强制卸载，忽略确认信息，默认为 false</td>
+</tr>
+<tr>
+<td>–wait</td>
+<td>阻塞直至 Velero 被完全卸载<br/><em>手动退出等待可以 ctrl-c，并不会影响到卸载流程</em></td>
+</tr>
+</tbody></table>
+<h2 id="Customize"><a href="#Customize" class="headerlink" title="Customize"></a>Customize</h2><h3 id="Velero-Server"><a href="#Velero-Server" class="headerlink" title="Velero Server"></a>Velero Server</h3><p>以下参数均为 Velero 服务启动时的额外参数</p>
+<p><em>部分参数可以通过 install 指定，而其余参数只能通过定制化 Velero Deployment 的启动参数</em></p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–log-level</td>
+<td>日志级别，可选的有 debug、info、warn、error、fatal、panic 和 trace，默认为 Info<br><em>在安装 velero 服务时的全局参数 -v 代表时 velero 调用其他第三方库时透传下去的日志级别，而非 velero 本身的日志级别，第三方库采用的日志库通常为 klog 或者 glog 等，通过 -v 指定日志级别，高于该级别的日志不会输出，如 -v &#x3D; 5。 Velero 采用的日志库为 logrus，有 debug 、 info 、 warn 、 error 、 fatal 、 panic 和 trace，通过该参数指定，低于该级别的日志不会输出。</em></td>
+</tr>
+<tr>
+<td>–log-format</td>
+<td>日志格式，可选的有 text 和 json，默认为 text</td>
+</tr>
+<tr>
+<td>–plugin-dir</td>
+<td>Velero Plugins 的存放位置，默认为 &#x2F;plugins</td>
+</tr>
+<tr>
+<td>–metrics-address</td>
+<td>暴露至 Prometheus 的端口，默认为 8085</td>
+</tr>
+<tr>
+<td>–backup-sync-period</td>
+<td>备份同步的时间间隔，默认为 1 分钟，设置为 0 时表示禁用同步</td>
+</tr>
+<tr>
+<td>–restic-timeout</td>
+<td>Pod 卷备份与恢复的执行超时时间，默认为 240 分钟</td>
+</tr>
+<tr>
+<td>–restore-only</td>
+<td>是否以 Restore-Only 形式运行服务，即 Backup、Schedule 和 GC controller 都会被禁用，仅启动 Restore Controller <br/><em>参数已经废弃，取而代之的是将 BackupStorageLocation 设为 ReadOnly</em></td>
+</tr>
+<tr>
+<td>–disable-controllers</td>
+<td>禁止启动的 Controller，可选的有 Backup、BackupDeletion、BackupSync、DownloadRequest、GarbageCollection、ResticRepo、Restore、Schedule 和 ServerStatusRequest，默认不禁止</td>
+</tr>
+<tr>
+<td>–restore-resource-priorities</td>
+<td>期望的资源恢复顺序，任何不在列表中的资源都将在优先资源之后按字母顺序恢复，默认恢复顺序为<br />1. customresourcedefinitions<br />2. namespaces<br />3. storageclasses<br />4. volumesnapshotclass.snapshot.storage.k8s.io<br />5. volumesnapshotcontents.snapshot.storage.k8s.io<br />6. volumesnapshots.snapshot.storage.k8s.io<br />7. persistentvolumes<br />8. persistentvolumeclaims<br />9. secrets<br />10. configmaps<br />11. serviceaccounts<br />12. limitranges<br />13. pods<br />14. replicasets.apps<br />15. clusters.cluster.x-k8s.io<br />16. clusterresourcesets.addons.cluster.x-k8s.io</td>
+</tr>
+<tr>
+<td>–default-backup-storage-location</td>
+<td>默认的 BackupStorageLocation 名称，默认为 default<br /><em>参数已经废弃，取而代之的是将 BackupStorageLocation 的 –default 设置为 true</em></td>
+</tr>
+<tr>
+<td>–store-validation-frequency</td>
+<td>BackupStorageLocation 的检验时间间隔，默认为 1 分钟，设置为 0 时表示禁用校验</td>
+</tr>
+<tr>
+<td>–default-volume-snapshot-locations</td>
+<td>SnapshotProvider 的信息，例如 provider1:location-01,provider2:location-02</td>
+</tr>
+<tr>
+<td>–client-qps</td>
+<td>访问 Kubernetes API 的最大 QPS，默认为 20，如果为 0，则置为 5<br /><em>详情查看 client-go</em></td>
+</tr>
+<tr>
+<td>–client-burst</td>
+<td>访问 Kubernetes API 的最大突发请求量，默认为 30，如果为 0，则置为 10<br /><em>详情查看 client-go</em></td>
+</tr>
+<tr>
+<td>–profiler-address</td>
+<td>pprof 信息的地址，默认为 localhost:6060</td>
+</tr>
+<tr>
+<td>–terminating-resource-timeout</td>
+<td>恢复期间等待 PV 和 namespace 创建完成的超时时间，默认为 10 分钟</td>
+</tr>
+<tr>
+<td>–default-backup-ttl</td>
+<td>backup 的过期时间，默认为 30 天</td>
+</tr>
+<tr>
+<td>–default-restic-prune-frequency</td>
+<td>对 Restic repo 执行 restic prune 的周期，默认为 1 周</td>
+</tr>
+<tr>
+<td>–default-volumes-to-restic</td>
+<td>是否由 Restic 备份所有的 Pod 卷，默认为 false</td>
+</tr>
+</tbody></table>
+<h3 id="Restic-Server"><a href="#Restic-Server" class="headerlink" title="Restic Server"></a>Restic Server</h3><p>以下参数均为 Restic 服务启动时的额外参数</p>
+<p><em>由于 Restic 不存在安装命令，因此只能通过定制化 Restic DaemonSet 的启动参数</em></p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–log-level</td>
+<td>日志级别，可选的有 debug、info、warn、error、fatal、panic 和 trace，默认为 Info<br><em>在安装 velero 服务时的全局参数 -v 代表时 velero 调用其他第三方库时透传下去的日志级别，而非 velero 本身的日志级别，第三方库采用的日志库通常为 klog 或者 glog 等，通过 -v 指定日志级别，高于该级别的日志不会输出，如 -v &#x3D; 5。 Velero 采用的日志库为 logrus，有 debug 、 info 、 warn 、 error 、 fatal 、 panic 和 trace，通过该参数指定，低于该级别的日志不会输出。</em></td>
+</tr>
+<tr>
+<td>–log-format</td>
+<td>日志格式，可选的有 text 和 json，默认为 text</td>
+</tr>
+</tbody></table>
+<h1 id="仓库"><a href="#仓库" class="headerlink" title="仓库"></a>仓库</h1><h2 id="StorageProvider"><a href="#StorageProvider" class="headerlink" title="StorageProvider"></a>StorageProvider</h2><p>StorageProvider 用于存放备份过程中产生的元数据信息、由 Restic 备份的卷数据信息、备份和恢复的任务日志等，对应的资源对象为 BackupStorageLocation。</p>
+<h3 id="create"><a href="#create" class="headerlink" title="create"></a>create</h3><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/main/pkg/apis/velero/v1/backupstoragelocation_types.go">BackupStorageLocation API</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero backup-location create</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–access-mode</td>
+<td>访问权限，默认为 ReadWrite，可选值有 ReadWrite 和 ReadOnly</td>
+</tr>
+<tr>
+<td>–backup-sync-period</td>
+<td>备份同步的时间间隔，默认为 1 分钟，设置为 0 时表示禁用同步</td>
+</tr>
+<tr>
+<td>–bucket</td>
+<td>BackupStorageLocation 中 bucket 信息，参考对象存储中的概念</td>
+</tr>
+<tr>
+<td>–cacert</td>
+<td>连接 BackupStorageLocation 时所需要的 TLS 证书</td>
+</tr>
+<tr>
+<td>–config</td>
+<td>描述 BackupStorageLocation 配置信息</td>
+</tr>
+<tr>
+<td>–credential</td>
+<td>连接 BackupStorageLocation 所需要的认证信息<br><em>格式为 key-value，key 为 K8s secret 的名称，value 为 secret 中的 key，仅支持一对</em></td>
+</tr>
+<tr>
+<td>–default</td>
+<td>是否为默认的 BackupStorageLocation</td>
+</tr>
+<tr>
+<td>–label-columns</td>
+<td>在 table 样式下，自定义表格栏展示</td>
+</tr>
+<tr>
+<td>–labels</td>
+<td>设置创建出来的 BackupStorageLocation 对象的标签信息</td>
+</tr>
+<tr>
+<td>–output</td>
+<td>dry run，指定生成配置文件的格式，可选的有 table，json 和 yaml</td>
+</tr>
+<tr>
+<td>–prefix</td>
+<td>BackupStorageLocation 中 prefix 信息，参考对象存储中的概念</td>
+</tr>
+<tr>
+<td>–provider</td>
+<td>指定 StorageProvider，例如 aws, gcp 等</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+<tr>
+<td>–validation-frequency</td>
+<td>BackupStorageLocation 的检验时间间隔，默认为 1 分钟，设置为 0 时表示禁用校验</td>
+</tr>
+</tbody></table>
+<h3 id="delete"><a href="#delete" class="headerlink" title="delete"></a>delete</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero backup-location delete</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–all</td>
+<td>删除所有 BackupStorageLocation 对象</td>
+</tr>
+<tr>
+<td>–confirm</td>
+<td>确认删除交互</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>删除满足标签选择的所有 BackupStorageLocation 对象</td>
+</tr>
+</tbody></table>
+<p><em>name，–all 和 –selector 仅能指定一个</em></p>
+<h3 id="get"><a href="#get" class="headerlink" title="get"></a>get</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero backup-location get</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–default</td>
+<td>仅展示默认的 BackupStorageLocation</td>
+</tr>
+<tr>
+<td>–label-columns</td>
+<td>在 table 样式下，自定义表格栏展示</td>
+</tr>
+<tr>
+<td>–output</td>
+<td>格式化输出的样式，可选的有 table，json 和 yaml，默认为 table</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器展示符合要求的 BackupStorageLocation 对象</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+</tbody></table>
+<h3 id="set"><a href="#set" class="headerlink" title="set"></a>set</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero backup-location <span class="built_in">set</span></span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–cacert</td>
+<td>连接 BackupStorageLocation 时所需要的 TLS 证书</td>
+</tr>
+<tr>
+<td>–credential</td>
+<td>连接 BackupStorageLocation 所需要的认证信息<br><em>格式为 key-value，key 为 K8s secret 的名称，value 为 secret 中的 key，仅支持一对</em></td>
+</tr>
+<tr>
+<td>–default</td>
+<td>设置为默认的 BackupStorageLocation<br><em>默认的仅能有一个，其余的会被设置为 false</em></td>
+</tr>
+</tbody></table>
+<h2 id="SnapshotProvider"><a href="#SnapshotProvider" class="headerlink" title="SnapshotProvider"></a>SnapshotProvider</h2><p>SnapshotProvider 用于存放备份过程中的卷快照数据，数据源自于 SnapshotProvider Plugin。</p>
+<h3 id="create-1"><a href="#create-1" class="headerlink" title="create"></a>create</h3><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/main/pkg/apis/velero/v1/volume_snapshot_location.go">VolumeSnapshotLocation API</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero snapshot-location create</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–config</td>
+<td>描述 VolumeSnapshotLocation 的配置信息</td>
+</tr>
+<tr>
+<td>–label-columns</td>
+<td>在 table 样式下，用于自定义表格栏信息</td>
+</tr>
+<tr>
+<td>–labels</td>
+<td>设置创建出来的 VolumeSnapshotLocation 对象的标签信息</td>
+</tr>
+<tr>
+<td>–output</td>
+<td>格式化输出的样式，可选的有 table，json 和 yaml，默认为 table</td>
+</tr>
+<tr>
+<td>–provider</td>
+<td>指定 SnapshotProvider，例如 aws, gcp 等</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+</tbody></table>
+<h3 id="get-1"><a href="#get-1" class="headerlink" title="get"></a>get</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero snapshot-location get</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–label-columns</td>
+<td>在 table 样式下，自定义表格栏信息展示</td>
+</tr>
+<tr>
+<td>–output</td>
+<td>dry run，指定生成配置文件的格式，可选的有 table，json 和 yaml</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器获取符合要求的 VolumeSnapshotLocation 对象</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+</tbody></table>
+<h2 id="ResticRepository"><a href="#ResticRepository" class="headerlink" title="ResticRepository"></a>ResticRepository</h2><p>目前 Velero 仅支持 Restic AWS、AZURE 和 GCP 作为卷数据存储，数据的采集和传输均由 Velero Restic 操作，目标会上传至卷数据存储，对应的资源对象为 ResticRepository。</p>
+<h3 id="repo"><a href="#repo" class="headerlink" title="repo"></a>repo</h3><h4 id="get-2"><a href="#get-2" class="headerlink" title="get"></a>get</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero restic repo get</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–label-columns</td>
+<td>在 table 样式下，自定义表格栏信息展示</td>
+</tr>
+<tr>
+<td>–output</td>
+<td>dry run，指定生成配置文件的格式，可选的有 table，json 和 yaml</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器获取符合要求的 ResticRepository 对象</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+</tbody></table>
+<h1 id="插件"><a href="#插件" class="headerlink" title="插件"></a>插件</h1><h2 id="add"><a href="#add" class="headerlink" title="add"></a>add</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero plugin add</span>	</span><br></pre></td></tr></table></figure>
+
+<p><em>name 就是镜像地址</em></p>
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–image-pull-policy</td>
+<td>plugin 镜像的拉取策略，可选的有 Always，IfNotPresent 和 Never，默认为 IfNotPresent</td>
+</tr>
+</tbody></table>
+<h2 id="get-3"><a href="#get-3" class="headerlink" title="get"></a>get</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero plugin get</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–output</td>
+<td>格式化输出的样式，可选的有 table，json 和 yaml，默认为 table</td>
+</tr>
+<tr>
+<td>–timeout</td>
+<td>命令输出的超时时间，默认为 5 秒钟</td>
+</tr>
+</tbody></table>
+<h2 id="remove"><a href="#remove" class="headerlink" title="remove"></a>remove</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero plugin remove</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="备份"><a href="#备份" class="headerlink" title="备份"></a>备份</h1><h2 id="即时备份"><a href="#即时备份" class="headerlink" title="即时备份"></a>即时备份</h2><p>即时备份（on-demand）也就是单次的备份任务，对应的资源对象为 Backup。</p>
+<h3 id="create-2"><a href="#create-2" class="headerlink" title="create"></a>create</h3><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/release-1.6/pkg/apis/velero/v1/backup.go">Backup API</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero backup create &lt;name&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–default-volumes-to-restic</td>
+<td>默认为 true，即由 restic 备份所有的 Pod 卷<br /><em>如果不指定，则以全局的为主</em></td>
+</tr>
+<tr>
+<td>–include-namespaces &#x2F; –exclude-namespaces</td>
+<td>显式包含&#x2F;排除的命名空间，支持逗号分割</td>
+</tr>
+<tr>
+<td>–include-resources &#x2F; –exclude-resources</td>
+<td>显式包含&#x2F;排除的资源，支持逗号分割</td>
+</tr>
+<tr>
+<td>–from-schedule</td>
+<td>基于某一个定时备份创建一次即时备份<br /><em>指定此参数时，其他的 filter flag 均会失效，并以 Schedule 的模板为准；不指定备份名称时会以 schedule-timestamp 作为备份任务名称</em></td>
+</tr>
+<tr>
+<td>–include-cluster-resources</td>
+<td>是否备份集群级别的资源，默认为 true<br /><em>即使开启了此特性，如果并未备份全量 namespaces 的资源，仍然不会备份集群级别资源</em></td>
+</tr>
+<tr>
+<td>–label-columns</td>
+<td>在 table 样式下，用于自定义表格栏信息</td>
+</tr>
+<tr>
+<td>–labels</td>
+<td>设置创建出来的 Backup 对象的标签信息</td>
+</tr>
+<tr>
+<td>–ordered-resources</td>
+<td>指定备份的顺序<br /><em>集群级别的资源格式为 <code>resource name</code>，非集群级别的资源格式为 <code>namespace/resource name</code>，例如 pods&#x3D;ns1&#x2F;pod1,ns1&#x2F;pod2;persistentvolumeclaims&#x3D;ns1&#x2F;pvc4,ns1&#x2F;pvc8</em></td>
+</tr>
+<tr>
+<td>–output</td>
+<td>dry run，指定生成配置文件的格式，可选的有 table，json 和 yaml</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器备份符合要求的资源</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+<tr>
+<td>–snapshot-volumes</td>
+<td>默认为 true，即备份时，默认会对 PV 资源调用 SnapshotProvider 打快照</td>
+</tr>
+<tr>
+<td>–storage-location</td>
+<td>指定 BackupStorageLocation，仅支持单个</td>
+</tr>
+<tr>
+<td>–ttl</td>
+<td>过期时间，默认 720 小时</td>
+</tr>
+<tr>
+<td>–volume-snapshot-locations</td>
+<td>指定 VolumeSnapshotLocation，支持多个</td>
+</tr>
+<tr>
+<td>–wait</td>
+<td>阻塞直至备份状态不再是 New 或者 InProgress<br /><em>手动退出等待可以 ctrl-c，并不会影响到备份任务</em></td>
+</tr>
+</tbody></table>
+<h3 id="delete-1"><a href="#delete-1" class="headerlink" title="delete"></a>delete</h3><p>velero backup 的删除涉及到存储在远端数据的同步删除，因此并非单纯删除 Backup 对象，而是借助于 DeleteBackupRequest 对象。</p>
+<p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/release-1.6/pkg/apis/velero/v1/delete_backup_request.go">DeleteBackupRequest API</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero backup delete</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–all</td>
+<td>删除所有资源</td>
+</tr>
+<tr>
+<td>–confirm</td>
+<td>确认删除交互</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>删除满足标签选择的所有资源</td>
+</tr>
+</tbody></table>
+<p><em>name，–all 和 –selector 仅能指定一个</em></p>
+<h3 id="describe"><a href="#describe" class="headerlink" title="describe"></a>describe</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero backup describe</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–cacert</td>
+<td>连接 BackupStorageLocation 时所需要的 TLS 证书</td>
+</tr>
+<tr>
+<td>–details</td>
+<td>更详细的信息输出</td>
+</tr>
+<tr>
+<td>–insecure-skip-tls-verify</td>
+<td>是否跳过 TLS 验证，默认为 false</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器获取符合要求的 Backup 对象</td>
+</tr>
+</tbody></table>
+<h3 id="download"><a href="#download" class="headerlink" title="download"></a>download</h3><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/release-1.6/pkg/apis/velero/v1/download_request_types.go">DownloadRequest CR</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero backup download</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–cacert</td>
+<td>连接 BackupStorageLocation 时所需要的 TLS 证书</td>
+</tr>
+<tr>
+<td>–force</td>
+<td>下载文件存在则覆盖</td>
+</tr>
+<tr>
+<td>–insecure-skip-tls-verify</td>
+<td>是否跳过 TLS 验证，默认为 false</td>
+</tr>
+<tr>
+<td>–output</td>
+<td>文件保存的路径，默认为当前目录，名称为 &lt;backup&gt;-data.tar.gz</td>
+</tr>
+<tr>
+<td>–timeout</td>
+<td>等待下载的超时时间，默认为 1m</td>
+</tr>
+</tbody></table>
+<h3 id="get-4"><a href="#get-4" class="headerlink" title="get"></a>get</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero backup get</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–label-columns</td>
+<td>在 table 样式下，自定义表格栏展示</td>
+</tr>
+<tr>
+<td>–output</td>
+<td>格式化输出的样式，可选的有 table，json 和 yaml，默认为 table</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器展示符合要求的 Backup 对象</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+</tbody></table>
+<h3 id="logs"><a href="#logs" class="headerlink" title="logs"></a>logs</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero backup logs</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–cacert</td>
+<td>连接 BackupStorageLocation 时所需要的 TLS 证书</td>
+</tr>
+<tr>
+<td>–insecure-skip-tls-verify</td>
+<td>是否跳过 TLS 验证，默认为 false</td>
+</tr>
+<tr>
+<td>–timeout</td>
+<td>等待获取日志的超时时间，默认为 1 分钟</td>
+</tr>
+</tbody></table>
+<h2 id="定时备份"><a href="#定时备份" class="headerlink" title="定时备份"></a>定时备份</h2><p>定时备份（schedule）是符合特定时间规律，由 Velero 控制面负责触发的备份任务，对应的资源对象为 Schedule。</p>
+<h3 id="create-3"><a href="#create-3" class="headerlink" title="create"></a>create</h3><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/release-1.6/pkg/apis/velero/v1/schedule.go">Schedule CR</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero schedule create</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–default-volumes-to-restic</td>
+<td>是否由 Restic 备份所有的 Pod 卷，默认为 true<br /><em>优先级小于 velero install 中的对应参数</em></td>
+</tr>
+<tr>
+<td>–include-cluster-resources</td>
+<td>是否备份集群级别的资源，默认为 true<br /><em>即使开启了此特性，如果并未备份全量 namespaces 的资源，仍然不会备份集群级别资源</em></td>
+</tr>
+<tr>
+<td>–include-namespaces &#x2F; –exclude-namespaces</td>
+<td>显式包含&#x2F;排除的命名空间，支持逗号分割</td>
+</tr>
+<tr>
+<td>–include-resources &#x2F; –exclude-resources</td>
+<td>显式包含&#x2F;排除的资源，支持逗号分割</td>
+</tr>
+<tr>
+<td>–label-columns</td>
+<td>在 table 样式下，自定义表格栏展示</td>
+</tr>
+<tr>
+<td>–labels</td>
+<td>设置创建出来的 Backup 对象的标签信息</td>
+</tr>
+<tr>
+<td>–ordered-resources</td>
+<td>指定备份的顺序<br /><em>集群级别的资源格式为 resource name，非集群级别的资源格式为 namespace&#x2F;resource name，例如 pods&#x3D;ns1&#x2F;pod1,ns1&#x2F;pod2;persistentvolumeclaims&#x3D;ns1&#x2F;pvc4,ns1&#x2F;pvc8</em></td>
+</tr>
+<tr>
+<td>–output</td>
+<td>dry run，指定生成配置文件的格式，可选的有 table，json 和 yaml</td>
+</tr>
+<tr>
+<td>–schedule</td>
+<td>定时规则的表达式<br/>不仅支持 cron 表达式，还支持易读的形式，例如 “0 *&#x2F;6 * * *” 和 @every 6h</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器备份符合要求的资源</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+<tr>
+<td>–snapshot-volumes</td>
+<td>备份时，是否会对 PV 资源调用 SnapshotProvider 打快照，默认为 true，</td>
+</tr>
+<tr>
+<td>–storage-location</td>
+<td>指定 BackupStorageLocation，仅支持单个</td>
+</tr>
+<tr>
+<td>–ttl</td>
+<td>过期时间，默认 720 小时</td>
+</tr>
+<tr>
+<td>–use-owner-references-in-backup</td>
+<td>由 Schedule 创建出来的 Backup 是否带有 OwnerReferences 信息，默认为 false，</td>
+</tr>
+<tr>
+<td>–volume-snapshot-locations</td>
+<td>卷快照的存储后端，支持多个</td>
+</tr>
+</tbody></table>
+<h3 id="delete-2"><a href="#delete-2" class="headerlink" title="delete"></a>delete</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero schedule delete</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–all</td>
+<td>删除所有 Schedule 对象</td>
+</tr>
+<tr>
+<td>–confirm</td>
+<td>确认删除交互</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>删除满足标签选择器的所有 Schedule 对象</td>
+</tr>
+</tbody></table>
+<h3 id="describe-1"><a href="#describe-1" class="headerlink" title="describe"></a>describe</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero schedule describe</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–selector</td>
+<td>可以通过标签选择器获取符合要求的 Schedule 对象</td>
+</tr>
+</tbody></table>
+<h3 id="get-5"><a href="#get-5" class="headerlink" title="get"></a>get</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero schedule get</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–label-columns</td>
+<td>在 table 样式下，自定义表格栏展示</td>
+</tr>
+<tr>
+<td>–output</td>
+<td>格式化输出的样式，可选的有 table，json 和 yaml，默认为 table</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器展示符合要求的 Schedule 对象</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+</tbody></table>
+<h1 id="恢复"><a href="#恢复" class="headerlink" title="恢复"></a>恢复</h1><h2 id="create-4"><a href="#create-4" class="headerlink" title="create"></a>create</h2><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/release-1.6/pkg/apis/velero/v1/restore.go">Restore API</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero restore create</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–allow-partially-failed</td>
+<td>在开启 –from-schedule 时，是否允许从部分失败的 Backup 中恢复</td>
+</tr>
+<tr>
+<td>–include-namespaces &#x2F; –exclude-namespaces</td>
+<td>显式包含&#x2F;排除的命名空间，支持逗号分割</td>
+</tr>
+<tr>
+<td>–include-resources &#x2F; –exclude-resources</td>
+<td>显式包含&#x2F;排除的资源，支持逗号分割</td>
+</tr>
+<tr>
+<td>–from-backup</td>
+<td>指定从哪一个 Backup 中恢复</td>
+</tr>
+<tr>
+<td>–from-schedule</td>
+<td>指定从哪一个 Schedule 中恢复<br><em>从 Schedule 最新创建的 Backup 恢复</em></td>
+</tr>
+<tr>
+<td>–include-cluster-resources</td>
+<td>默认为 true，即恢复集群级别的资源<br><em>即使开启了此特性，如果并未恢复全量 namespaces 的资源，仍然不会恢复集群级别资源</em></td>
+</tr>
+<tr>
+<td>–label-columns</td>
+<td>在 table 样式下，自定义表格栏展示</td>
+</tr>
+<tr>
+<td>–labels</td>
+<td>设置创建出来的 Restore 对象的标签信息</td>
+</tr>
+<tr>
+<td>–namespace-mappings</td>
+<td>恢复时，命名空间的映射关系<br><em>例如，src1:dst1,src2:dst2</em></td>
+</tr>
+<tr>
+<td>–output</td>
+<td>dry run，指定生成配置文件的格式，可选的有 table，json 和 yaml</td>
+</tr>
+<tr>
+<td>–preserve-nodeports</td>
+<td>恢复时，是否保留 Service 资源的 NodePort 信息，默认为 true，</td>
+</tr>
+<tr>
+<td>–restore-volumes</td>
+<td>恢复时，是否从快照中恢复卷数据，默认为 true</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器恢复符合要求的资源</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+<tr>
+<td>–wait</td>
+<td>阻塞直至恢复状态不再是 New 或者 InProgress<br><em>手动退出等待可以 ctrl-c，并不会影响到恢复任务</em></td>
+</tr>
+</tbody></table>
+<h2 id="delete-3"><a href="#delete-3" class="headerlink" title="delete"></a>delete</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero restore delete</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–all</td>
+<td>删除所有 Restore 对象</td>
+</tr>
+<tr>
+<td>–confirm</td>
+<td>确认删除交互</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>删除满足标签选择器的所有 Restore 对象</td>
+</tr>
+</tbody></table>
+<h2 id="describe-2"><a href="#describe-2" class="headerlink" title="describe"></a>describe</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero restore describe</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–cacert</td>
+<td>连接 BackupStorageLocation 时所需要的 TLS 证书</td>
+</tr>
+<tr>
+<td>–details</td>
+<td>更详细的信息输出</td>
+</tr>
+<tr>
+<td>–insecure-skip-tls-verify</td>
+<td>是否跳过 TLS 验证，默认为 false</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器获取符合要求的 Restore 对象</td>
+</tr>
+</tbody></table>
+<h2 id="get-6"><a href="#get-6" class="headerlink" title="get"></a>get</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero restore get</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–label-columns</td>
+<td>在 table 样式下，自定义表格栏展示</td>
+</tr>
+<tr>
+<td>–output</td>
+<td>格式化输出的样式，可选的有 table，json 和 yaml，默认为 table</td>
+</tr>
+<tr>
+<td>–selector</td>
+<td>可以通过标签选择器展示符合要求的 Restore 对象</td>
+</tr>
+<tr>
+<td>–show-labels</td>
+<td>在 table 样式下，最后一栏展示标签信息</td>
+</tr>
+</tbody></table>
+<h2 id="logs-1"><a href="#logs-1" class="headerlink" title="logs"></a>logs</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">velero restore logs</span></span><br></pre></td></tr></table></figure>
+
+<p>可选的 flags 包括</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>–cacert</td>
+<td>连接 BackupStorageLocation 时所需要的 TLS 证书</td>
+</tr>
+<tr>
+<td>–insecure-skip-tls-verify</td>
+<td>是否跳过 TLS 验证，默认为 false</td>
+</tr>
+<tr>
+<td>–timeout</td>
+<td>等待获取日志的超时时间，默认为 1 分钟</td>
+</tr>
+</tbody></table>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Velero 」 1 基础使用</p><p><a href="http://example.com/2021/06/07/2021-06-07-Velero 基础使用/">http://example.com/2021/06/07/2021-06-07-Velero 基础使用/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2021-06-07</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2022-11-16</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/Cloud-Native/">Cloud Native</a><a class="link-muted mr-2" rel="tag" href="/tags/Velero/">Velero</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2021/06/28/2021-06-28-Velero%20%E6%93%8D%E4%BD%9C%E5%85%83%E6%95%B0%E6%8D%AE/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Velero 」 1.1 操作元数据</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/04/22/2021-04-22-Kata%20Containers%20%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"><span class="level-item">「 Kata Containers 」 3 基础使用</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">48</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">10</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">14</p></a></div></div></nav></div></div><!--!--><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Istio/"><span class="level-start"><span class="level-item">Istio</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Kata-Containers/"><span class="level-start"><span class="level-item">Kata Containers</span></span><span class="level-end"><span class="level-item tag">15</span></span></a><ul><li><a class="level is-mobile" href="/categories/Kata-Containers/virtcontainers/"><span class="level-start"><span class="level-item">virtcontainers</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Kubebuilder/"><span class="level-start"><span class="level-item">Kubebuilder</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Rust/"><span class="level-start"><span class="level-item">Rust</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Velero/"><span class="level-start"><span class="level-item">Velero</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Virtual-Kubelet/"><span class="level-start"><span class="level-item">Virtual Kubelet</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7">© 2023</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

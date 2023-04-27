@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Istio 」 3.3 流量管理 — DestinationRule - Hexo</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Hexo"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Hexo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Istio 中流量管理组件 DestinationRule 对象介绍"><meta property="og:type" content="blog"><meta property="og:title" content="「 Istio 」 3.3 流量管理 — DestinationRule"><meta property="og:url" content="http://example.com/2022/08/09/2022-08-09-Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Destination%20Rule/"><meta property="og:site_name" content="Hexo"><meta property="og:description" content="Istio 中流量管理组件 DestinationRule 对象介绍"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/istio/logo.png"><meta property="article:published_time" content="2022-08-08T16:00:00.000Z"><meta property="article:modified_time" content="2022-11-16T07:44:25.124Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Cloud Native"><meta property="article:tag" content="Service Mesh"><meta property="article:tag" content="Istio"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/istio/logo.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2022/08/09/2022-08-09-Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Destination%20Rule/"},"headline":"「 Istio 」 3.3 流量管理 — DestinationRule","image":["https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/istio/logo.png"],"datePublished":"2022-08-08T16:00:00.000Z","dateModified":"2022-11-16T07:44:25.124Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"Hexo","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"Istio 中流量管理组件 DestinationRule 对象介绍"}</script><link rel="canonical" href="http://example.com/2022/08/09/2022-08-09-Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Destination%20Rule/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2022-08-08T16:00:00.000Z" title="2022/8/9 00:00:00">2022-08-09</time></span><span class="level-item">Updated&nbsp;<time dateTime="2022-11-16T07:44:25.124Z" title="2022/11/16 15:44:25">2022-11-16</time></span><span class="level-item"><a class="link-muted" href="/categories/Istio/">Istio</a></span><span class="level-item">44 minutes read (About 6653 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Istio 」 3.3 流量管理 — DestinationRule</h1><div class="content"><div align=center><img width="150" style="border: 0px" src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/istio/logo.png"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v1.15.0</strong></p>
+</blockquote>
+<p>DestinationRule 定义了在路由发生后应用于服务的流量的策略。这些规则指定负载均衡的配置、sidecar 的连接池大小以及异常值检测设置，用来检测、驱逐负载均衡池中不健康的后端。</p>
+<p>例如，review 服务的简单负载均衡策略如下。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo-ratings</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">trafficPolicy:</span></span><br><span class="line">    <span class="attr">loadBalancer:</span></span><br><span class="line">      <span class="attr">simple:</span> <span class="string">LEAST_REQUEST</span></span><br></pre></td></tr></table></figure>
+
+<p>可以通过定义 subset 覆盖在服务级别指定的设置来指定版本特定策略。</p>
+<p>以下规则对流向名为 testversion 的子集的所有流量使用 ROUND_ROBIN 负载均衡策略。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo-ratings</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">trafficPolicy:</span></span><br><span class="line">    <span class="attr">loadBalancer:</span></span><br><span class="line">      <span class="attr">simple:</span> <span class="string">LEAST_REQUEST</span></span><br><span class="line">  <span class="attr">subsets:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">testversion</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="attr">version:</span> <span class="string">v3</span></span><br><span class="line">    <span class="attr">trafficPolicy:</span></span><br><span class="line">      <span class="attr">loadBalancer:</span></span><br><span class="line">        <span class="attr">simple:</span> <span class="string">ROUND_ROBIN</span></span><br></pre></td></tr></table></figure>
+
+<p><em>注意：为子集指定的策略在路由规则明确向该子集发送流量之前不会生效。</em></p>
+<p>流量策略也可以针对特定端口进行定制。以下规则对流向端口 80 的所有流量使用 LEAST_REQUEST 负载均衡策略，而对流向端口 9080 的流量使用 ROUND_ROBIN  负载均衡策略。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo-ratings-port</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">trafficPolicy:</span> <span class="comment"># Apply to all ports</span></span><br><span class="line">    <span class="attr">portLevelSettings:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">        <span class="attr">number:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">loadBalancer:</span></span><br><span class="line">        <span class="attr">simple:</span> <span class="string">LEAST_REQUEST</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">        <span class="attr">number:</span> <span class="number">9080</span></span><br><span class="line">      <span class="attr">loadBalancer:</span></span><br><span class="line">        <span class="attr">simple:</span> <span class="string">ROUND_ROBIN</span></span><br></pre></td></tr></table></figure>
+
+<p>目标规则也可以针对特定的工作负载进行定制。以下示例显示了如何使用工作负载选择器将目标规则应用于特定工作负载。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1alpha3</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">configure-client-mtls-dr-with-workloadselector</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">workloadSelector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">ratings</span></span><br><span class="line">  <span class="attr">trafficPolicy:</span></span><br><span class="line">    <span class="attr">loadBalancer:</span></span><br><span class="line">      <span class="attr">simple:</span> <span class="string">ROUND_ROBIN</span></span><br><span class="line">    <span class="attr">portLevelSettings:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">        <span class="attr">number:</span> <span class="number">31443</span></span><br><span class="line">      <span class="attr">tls:</span></span><br><span class="line">        <span class="attr">credentialName:</span> <span class="string">client-credential</span></span><br><span class="line">        <span class="attr">mode:</span> <span class="string">MUTUAL</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="DestinationRule"><a href="#DestinationRule" class="headerlink" title="DestinationRule"></a>DestinationRule</h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>host</td>
+<td>服务注册表中的服务名称。服务名称从平台的服务注册表（例如，Kubernetes 服务、Consul 服务等）和 ServiceEntry 声明的 host 中查找。两者都找不到的流量将被丢弃。<br /><em>同样的，推荐使用完全限定域名，host 字段适用于 HTTP 和 TCP 的服务</em></td>
+</tr>
+<tr>
+<td><a href="#TrafficPolicy">trafficPolicy</a></td>
+<td>要应用的流量策略（负载均衡策略、连接池大小、异常值检测）</td>
+</tr>
+<tr>
+<td><a href="#Subset">subsets</a></td>
+<td>一个或多个命名集，代表服务的各个版本。流量策略可以在子集级别被覆盖</td>
+</tr>
+<tr>
+<td>exportTo</td>
+<td>此 VirtualService 暴露到的命名空间列表。暴露 VirtualService 允许它被其他命名空间中定义的 sidecar 和 Gateway 使用。此功能为服务所有者和网格管理员提供了一种机制来控制跨命名空间边界的 VirtualService 的可见性<br />如果未指定命名空间，则默认情况下将 VirtualService 暴露到所有命名空间<br /> . 为保留标识代表暴露到 VirtualService 的同一命名空间中。类似地，* 代表暴露到所有命名空间</td>
+</tr>
+<tr>
+<td>workloadSelector</td>
+<td>用于选择应用此 DestinationRule 配置的特定 pod&#x2F;VM 集的条件。如果指定，则 DestinationRule 配置将仅应用于与同一命名空间中的选择器标签匹配的工作负载实例。工作负载选择器不适用于跨命名空间。如果省略，DestinationRule 将回退到其默认行为。例如，如果特定的 sidecar 需要为网格外的服务设置出口 TLS 设置，而不是网格中的每个 sidecar 都需要配置（这是默认行为），则可以指定工作负载选择器</td>
+</tr>
+</tbody></table>
+<h1 id="TrafficPolicy"><a href="#TrafficPolicy" class="headerlink" title="TrafficPolicy"></a><a name="TrafficPolicy">TrafficPolicy</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#LoadBalancerSettings">loadBalancer</a></td>
+<td>负载均衡器算法的设置</td>
+</tr>
+<tr>
+<td><a href="#ConnectionPoolSettings">connectionPool</a></td>
+<td>与上游服务的连接池的设置</td>
+</tr>
+<tr>
+<td><a href="#OutlierDetection">outlierDetection</a></td>
+<td>负载均衡池中逐出不健康后端的设置</td>
+</tr>
+<tr>
+<td><a href="#ClientTLSSettings">tls</a></td>
+<td>与上游服务连接的 TLS 相关设置</td>
+</tr>
+<tr>
+<td><a href="#TrafficPolicy.PortTrafficPolicy">portLevelSettings</a></td>
+<td>各个端口的流量策略。<br /><em>注意，portLevelSettings 将覆盖 destinationLevel 设置。portLevelSettings 未设置的部分，会以 destinationLevel  级别为准</em></td>
+</tr>
+<tr>
+<td><a href="#TrafficPolicy.TunnelSettings">tunnel</a></td>
+<td>在 DestinationRule 中配置的 host 的其他传输层或应用层上的隧道 TCP 配置。隧道设置可以应用于 TCP 或 TLS 路由，但不能应用于 HTTP 路由</td>
+</tr>
+</tbody></table>
+<h1 id="Subset"><a href="#Subset" class="headerlink" title="Subset"></a><a name="Subset">Subset</a></h1><p>Service 的 endpoint 的子集。子集可用于 A&#x2F;B 测试或路由到特定服务版本等场景。此外，在 VirtualService 级别定义的流量策略可以被子集级别覆盖。</p>
+<p>通常需要一个或多个标签来标识子集目的地，但是，当相应的 DestinationRule 表示支持多个 SNI 主机的主机（例如，出口网关）时，没有标签的子集可能是有意义的。在这种情况下，可以使用带有 ClientTLSSettings 的流量策略来识别与命名子集相对应的特定 SNI 主机。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>name</td>
+<td>子集的名称。服务名称和子集名称可用于路由规则中的流量拆分</td>
+</tr>
+<tr>
+<td>labels</td>
+<td>服务注册表中的服务 endpoint 上应用过滤器</td>
+</tr>
+<tr>
+<td><a href="#TrafficPolicy">trafficPolicy</a></td>
+<td>子集的流量策略。子集会继承在 DestinationRule 级别指定的流量策略，同时会被子集级别指定的设置覆盖</td>
+</tr>
+</tbody></table>
+<h1 id="LoadBalancerSettings"><a href="#LoadBalancerSettings" class="headerlink" title="LoadBalancerSettings"></a><a name="LoadBalancerSettings">LoadBalancerSettings</a></h1><p>应用到特定目的地的负载均衡策略。有关更多详细信息，参阅 <a target="_blank" rel="noopener" href="https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/load_balancing">Envoy 的负载均衡文档</a>。</p>
+<p>例如，以下规则对流向 ratings 服务的所有流量使用 ROUND_ROBIN 负载均衡策略。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo-ratings</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">trafficPolicy:</span></span><br><span class="line">    <span class="attr">loadBalancer:</span></span><br><span class="line">      <span class="attr">simple:</span> <span class="string">ROUND_ROBIN</span></span><br></pre></td></tr></table></figure>
+
+<p>以下示例对于使用 User cookie 作为哈希键访问 rating 服务设置粘性会话。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo-ratings</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">trafficPolicy:</span></span><br><span class="line">    <span class="attr">loadBalancer:</span></span><br><span class="line">      <span class="attr">consistentHash:</span></span><br><span class="line">        <span class="attr">httpCookie:</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">user</span></span><br><span class="line">          <span class="attr">ttl:</span> <span class="string">0s</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#LoadBalancerSettings.SimpleLB">simple</a></td>
+<td>参考 LoadBalancerSettings.SimpleLB 说明</td>
+</tr>
+<tr>
+<td><a href="#LoadBalancerSettings.ConsistentHashLB">consistentHash</a></td>
+<td>参考 LoadBalancerSettings.ConsistentHashLB 说明</td>
+</tr>
+<tr>
+<td><a href="#LocalityLoadBalancerSetting">localityLbSetting</a></td>
+<td>本地负载均衡器设置，这将完全覆盖网格范围的设置，这意味着不会在此对象和 MeshConfig 之间执行合并</td>
+</tr>
+<tr>
+<td>warmupDurationSecs</td>
+<td>表示 Service 的预热持续时间。如果设置，则新创建的 service endpoint 在此窗口期间从其创建时间开始保持预热模式，并且 Istio 逐渐增加该 endpoint 的流量，而不是发送成比例的流量。应该为需要预热时间的合理延迟服务完整生产负载的服务启用此功能。目前只支持 ROUND_ROBIN 和 LEAST_CONN 负载均衡器</td>
+</tr>
+</tbody></table>
+<h1 id="ConnectionPoolSettings"><a href="#ConnectionPoolSettings" class="headerlink" title="ConnectionPoolSettings"></a><a name="ConnectionPoolSettings">ConnectionPoolSettings</a></h1><p>上游主机的连接池设置。这些设置适用于上游服务中的每个单独的主机。有关更多详细信息，参阅 <a target="_blank" rel="noopener" href="https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/circuit_breaking">Envoy 的断路器</a>。连接池设置可以应用于 TCP 级别以及 HTTP 级别。</p>
+<p>例如，以下规则设置了 100 个连接到名为 myredissrv 的 redis 服务的限制，连接超时为 30 毫秒。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo-redis</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">myredissrv.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">trafficPolicy:</span></span><br><span class="line">    <span class="attr">connectionPool:</span></span><br><span class="line">      <span class="attr">tcp:</span></span><br><span class="line">        <span class="attr">maxConnections:</span> <span class="number">100</span></span><br><span class="line">        <span class="attr">connectTimeout:</span> <span class="string">30ms</span></span><br><span class="line">        <span class="attr">tcpKeepalive:</span></span><br><span class="line">          <span class="attr">time:</span> <span class="string">7200s</span></span><br><span class="line">          <span class="attr">interval:</span> <span class="string">75s</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#ConnectionPoolSettings.TCPSettings">tcp</a></td>
+<td>HTTP 和 TCP 上游连接通用的设置</td>
+</tr>
+<tr>
+<td><a href="#ConnectionPoolSettings.HTTPSettings">http</a></td>
+<td>HTTP 连接池设置</td>
+</tr>
+</tbody></table>
+<h1 id="OutlierDetection"><a href="#OutlierDetection" class="headerlink" title="OutlierDetection"></a><a name="OutlierDetection">OutlierDetection</a></h1><p>一种断路器实现，用于跟踪上游服务中每个单独主机的状态。</p>
+<p>适用于 HTTP 和 TCP 服务。</p>
+<ul>
+<li>对于 HTTP 服务，对于 API 调用持续返回 5xx 错误的主机将在预定义的时间段内从池中弹出</li>
+<li>对于 TCP 服务，在测量连续错误指标时，与给定主机的连接超时或连接失败将计为错误</li>
+</ul>
+<p>有关更多详细信息，参阅 <a target="_blank" rel="noopener" href="https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/outlier">Envoy 的异常值检测</a>。</p>
+<p>以下规则将连接池大小设置为 100 个 HTTP1 连接，其中 reviews 服务的单连接的请求最大不超过 10 个。此外，它设置了 1000 个并发 HTTP2 请求的限制，并将上游 host 配置为每 5 分钟扫描一次，任何连续 7 次失败并出现 502、503 或 504 错误代码的 host 将被弹出 15 分钟。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews-cb-policy</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">trafficPolicy:</span></span><br><span class="line">    <span class="attr">connectionPool:</span></span><br><span class="line">      <span class="attr">tcp:</span></span><br><span class="line">        <span class="attr">maxConnections:</span> <span class="number">100</span></span><br><span class="line">      <span class="attr">http:</span></span><br><span class="line">        <span class="attr">http2MaxRequests:</span> <span class="number">1000</span></span><br><span class="line">        <span class="attr">maxRequestsPerConnection:</span> <span class="number">10</span></span><br><span class="line">    <span class="attr">outlierDetection:</span></span><br><span class="line">      <span class="attr">consecutive5xxErrors:</span> <span class="number">7</span></span><br><span class="line">      <span class="attr">interval:</span> <span class="string">5m</span></span><br><span class="line">      <span class="attr">baseEjectionTime:</span> <span class="string">15m</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>splitExternalLocalOriginErrors</td>
+<td>确定是否区分本地源故障和外部错误。如果设置为 true，则连续_local_origin_failure 被考虑用于异常值检测计算。当您希望根据本地看到的错误（例如连接失败、连接超时等）而不是上游服务重新调整的状态码来推导异常检测状态时，应该使用此选项。当上游服务为某些请求显式返回 5xx 并且您希望在确定主机的异常检测状态时忽略来自上游服务的这些响应时，这尤其有用。默认为假</td>
+</tr>
+<tr>
+<td>consecutiveLocalOriginFailures</td>
+<td>在弹出发生之前连续发生的本地故障数。默认为 5。参数仅在 splitExternalLocalOriginErrors 设置为 true 时生效</td>
+</tr>
+<tr>
+<td>consecutiveGatewayErrors</td>
+<td>主机从连接池中弹出之前的网关错误数。当通过 HTTP 访问上游主机时，502、503 或 504 返回码被视为网关错误。当通过不透明的 TCP 连接访问上游主机时，连接超时和连接错误&#x2F;失败事件符合网关错误。默认为 0，即禁用此功能</td>
+</tr>
+<tr>
+<td>consecutive5xxErrors</td>
+<td>主机从连接池中弹出之前的 5xx 错误数。当通过不透明的 TCP 连接访问上游主机时，连接超时、连接错误&#x2F;失败和请求失败事件被视为 5xx 错误。默认为 5，可以通过将值设置为 0 来禁用<br /><em>注意， consecutiveGatewayErrors 和  consecutive5xxErrors 可以单独使用，也可以一起使用。因为 consecutiveGatewayErrors 统计的错误也包含在 consecutive5xxErrors 中，如果 consecutiveGatewayErrors 的值大于或等于 consecutive5xxErrors 的值，则 consecutiveGatewayErrors 将不起作用</em></td>
+</tr>
+<tr>
+<td>interval</td>
+<td>弹出分析的时间间隔。格式：1h&#x2F;1m&#x2F;1s&#x2F;1ms。必须 &gt;&#x3D;1 ms。默认为 10 s</td>
+</tr>
+<tr>
+<td>baseEjectionTime</td>
+<td>最短弹出时间。被弹出的时间等于最小弹出持续时间与主机被弹出次数的乘积。这种方式下系统将自动增加不健康的上游服务器的弹出周期。格式：1h&#x2F;1m&#x2F;1s&#x2F;1ms。必须 &gt;&#x3D;1 ms。默认为 30 s</td>
+</tr>
+<tr>
+<td>maxEjectionPercent</td>
+<td>上游服务的负载均衡池中可以弹出的后端的最大百分比。默认为 10%</td>
+</tr>
+<tr>
+<td>minHealthPercent</td>
+<td>只要关联的负载均衡池至少有 minHealthPercent 主机处于健康模式，就会启用异常值检测。当负载均衡池中健康主机的百分比低于此阈值时，将禁用异常值检测，并且代理将在池中的所有主机（健康和不健康）之间进行负载均衡。可以通过将阈值设置为 0% 来禁用该阈值。默认值为 0%，因为它通常不适用于每个服务的 pod 很少的 k8s 环境</td>
+</tr>
+</tbody></table>
+<h1 id="ClientTLSSettings"><a href="#ClientTLSSettings" class="headerlink" title="ClientTLSSettings"></a><a name="ClientTLSSettings">ClientTLSSettings</a></h1><p>上游连接的 SSL&#x2F;TLS 相关设置。有关更多详细信息，参阅 <a target="_blank" rel="noopener" href="https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/transport_sockets/tls/v3/common.proto.html#common-tls-configuration">Envoy 的 TLS 上下文</a>。对 HTTP 和 TCP 上游都是通用的。</p>
+<p>例如，以下规则将客户端配置为使用双向 TLS（MUTUAL）连接到上游数据库集群。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">db-mtls</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">mydbserver.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">trafficPolicy:</span></span><br><span class="line">    <span class="attr">tls:</span></span><br><span class="line">      <span class="attr">mode:</span> <span class="string">MUTUAL</span></span><br><span class="line">      <span class="attr">clientCertificate:</span> <span class="string">/etc/certs/myclientcert.pem</span></span><br><span class="line">      <span class="attr">privateKey:</span> <span class="string">/etc/certs/client_private_key.pem</span></span><br><span class="line">      <span class="attr">caCertificates:</span> <span class="string">/etc/certs/rootcacerts.pem</span></span><br></pre></td></tr></table></figure>
+
+<p>以下规则将客户端配置为在与 rating 服务通信时使用 Istio 双向 TLS。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ratings-istio-mtls</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">trafficPolicy:</span></span><br><span class="line">    <span class="attr">tls:</span></span><br><span class="line">      <span class="attr">mode:</span> <span class="string">ISTIO_MUTUAL</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#ClientTLSSettings.TLSmode">mode</a></td>
+<td>是否应使用 TLS 保护与此端口的连接。该字段的值决定了 TLS 的行为方式</td>
+</tr>
+<tr>
+<td>clientCertificate</td>
+<td>如果 mode 为 MUTUAL 时，则为必需。表示使用的客户端 TLS 证书的文件的路径。如果模式为 ISTIO_MUTUAL，则应为空</td>
+</tr>
+<tr>
+<td>privateKey</td>
+<td>如果 mode 为 MUTUAL 时，则为必需。保存客户端私钥的文件的路径。如果模式为 ISTIO_MUTUAL，则应为空</td>
+</tr>
+<tr>
+<td>caCertificates</td>
+<td>用于验证提供的服务器证书的证书颁发机构证书的文件的路径。如果省略，代理将不会验证服务器的证书。如果模式为 ISTIO_MUTUAL，则应为空</td>
+</tr>
+<tr>
+<td>credentialName</td>
+<td>保存客户端 TLS 证书的密钥的名称，包括 CA 证书。 Secret 必须与使用证书的代理存在于同一命名空间中。密钥（通用类型）应包含以下键和值：key：&lt;privateKey&gt;、cert：&lt;clientCert&gt;、cacert：&lt;CACertificate&gt;。这里 CACertificate 用于验证服务器证书。还支持用于客户端证书的 tls 类型的密钥以及用于 CA 证书的 ca.crt 密钥。只能指定客户端证书和 CA 证书或 credentialName 中的一个<br />注意：仅当 DestinationRule 指定了工作负载选择器时，此字段才适用于 sidecar。否则该字段将仅适用于网关，sidecar 将继续使用证书路径</td>
+</tr>
+<tr>
+<td>subjectAltNames</td>
+<td>用于验证证书中主体身份的备用名称列表。如果指定，代理将验证服务器证书的主题 alt 名称是否与指定值之一匹配。如果指定，此列表将覆盖 ServiceEntry 中的 subject_alt_names 的值。如果未指定，则将根据下游 HTTP 主机&#x2F;授权标头自动验证新上游连接的上游证书，前提是 VERIFY_CERT_AT_CLIENT 和 ENABLE_AUTO_SNI 环境变量设置为 true</td>
+</tr>
+<tr>
+<td>sni</td>
+<td>在 TLS 握手期间呈现给服务器的 SNI 字符串。如果未指定，则 SNI 将根据 SIMPLE 和 MUTUAL TLS 模式的下游 HTTP host&#x2F;authority header 自动设置，前提是 ENABLE_AUTO_SNI 环境变量设置为 true</td>
+</tr>
+<tr>
+<td>insecureSkipVerify</td>
+<td>InsecureSkipVerify 指定代理是否应该跳过验证主机对应的服务器证书的 CA 签名和 SAN。仅当启用全局 CA 签名验证，VerifyCertAtClient 环境变量设置为 true，但不需要对特定主机进行验证时，才应设置此标志。无论是否启用了 VerifyCertAtClient，都将跳过 CA 签名和 SAN 的验证<br />InsecureSkipVerify 默认为 false。在 Istio 1.9 版本中，VerifyCertAtClient 默认为 false，但在以后的版本中默认为 true</td>
+</tr>
+</tbody></table>
+<h1 id="LocalityLoadBalancerSetting"><a href="#LocalityLoadBalancerSetting" class="headerlink" title="LocalityLoadBalancerSetting"></a><a name="LocalityLoadBalancerSetting">LocalityLoadBalancerSetting</a></h1><p>位置加权负载均衡允许根据流量的来源和终止位置来控制到 endpoint 的流量分配。这些地区是使用任意标签指定的，这些标签以 {region}&#x2F;{zone}&#x2F;{sub-zone} 形式指定地区层次结构。有关更多详细信息，参阅<a target="_blank" rel="noopener" href="https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/locality_weight">局部权重</a>。</p>
+<p>以下示例显示如何在网格范围内设置局部权重：在一个网格中，其工作负载中的服务部署到了 us-west&#x2F;zone1&#x2F; 和 us-west&#x2F;zone2&#x2F; 中。当访问服务的流量源自 us-west&#x2F;zone1&#x2F; 中时，80% 的流量将发送到 us-west&#x2F;zone1&#x2F; 的 endpoint，即同一区域，其余的 20% 将进入 us-west&#x2F;zone2&#x2F; 的 endpoint。此设置旨在将流量路由到同一位置的 endpoint。为源自 us-west&#x2F;zone2&#x2F; 的流量指定了类似的设置。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">distribute:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">from:</span> <span class="string">us-west/zone1/*</span></span><br><span class="line">    <span class="attr">to:</span></span><br><span class="line">      <span class="string">&quot;us-west/zone1/*&quot;</span><span class="string">:</span> <span class="number">80</span></span><br><span class="line">      <span class="string">&quot;us-west/zone2/*&quot;</span><span class="string">:</span> <span class="number">20</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">from:</span> <span class="string">us-west/zone2/*</span></span><br><span class="line">    <span class="attr">to:</span></span><br><span class="line">      <span class="string">&quot;us-west/zone1/*&quot;</span><span class="string">:</span> <span class="number">20</span></span><br><span class="line">      <span class="string">&quot;us-west/zone2/*&quot;</span><span class="string">:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+
+<p>如果运营商的目标不是跨区域和区域分配负载，而是限制故障转移的区域性以满足其他运营要求，则运营商可以设置“故障转移”策略而不是“分布”策略。</p>
+<p>以下示例为区域设置本地故障转移策略。假设服务驻留在 us-east、us-west 和 eu-west 内的区域中，此示例指定当 us-east 内的 endpoint 变得不健康时，流量应故障转移到 eu-west 内的 endpoint，类似地 us-west 应该故障转移到 us-east。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">failover:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">from:</span> <span class="string">us-east</span></span><br><span class="line">    <span class="attr">to:</span> <span class="string">eu-west</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">from:</span> <span class="string">us-west</span></span><br><span class="line">    <span class="attr">to:</span> <span class="string">us-east</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#LocalityLoadBalancerSetting.Distribute">distribute</a></td>
+<td>只能设置 distribute、failover 或 failoverPriority 中的其一。指定跨不同区域和地理位置的负载平衡权重。参考 <a target="_blank" rel="noopener" href="https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/upstream/load_balancing/locality_weight">Locality weighted load balancing</a>。如果为空，则根据其中的 endpoints 数量设置 locality 权重</td>
+</tr>
+<tr>
+<td><a href="#LocalityLoadBalancerSetting.Failover">failover</a></td>
+<td>只能设置 distribute、failover 或 failoverPriority 中的其一。当本地区域的 endpoint 变得不健康时，显式指定待转移流量的区域。应与 OutlierDetection 一起使用以检测不健康的 endpoint<br /><em>注意：生效的前提是指定了 OutlierDetection</em></td>
+</tr>
+<tr>
+<td>failoverPriority</td>
+<td>failoverPriority 是标签的有序列表，用于对 endpoint 进行排序以进行基于优先级的负载平衡。这是为了支持跨不同 endpoint 组的流量故障转移。假设总共指定了 N 个标签：<br />- 与客户端代理匹配所有 N 个标签的 endpoint 具有优先级 P(0)，即最高优先级<br />- 将前 N-1 个标签与客户端代理匹配的 endpoint 具有优先级 P(1)，即第二高优先级<br />- 通过扩展此逻辑，仅与客户端代理匹配第一个标签的 endpoint 具有优先级 P(N-1)，即第二低优先级<br />- 所有其他 endpoint 具有优先级 P(N)，即最低优先级<br />注意：对于要考虑匹配的标签，之前的标签必须匹配，即仅当前 n-1 个标签匹配时，才会认为第 n 个标签匹配<br />它可以是在客户端和服务器工作负载上指定的任何标签。还支持以下具有特殊语义含义的标签<br />- topology.istio.io&#x2F;network 用于匹配 endpoint 的网络元数据，可以通过 pod&#x2F;namespace 标签 topology.istio.io&#x2F;network、sidecar env ISTIO_META_NETWORK 或 MeshNetworks 指定<br />- topology.istio.io&#x2F;cluster 用于匹配一个 endpoint 的clusterID，可以通过 pod label topology.istio.io&#x2F;cluster 或pod env ISTIO_META_CLUSTER_ID 指定<br />- topology.kubernetes.io&#x2F;region 用于匹配 endpoint 的区域元数据，映射到 Kubernetes 节点标签 topology.kubernetes.io&#x2F;region 或 failure-domain.beta.kubernetes.io&#x2F;region（已弃用）<br />- topology.kubernetes.io&#x2F;zone 用于匹配 endpoint 的 zone 元数据，映射到 Kubernetes 节点标签 topology.kubernetes.io&#x2F;zone 或 failure-domain.beta.kubernetes.io&#x2F;zone（已弃用）<br />- topology.istio.io&#x2F;subzone 用于匹配 endpoint 的子区域元数据，映射到 Istio 节点标签 topology.istio.io&#x2F;subzone<br />拓扑配置遵循以下优先级：<br />failoverPriority<br/>- topology.istio.io&#x2F;network<br/>- topology.kubernetes.io&#x2F;region<br/>- topology.kubernetes.io&#x2F;zone<br/>- topology.istio.io&#x2F;subzone<br />即 endpoint 和客户端代理的 [network, region, zone, subzone] label 的匹配度越高，则优先级越高<br />只能设置 distribute、failover 或 failoverPriority 中的其一。并且应该和 OutlierDetection 一起使用来检测不健康的 endpoint，否则没有效果</td>
+</tr>
+<tr>
+<td>enabled</td>
+<td>是否启用局部负载平衡，为 DestinationRule 级别，将完全覆盖网格范围的设置<br /><em>例如 true 表示无论网格范围的设置是什么，都为此 DestinationRule 打开局部负载平衡</em></td>
+</tr>
+</tbody></table>
+<h1 id="TrafficPolicy-PortTrafficPolicy"><a href="#TrafficPolicy-PortTrafficPolicy" class="headerlink" title="TrafficPolicy.PortTrafficPolicy"></a><a name="TrafficPolicy.PortTrafficPolicy">TrafficPolicy.PortTrafficPolicy</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>port</td>
+<td>指定应用此策略的目标服务上的端口号</td>
+</tr>
+<tr>
+<td><a href="#LoadBalancerSettings">loadBalancer</a></td>
+<td>控制负载均衡器算法的设置</td>
+</tr>
+<tr>
+<td><a href="#ConnectionPoolSettings">connectionPool</a></td>
+<td>控制与上游服务的连接量的设置</td>
+</tr>
+<tr>
+<td><a href="#OutlierDetection">outlierDetection</a></td>
+<td>控制从负载均衡池中逐出不健康主机的设置</td>
+</tr>
+<tr>
+<td><a href="#ClientTLSSettings">tls</a></td>
+<td>与上游服务连接的 TLS 相关设置</td>
+</tr>
+</tbody></table>
+<h1 id="TrafficPolicy-TunnelSettings"><a href="#TrafficPolicy-TunnelSettings" class="headerlink" title="TrafficPolicy.TunnelSettings"></a><a name="TrafficPolicy.TunnelSettings">TrafficPolicy.TunnelSettings</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>protocol</td>
+<td>指定用于隧道下行连接的协议。支持的协议有：connect - 使用 HTTP CONNECT； post - 使用 HTTP POST。上游请求的 HTTP 版本由为代理定义的服务协议确定</td>
+</tr>
+<tr>
+<td>targetHost</td>
+<td>指定下游连接通过隧道连接到的主机。目标主机必须是 FQDN 或 IP 地址</td>
+</tr>
+<tr>
+<td>targetPort</td>
+<td>指定下游连接通过隧道连接到的端口</td>
+</tr>
+</tbody></table>
+<h1 id="LoadBalancerSettings-ConsistentHashLB"><a href="#LoadBalancerSettings-ConsistentHashLB" class="headerlink" title="LoadBalancerSettings.ConsistentHashLB"></a><a name="LoadBalancerSettings.ConsistentHashLB">LoadBalancerSettings.ConsistentHashLB</a></h1><p>一致的基于哈希的负载均衡可用于提供基于 HTTP 标头、cookie 或其他属性的软会话亲和性。当从目标服务中添加&#x2F;删除一个或多个主机时，与特定目标主机的关联将被移除。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>httpHeaderName</td>
+<td>基于特定 HTTP 标头的 hash</td>
+</tr>
+<tr>
+<td><a href="#LoadBalancerSettings.ConsistentHashLB.HTTPCookie">httpCookie</a></td>
+<td>基于 HTTP cookie 的 hash</td>
+</tr>
+<tr>
+<td>useSourceIp</td>
+<td>基于源 IP 地址的 hash。适用于 TCP 和 HTTP 连接</td>
+</tr>
+<tr>
+<td>httpQueryParameterName</td>
+<td>基于特定 HTTP query 参数的 hash</td>
+</tr>
+<tr>
+<td>minimumRingSize</td>
+<td>用于哈希环的最小虚拟节点数。默认为 1024。较大的环尺寸会产生更精细的负载分布。如果负载均衡池中的主机数量大于环大小，则每个主机将被分配一个虚拟节点</td>
+</tr>
+</tbody></table>
+<h1 id="LoadBalancerSettings-ConsistentHashLB-HTTPCookie"><a href="#LoadBalancerSettings-ConsistentHashLB-HTTPCookie" class="headerlink" title="LoadBalancerSettings.ConsistentHashLB.HTTPCookie"></a><a name="LoadBalancerSettings.ConsistentHashLB.HTTPCookie">LoadBalancerSettings.ConsistentHashLB.HTTPCookie</a></h1><p>描述将用作一致哈希负载均衡器的哈希键的 HTTP cookie。如果 cookie 不存在，则会自动生成</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>name</td>
+<td>cookie 的名称</td>
+</tr>
+<tr>
+<td>path</td>
+<td>为 cookie 设置的路径</td>
+</tr>
+<tr>
+<td>ttl</td>
+<td>cookie 的生命周期</td>
+</tr>
+</tbody></table>
+<h1 id="ConnectionPoolSettings-TCPSettings"><a href="#ConnectionPoolSettings-TCPSettings" class="headerlink" title="ConnectionPoolSettings.TCPSettings"></a><a name="ConnectionPoolSettings.TCPSettings">ConnectionPoolSettings.TCPSettings</a></h1><p>HTTP 和 TCP 上游连接通用的设置。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>maxConnections</td>
+<td>到目标主机的最大 HTTP1 &#x2F;TCP 连接数。默认 2^32-1</td>
+</tr>
+<tr>
+<td>connectTimeout</td>
+<td>TCP 连接超时。格式：1h&#x2F;1m&#x2F;1s&#x2F;1ms。必须 &gt;&#x3D;1ms。默认为 10s</td>
+</tr>
+<tr>
+<td><a href="#ConnectionPoolSettings.TCPSettings.TcpKeepalive">tcpKeepalive</a></td>
+<td>如果设置，则在套接字上设置 SO_KEEPALIVE 以启用 TCP Keepalive</td>
+</tr>
+</tbody></table>
+<h1 id="ConnectionPoolSettings-HTTPSettings"><a href="#ConnectionPoolSettings-HTTPSettings" class="headerlink" title="ConnectionPoolSettings.HTTPSettings"></a><a name="ConnectionPoolSettings.HTTPSettings">ConnectionPoolSettings.HTTPSettings</a></h1><p>适用于 HTTP1.1&#x2F;HTTP2&#x2F;GRPC 连接的设置。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>http1MaxPendingRequests</td>
+<td>目标的最大挂起 HTTP 请求数。默认 2^32-1</td>
+</tr>
+<tr>
+<td>http2MaxRequests</td>
+<td>后端的最大请求数。默认 2^32-1</td>
+</tr>
+<tr>
+<td>maxRequestsPerConnection</td>
+<td>每个连接到后端的最大请求数。将此参数设置为 1 将禁用 alive。默认为 0，表示无限制，最大为 2^29</td>
+</tr>
+<tr>
+<td>maxRetries</td>
+<td>在给定时间可以对集群中的所有主机进行的最大重试次数。默认为 2^32-1</td>
+</tr>
+<tr>
+<td>idleTimeout</td>
+<td>上游连接池连接的空闲超时。空闲超时定义为没有 alive 请求的时间段。如果未设置，则默认为 1 小时。当达到空闲超时时，连接将被关闭。如果连接是 HTTP&#x2F;2 连接，则会在关闭连接之前发生耗尽序列。请注意，基于请求的超时意味着 HTTP&#x2F;2 PING 不会使连接保持活动状态。适用于 HTTP1.1 和 HTTP2 连接</td>
+</tr>
+<tr>
+<td><a href="#ConnectionPoolSettings.HTTPSettings.H2UpgradePolicy">h2UpgradePolicy</a></td>
+<td>指定是否应将关联目标的 http1.1 连接升级到 http2</td>
+</tr>
+<tr>
+<td>useClientProtocol</td>
+<td>如果设置为 true，则启动与后端的连接时将保留客户端协议。请注意，当设置为 true 时，h2UpgradePolicy 将无效，即客户端连接不会升级到 http2</td>
+</tr>
+</tbody></table>
+<h1 id="ConnectionPoolSettings-TCPSettings-TcpKeepalive"><a href="#ConnectionPoolSettings-TCPSettings-TcpKeepalive" class="headerlink" title="ConnectionPoolSettings.TCPSettings.TcpKeepalive"></a><a name="ConnectionPoolSettings.TCPSettings.TcpKeepalive">ConnectionPoolSettings.TCPSettings.TcpKeepalive</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>probes</td>
+<td>在确定连接已死之前，要发送且无响应的最大保活探测数。默认是使用操作系统级别的配置（除非被覆盖，Linux 默认为 9)</td>
+</tr>
+<tr>
+<td>time</td>
+<td>在开始发送 keep-alive 探测之前，连接需要空闲的持续时间。默认是使用操作系统级别的配置（除非被覆盖，Linux 默认为 7200s）</td>
+</tr>
+<tr>
+<td>interval</td>
+<td>保持活动探测之间的持续时间。默认是使用操作系统级别的配置（除非被覆盖，Linux 默认为 75s）</td>
+</tr>
+</tbody></table>
+<h1 id="LocalityLoadBalancerSetting-Distribute"><a href="#LocalityLoadBalancerSetting-Distribute" class="headerlink" title="LocalityLoadBalancerSetting.Distribute"></a><a name="LocalityLoadBalancerSetting.Distribute">LocalityLoadBalancerSetting.Distribute</a></h1><p>描述源自 from 区域或子区域的流量如何分布在一组 to 区域上。指定区域的语法是 {region}&#x2F;{zone}&#x2F;{sub-zone} 并且规范的任何部分都允许使用终端通配符。例如：</p>
+<ul>
+<li>* 匹配所有的地区</li>
+<li>us-west&#x2F;* 匹配 us-west 区域内的所有区域和子区域</li>
+<li>us-west&#x2F;zone-1&#x2F;* 匹配 us-west&#x2F;zone-1 中的所有子区域</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>from</td>
+<td>源位置，用 &#x2F; 分隔，例如 region&#x2F;zone&#x2F;sub_zone</td>
+</tr>
+<tr>
+<td>to</td>
+<td>上游地区到流量分布权重的地图。所有权重的总和应为 100。任何不存在的位置都不会收到流量</td>
+</tr>
+</tbody></table>
+<h1 id="LocalityLoadBalancerSetting-Failover"><a href="#LocalityLoadBalancerSetting-Failover" class="headerlink" title="LocalityLoadBalancerSetting.Failover"></a><a name="LocalityLoadBalancerSetting.Failover">LocalityLoadBalancerSetting.Failover</a></h1><p>指定跨区域的流量故障转移策略。由于默认情况下支持区域和子区域故障转移，因此仅当运营商需要限制流量故障转移时才需要为区域指定，以便全局故障转移到任何 endpoint 的默认行为不适用。这在跨区域故障转移流量不会改善服务健康或可能需要因监管控制等其他原因而受到限制时非常有用。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>from</td>
+<td>源区域</td>
+</tr>
+<tr>
+<td>to</td>
+<td>当 from 区域中的 endpoint 变得不健康时，流量将故障转移到目标区域</td>
+</tr>
+</tbody></table>
+<h1 id="LoadBalancerSettings-SimpleLB"><a href="#LoadBalancerSettings-SimpleLB" class="headerlink" title="LoadBalancerSettings.SimpleLB"></a><a name="SimpleLB">LoadBalancerSettings.SimpleLB</a></h1><p>无需调整的标准负载均衡算法。</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UNSPECIFIED</td>
+<td>用户未指定负载均衡算法。 Istio 将选择适当的默认值</td>
+</tr>
+<tr>
+<td>RANDOM</td>
+<td>随机负载均衡器选择一个随机的健康主机。如果没有配置健康检查策略，随机负载均衡器的性能通常比轮询更好</td>
+</tr>
+<tr>
+<td>PASSTHROUGH</td>
+<td>此选项会将连接转发到调用者请求的原始 IP 地址，而不进行任何形式的负载平衡。慎重使用。它适用于高级用例。有关更多详细信息，参阅 Envoy 中的原始目标负载均衡器</td>
+</tr>
+<tr>
+<td>ROUND_ROBIN</td>
+<td>一个基本的循环负载均衡策略。这对于许多场景（例如，使用 endpoint 加权时）通常是不安全的，因为它可能会使 endpoint 负担过重。一般来说，倾向于使用 LEAST_REQUEST 替代 ROUND_ROBIN</td>
+</tr>
+<tr>
+<td>LEAST_REQUEST</td>
+<td>最少请求负载均衡器将负载分散到各个 endpoint，倾向于具有最少未完成请求的 endpoint。这通常更安全，并且几乎在所有情况下都优于 ROUND_ROBIN。倾向于使用 LEAST_REQUEST 替代 ROUND_ROBIN</td>
+</tr>
+<tr>
+<td>LEAST_CONN</td>
+<td>已弃用。改用 LEAST_REQUEST</td>
+</tr>
+</tbody></table>
+<h1 id="ConnectionPoolSettings-HTTPSettings-H2UpgradePolicy"><a href="#ConnectionPoolSettings-HTTPSettings-H2UpgradePolicy" class="headerlink" title="ConnectionPoolSettings.HTTPSettings.H2UpgradePolicy"></a><a name="ConnectionPoolSettings.HTTPSettings.H2UpgradePolicy">ConnectionPoolSettings.HTTPSettings.H2UpgradePolicy</a></h1><p>将 http1.1 连接升级到 http2 的策略。</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DEFAULT</td>
+<td>使用全局默认值</td>
+</tr>
+<tr>
+<td>DO_NOT_UPGRADE</td>
+<td>不将连接升级到 http2。会覆盖默认值</td>
+</tr>
+<tr>
+<td>UPGRADE</td>
+<td>将连接升级到 http2。会覆盖默认值</td>
+</tr>
+</tbody></table>
+<h1 id="ClientTLSSettings-TLSmode"><a href="#ClientTLSSettings-TLSmode" class="headerlink" title="ClientTLSSettings.TLSmode"></a><a name="ClientTLSSettings.TLSmode">ClientTLSSettings.TLSmode</a></h1><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DISABLE</td>
+<td>不设置到上游 endpoint 的 TLS 连接</td>
+</tr>
+<tr>
+<td>SIMPLE</td>
+<td>发起到上游 endpoint 的 TLS 连接</td>
+</tr>
+<tr>
+<td>MUTUAL</td>
+<td>通过提供客户端证书进行身份验证，使用双向 TLS 保护与上游的连接</td>
+</tr>
+<tr>
+<td>ISTIO_MUTUAL</td>
+<td>通过提供客户端证书进行身份验证，使用双向 TLS 保护与上游的连接。与 MUTUAL 模式相比，该模式使用 Istio 自动生成的证书进行 mTLS 身份验证。使用此模式时，ClientTLSSettings 中的所有其他字段都应为空</td>
+</tr>
+</tbody></table>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Istio 」 3.3 流量管理 — DestinationRule</p><p><a href="http://example.com/2022/08/09/2022-08-09-Istio 流量管理 - Destination Rule/">http://example.com/2022/08/09/2022-08-09-Istio 流量管理 - Destination Rule/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-08-09</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2022-11-16</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/Cloud-Native/">Cloud Native</a><a class="link-muted mr-2" rel="tag" href="/tags/Service-Mesh/">Service Mesh</a><a class="link-muted mr-2" rel="tag" href="/tags/Istio/">Istio</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/08/16/2022-08-16-Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Service%20Entry/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Istio 」 3.4 流量管理 — ServiceEntry</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/08/05/2022-08-05-Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Virtual%20Service/"><span class="level-item">「 Istio 」 3.2 流量管理 — VirtualService</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">48</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">10</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">14</p></a></div></div></nav></div></div><!--!--><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Istio/"><span class="level-start"><span class="level-item">Istio</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Kata-Containers/"><span class="level-start"><span class="level-item">Kata Containers</span></span><span class="level-end"><span class="level-item tag">15</span></span></a><ul><li><a class="level is-mobile" href="/categories/Kata-Containers/virtcontainers/"><span class="level-start"><span class="level-item">virtcontainers</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Kubebuilder/"><span class="level-start"><span class="level-item">Kubebuilder</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Rust/"><span class="level-start"><span class="level-item">Rust</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Velero/"><span class="level-start"><span class="level-item">Velero</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Virtual-Kubelet/"><span class="level-start"><span class="level-item">Virtual Kubelet</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7">© 2023</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

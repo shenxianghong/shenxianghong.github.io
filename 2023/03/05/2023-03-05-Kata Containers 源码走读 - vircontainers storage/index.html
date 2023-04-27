@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Kata Containers 」 4.4.1 源码走读 — virtcontainers storage - Hexo</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Hexo"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Hexo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="virtcontainers 库中 storage 模块源码走读"><meta property="og:type" content="blog"><meta property="og:title" content="「 Kata Containers 」 4.4.1 源码走读 — virtcontainers storage"><meta property="og:url" content="http://example.com/2023/03/05/2023-03-05-Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20vircontainers%20storage/"><meta property="og:site_name" content="Hexo"><meta property="og:description" content="virtcontainers 库中 storage 模块源码走读"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"><meta property="article:published_time" content="2023-03-04T16:00:00.000Z"><meta property="article:modified_time" content="2023-04-06T08:43:43.573Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Cloud Native"><meta property="article:tag" content="Container Runtime"><meta property="article:tag" content="Kata Containers"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2023/03/05/2023-03-05-Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20vircontainers%20storage/"},"headline":"「 Kata Containers 」 4.4.1 源码走读 — virtcontainers storage","image":[],"datePublished":"2023-03-04T16:00:00.000Z","dateModified":"2023-04-06T08:43:43.573Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"Hexo","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"virtcontainers 库中 storage 模块源码走读"}</script><link rel="canonical" href="http://example.com/2023/03/05/2023-03-05-Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20vircontainers%20storage/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2023-03-04T16:00:00.000Z" title="2023/3/5 00:00:00">2023-03-05</time></span><span class="level-item">Updated&nbsp;<time dateTime="2023-04-06T08:43:43.573Z" title="2023/4/6 16:43:43">2023-04-06</time></span><span class="level-item"><a class="link-muted" href="/categories/Kata-Containers/">Kata Containers</a></span><span class="level-item">17 minutes read (About 2592 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Kata Containers 」 4.4.1 源码走读 — virtcontainers storage</h1><div class="content"><div align=center><img width="300" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v3.0.0</strong></p>
+</blockquote>
+<h1 id="PersistDriver"><a href="#PersistDriver" class="headerlink" title="PersistDriver"></a>PersistDriver</h1><p><em><u>src&#x2F;runtime&#x2F;virtcontainers&#x2F;persist&#x2F;api&#x2F;interface.go</u></em></p>
+<p>PersistDriver（也称 store）的实现有两类：fs 和 rootless。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> FS <span class="keyword">struct</span> &#123;</span><br><span class="line">	sandboxState    *persistapi.SandboxState</span><br><span class="line">	containerState  <span class="keyword">map</span>[<span class="type">string</span>]persistapi.ContainerState</span><br><span class="line">	storageRootPath <span class="type">string</span></span><br><span class="line">	driverName      <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 fs driver 中，storageRootPath 为 &#x2F;run&#x2F;vc，用于保存 sandbox（sbs，其中容器信息以子目录形式保存）和 VM（vm）相关状态信息。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> RootlessFS <span class="keyword">struct</span> &#123;</span><br><span class="line">	*FS</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>rootlessfs driver 完全继承 fs driver，唯一的区别在于 rootlessfs driver 的 storageRootPath 为 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;vc（当环境变量 XDG_RUNTIME_DIR 缺省时为 &#x2F;run&#x2F;user&#x2F;&lt;UID&gt;）。</p>
+<p><strong>工厂函数</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/manager.go#L49">source code</a></p>
+<ol>
+<li>根据当前是否为 root 用户权限，返回对应的 fs 实现</li>
+</ol>
+<p><em>以下接口 fs 和 rootlessfs 实现方式完全一样。</em></p>
+<h2 id="ToDisk"><a href="#ToDisk" class="headerlink" title="ToDisk"></a>ToDisk</h2><p><strong>保存 sandbox 和容器状态信息到文件中</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L77">source code</a></p>
+<ol>
+<li>以当前用户组信息创建 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt; 目录（如果不存在）</li>
+<li>创建 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt;&#x2F;persist.json 文件（如果不存在），写入 sandbox 状态信息</li>
+<li>遍历所有的容器状态信息<ol>
+<li>以当前用户组信息创建 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt;&#x2F;&lt;containerID&gt; 目录（如果不存在）</li>
+<li>创建 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt;&#x2F;&lt;containerID&gt;&#x2F;persist.json 文件（如果不存在），写入容器状态信息</li>
+</ol>
+</li>
+<li>遍历 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt; 目录（目录下的所有子目录名称均为 containerID），由于步骤 3 中为当前全量的容器状态信息，以此为准移除不存在的容器目录</li>
+</ol>
+<h2 id="FromDisk"><a href="#FromDisk" class="headerlink" title="FromDisk"></a>FromDisk</h2><p><strong>读取写入文件中的 sandbox 和容器状态信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L170">source code</a></p>
+<ol>
+<li>读取 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt;&#x2F;persist.json 文件内容，获取 sandbox 状态信息</li>
+<li>遍历 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt; 目录（目录下的所有子目录名称均为 containerID），读取 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt;&#x2F;&lt;containerID&gt;&#x2F;persist.json 文件内容，获取容器状态信息</li>
+</ol>
+<h2 id="Destroy"><a href="#Destroy" class="headerlink" title="Destroy"></a>Destroy</h2><p><strong>删除 sandbox 状态信息目录</strong></p>
+<p><em>因为 sandbox 和容器状态信息目录之间为父子目录关系，删除父目录即可</em></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L228">source code</a></p>
+<ol>
+<li>删除 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt; 目录</li>
+</ol>
+<h2 id="Lock"><a href="#Lock" class="headerlink" title="Lock"></a>Lock</h2><p><strong>对 sandbox 状态信息目录上锁</strong></p>
+<p><em>因为 sandbox 和容器状态信息目录之间为父子目录关系，对父目录上锁即可</em></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L244">source code</a></p>
+<ol>
+<li>调用 syscall.Flock，对 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt; 目录上共享锁或排他锁（根据函数传参而定）</li>
+<li>返回一个调用 syscall.Flock 的函数体，对 &lt;RunStoragePath&gt;&#x2F;&lt;sandboxID&gt; 目录释放锁（即 syscall.LOCK_UN）</li>
+</ol>
+<h2 id="GlobalWrite"><a href="#GlobalWrite" class="headerlink" title="GlobalWrite"></a>GlobalWrite</h2><p><strong>在状态信息目录中的文件写入内容</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L282">source code</a></p>
+<ol>
+<li>以当前用户组信息创建 &lt;storageRootPath&gt;&#x2F;&lt;relativePath&gt; （relativePath 为函数传参中的待写入内容的相对路径）所在目录（如果不存在）</li>
+<li>创建 &lt;storageRootPath&gt;&#x2F;&lt;relativePath&gt; 文件，写入数据</li>
+</ol>
+<h2 id="GlobalRead"><a href="#GlobalRead" class="headerlink" title="GlobalRead"></a>GlobalRead</h2><p><strong>读取状态信息目录中的文件内容</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L315">source code</a></p>
+<ol>
+<li>读取 &lt;storageRootPath&gt;&#x2F;&lt;relativePath&gt; 文件内容</li>
+</ol>
+<h2 id="RunStoragePath"><a href="#RunStoragePath" class="headerlink" title="RunStoragePath"></a>RunStoragePath</h2><p><strong>获取 sandbox 状态信息目录</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L337">source code</a></p>
+<ol>
+<li>返回 &lt;storageRootPath&gt;&#x2F;sbs 路径</li>
+</ol>
+<h2 id="RunVMStoragePath"><a href="#RunVMStoragePath" class="headerlink" title="RunVMStoragePath"></a>RunVMStoragePath</h2><p><strong>获取 vm 状态信息目录</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L341">source code</a></p>
+<ol>
+<li>返回 &lt;storageRootPath&gt;&#x2F;vm 路径</li>
+</ol>
+<h1 id="FilesystemSharer"><a href="#FilesystemSharer" class="headerlink" title="FilesystemSharer"></a>FilesystemSharer</h1><p><em><u>src&#x2F;runtime&#x2F;virtcontainers&#x2F;fs_share.go</u></em></p>
+<p>FilesystemSharer（也称 fsSharer）仅有 linux 操作系统下的实现。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> FilesystemShare <span class="keyword">struct</span> &#123;</span><br><span class="line">	sandbox *Sandbox</span><br><span class="line">	sync.Mutex</span><br><span class="line">	prepared <span class="type">bool</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><em>工厂函数为参数赋值初始化，无复杂逻辑，不作详述。</em></p>
+<h2 id="bindMount"><a href="#bindMount" class="headerlink" title="bindMount"></a>bindMount</h2><p><strong>将 src 绑定挂载到 dst</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/mount.go#L257">source code</a></p>
+<ol>
+<li>处理 src 中的符号链接，获得绝对路径，校验其是否存在</li>
+<li>创建 dst 的父目录（如果不存在）</li>
+<li>根据 src 的格式（目录或文件），创建 dst</li>
+<li>将 src 以 MS_BIND 的属性绑定挂载到 dst 下<br><em>等价于 mount –bind foo bar，也就是把 foo 目录绑定挂载到 bar 目录，bar 目录为 foo 目录的镜像挂载点。绑定后的两个目录类似于硬链接，无论读写 bar 还是读写 foo，都会反应在另一方，内核在底层所操作的都是同一个物理位置。将 bar 卸载后，bar 目录回归原始空目录状态，期间所执行的修改都保留在 foo 目录下</em></li>
+<li>更改 dst 目录挂载属性（即 MS_SHARED、MS_PRIVATE、MS_SLAVE 和 MS_UNBINDABLE）<br><em>等价于 mount –make-slave bar，也可以和步骤 4 合并操作 mount –make-slave –bind foo bar。单向传播模式下，在 foo 下添加或移除子挂载点，会同步到 bar 挂载点，而在 bar 下添加或移除子挂载点，不会影响 foo</em></li>
+<li>如果挂载为只读属性，则追加至绑定挂载属性中<br><em>等价于 mount –read-only –bind foo bar</em></li>
+</ol>
+<h2 id="Prepare"><a href="#Prepare" class="headerlink" title="Prepare"></a>Prepare</h2><p><strong>准备 host&#x2F;guest 的共享文件系统目录</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/fs_share_linux.go#L127">source code</a></p>
+<ol>
+<li>创建 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;shared 目录（用于 9p&#x2F;virtiofs 在 host 和 guest 之间共享数据）</li>
+<li>创建 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts 目录（用于维护所有 host 和 guest 之间的挂载点）</li>
+<li>调用 <strong>bindMount</strong>，将 mounts 目录以只读和 MS_SLAVE 的属性绑定挂载到 shared 目录下（为了后面 mounts 挂载点下的子挂载也能出现在 shared 中）</li>
+<li>处理 [runtime]. sandbox_bind_mounts 挂载点<ol>
+<li>创建 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;sandbox-mounts 目录</li>
+<li>针对 sandbox_bind_mounts 目录中的每一个挂载点，调用 <strong>bindMount</strong>，以只读和 MS_PRIVATE 的属性绑定挂载到 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;sandbox-mounts&#x2F;&lt;sandbox_bind_mounts&gt; 中，并追加 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;shared&#x2F;sandbox-mounts&#x2F;&lt;sandbox_bind_mounts&gt; 绑定挂载的只读属性</li>
+</ol>
+</li>
+<li>设置 prepared 为 true，表示共享文件系统已就绪（标识位也用于保证 Prepare 和 Cleanup 操作的幂等性）</li>
+</ol>
+<h2 id="Cleanup"><a href="#Cleanup" class="headerlink" title="Cleanup"></a>Cleanup</h2><p><strong>清理 host&#x2F;guest 的共享文件系统目录</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/fs_share_linux.go#L180">source code</a></p>
+<ol>
+<li>处理 [runtime]. sandbox_bind_mounts 挂载点<ol>
+<li>针对 sandbox_bind_mounts 目录中的每一个挂载点，移除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;sandbox-mounts&#x2F;&lt;sandbox_bind_mounts&gt; 挂载点</li>
+<li>删除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;sandbox-mounts 目录</li>
+</ol>
+</li>
+<li>移除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;shared 挂载点</li>
+<li>移除 sandbox 中所有容器的挂载点。如果容器 rootfs 的类型为 fuse.nydus-overlayfs，则移除 &#x2F;rafs&#x2F;&lt;containerID&gt;&#x2F;lowerdir virtiofs 挂载点，移除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt;&#x2F;snapshotdir 挂载点并删除此目录，删除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt;&#x2F;rootfs 目录（该目录和 &#x2F;run&#x2F;containerd&#x2F;io.containerd.runtime.v2.task&#x2F;k8s.io&#x2F;&lt;containerID&gt;&#x2F;rootfs 数据同步，借助 9pfs&#x2F;virtiofs 实现容器文件系统共享，在 host 上以 overlay 挂载点形式存在）；否则，移除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt;&#x2F;rootfs 挂载点并删除此目录</li>
+<li>删除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt; 目录</li>
+</ol>
+<h2 id="ShareFile"><a href="#ShareFile" class="headerlink" title="ShareFile"></a>ShareFile</h2><p><strong>共享 host 文件至 guest 中</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/fs_share_linux.go#L227">source code</a></p>
+<ol>
+<li><p>共享文件（shareFile）名称格式为 &lt;containerID&gt;-&lt;random bytes&gt;-&lt;dst&gt;<br><em>例如：&lt;containerID&gt;-47dcc9007bca8805-hostname</em></p>
+</li>
+<li><p>调用 hypervisor 的 <strong>Capabilities</strong>，判断是否支持 host 文件系统共享特性（QEMU 场景下支持）</p>
+<ol>
+<li><p>如果不支持，则通过文件拷贝实现共享</p>
+<ol>
+<li><p>校验 src 是否存在。如果 src 非常规文件，则不做处理（这里并未视为错误，而是作为一种局限性将其忽略）</p>
+</li>
+<li><p>调用 agent 的 <strong>copyFile</strong>，将 src 文件拷贝至 sandbox 的 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;containers&#x2F;&lt;shareFile&gt; 文件位置</p>
+</li>
+</ol>
+</li>
+<li><p>如果支持，则通过文件挂载实现共享</p>
+<ol>
+<li>如果挂载为读写属性，则调用 <strong>bindMount</strong>，将 src 以读写和 MS_PRIVATE 的属性绑定挂载到 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;shareFile&gt;</li>
+<li>否则，调用 <strong>bindMount</strong>，将 src 以只读和 MS_PRIVATE 的属性绑定挂载到 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;private&#x2F;&lt;shareFile&gt;，进而调用 <strong>bindMount</strong>，将 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;private&#x2F;&lt;shareFile&gt; 以读写和 MS_PRIVATE 的属性绑定挂载到 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;shareFile&gt;<br><em>对于只读挂载，bindMount 重新挂载事件不会传播到挂载子树，并且它也不会出现在 virtiofsd 独立挂载命名空间中</em></li>
+<li>设置挂载信息的 host 侧路径为 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;shareFile&gt;</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h2 id="UnshareFile"><a href="#UnshareFile" class="headerlink" title="UnshareFile"></a>UnshareFile</h2><p><strong>移除 host&#x2F;guest 共享文件的挂载点</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/fs_share_linux.go#L296">source code</a></p>
+<ol>
+<li>移除挂载信息的 host 侧挂载点</li>
+<li>如果挂载类型为 bind，校验 host 侧挂载点文件是否存在。如果为常规文件且为空，则直接删除；如果为目录，则移除目录</li>
+</ol>
+<h2 id="ShareRootFilesystem"><a href="#ShareRootFilesystem" class="headerlink" title="ShareRootFilesystem"></a>ShareRootFilesystem</h2><p><strong>创建 guest 中容器 rootfs 共享挂载</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/fs_share_linux.go#L373">source code</a></p>
+<ol>
+<li>如果 rootfs 类型为 fuse.nydus-overlayfs<ol>
+<li>通过 virtiofsd 挂载 &#x2F;rafs&#x2F;&lt;containerID&gt;&#x2F;lowerdir 目录至 guest 中</li>
+<li>创建 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt;&#x2F;rootfs 目录</li>
+<li>调用 <strong>bindMount</strong>，将 rootfs 挂载参数中的 snapshotdir 目录以只读和 MS_SLAVE 的属性绑定挂载到 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt;&#x2F;snapshotdir</li>
+<li>挂载类型仍为联合文件系统的 overlay 形式</li>
+</ol>
+</li>
+<li>如果 rootfs 类型不是 fuse.nydus-overlayfs，并且是基于块设备的 rootfs<ol>
+<li>调用 devManager 的 <strong>GetDeviceByID</strong>，根据容器状态中的信息获取到设备信息</li>
+<li>挂载类型视 [hypervisor].block_device_driver 而定</li>
+<li>创建 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt;&#x2F;rootfs 目录</li>
+</ol>
+</li>
+<li>对于传统的 rootfs（也就是非 fuse.nydus-overlayfs 类型，并且不是基于块设备的），调用 <strong>bindMount</strong>，以读写和 MS_PRIVATE 的属性将 rootfs（例如 &#x2F;run&#x2F;containerd&#x2F;io.containerd.runtime.v2.task&#x2F;k8s.io&#x2F;&lt;containerID&gt;&#x2F;rootfs）绑定挂载到 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt;&#x2F;rootfs<br><em>这个目录本身为共享目录，因此无需告知 agent 去挂载，在 host 侧挂载后会自动在 guest 中出现</em></li>
+<li>无论以上哪种挂载形式，最终 guest 中容器 rootfs 的挂载点均为 <XDG_RUNTIME_DIR>&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;containers&#x2F;&lt;containerID&gt;&#x2F;rootfs</li>
+</ol>
+<h2 id="UnshareRootFilesystem"><a href="#UnshareRootFilesystem" class="headerlink" title="UnshareRootFilesystem"></a>UnshareRootFilesystem</h2><p><strong>移除 guest 中容器 rootfs 共享挂载</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/fs_share_linux.go#L455">source code</a></p>
+<ol>
+<li>如果 rootfs 类型为 fuse.nydus-overlayfs<ol>
+<li>通过 virtiofsd 移除 guest 中的 &#x2F;rafs&#x2F;&lt;containerID&gt;&#x2F;lowerdir 挂载点</li>
+<li>移除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt;&#x2F;snapshotdir 挂载点，并删除目录</li>
+<li>移除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt;&#x2F;rootfs 目录</li>
+</ol>
+</li>
+<li>如果 rootfs 类型不是 fuse.nydus-overlayfs，则移除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt;&#x2F;rootfs 挂载点，并删除目录</li>
+<li>删除 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;sandboxID&gt;&#x2F;mounts&#x2F;&lt;containerID&gt; 目录</li>
+</ol>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Kata Containers 」 4.4.1 源码走读 — virtcontainers storage</p><p><a href="http://example.com/2023/03/05/2023-03-05-Kata Containers 源码走读 - vircontainers storage/">http://example.com/2023/03/05/2023-03-05-Kata Containers 源码走读 - vircontainers storage/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2023-03-05</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-04-06</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/Cloud-Native/">Cloud Native</a><a class="link-muted mr-2" rel="tag" href="/tags/Container-Runtime/">Container Runtime</a><a class="link-muted mr-2" rel="tag" href="/tags/Kata-Containers/">Kata Containers</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2023/03/12/2023-03-12-Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20vircontainers%20factory/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Kata Containers 」 4.4.2 源码走读 — virtcontainers factory</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2023/01/29/2023-01-29-Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20kata-monitor/"><span class="level-item">「 Kata Containers 」 4.3 源码走读 — kata-monitor</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">48</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">10</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">14</p></a></div></div></nav></div></div><!--!--><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Istio/"><span class="level-start"><span class="level-item">Istio</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Kata-Containers/"><span class="level-start"><span class="level-item">Kata Containers</span></span><span class="level-end"><span class="level-item tag">15</span></span></a><ul><li><a class="level is-mobile" href="/categories/Kata-Containers/virtcontainers/"><span class="level-start"><span class="level-item">virtcontainers</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Kubebuilder/"><span class="level-start"><span class="level-item">Kubebuilder</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Rust/"><span class="level-start"><span class="level-item">Rust</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Velero/"><span class="level-start"><span class="level-item">Velero</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Virtual-Kubelet/"><span class="level-start"><span class="level-item">Virtual Kubelet</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7">© 2023</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

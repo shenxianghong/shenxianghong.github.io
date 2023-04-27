@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Velero 」 2.6 源码走读 — Server - Hexo</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Hexo"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Hexo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Velero 中与 Server 等控制面相关的源码走读"><meta property="og:type" content="blog"><meta property="og:title" content="「 Velero 」 2.6 源码走读 — Server"><meta property="og:url" content="http://example.com/2022/03/06/2022-03-06-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Server/"><meta property="og:site_name" content="Hexo"><meta property="og:description" content="Velero 中与 Server 等控制面相关的源码走读"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://velero.io/img/Velero.svg"><meta property="article:published_time" content="2022-03-05T16:00:00.000Z"><meta property="article:modified_time" content="2022-11-16T07:43:43.654Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Cloud Native"><meta property="article:tag" content="Velero"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://velero.io/img/Velero.svg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2022/03/06/2022-03-06-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Server/"},"headline":"「 Velero 」 2.6 源码走读 — Server","image":[],"datePublished":"2022-03-05T16:00:00.000Z","dateModified":"2022-11-16T07:43:43.654Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"Hexo","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"Velero 中与 Server 等控制面相关的源码走读"}</script><link rel="canonical" href="http://example.com/2022/03/06/2022-03-06-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Server/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2022-03-05T16:00:00.000Z" title="2022/3/6 00:00:00">2022-03-06</time></span><span class="level-item">Updated&nbsp;<time dateTime="2022-11-16T07:43:43.654Z" title="2022/11/16 15:43:43">2022-11-16</time></span><span class="level-item"><a class="link-muted" href="/categories/Velero/">Velero</a></span><span class="level-item">13 minutes read (About 1944 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Velero 」 2.6 源码走读 — Server</h1><div class="content"><div align=center><img width="300" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v1.6.3</strong></p>
+</blockquote>
+<h1 id="Config"><a href="#Config" class="headerlink" title="Config"></a>Config</h1><p><em><u>pkg&#x2F;client&#x2F;factory.go</u></em><br><em><u>pkg&#x2F;client&#x2F;config.go</u></em><br><em><u>pkg&#x2F;cmd&#x2F;velero&#x2F;velero.go</u></em><br></p>
+<p>Velero 的全局配置参数，比如 namespaces，features，cacert 和 colorized 等信息，是在初始化 velero 根 command 时，解析位于 host 的 &lt;HOME&gt;&#x2F;.config&#x2F;velero&#x2F;config.json 的配置文件获取配置对象，初始化 factory 对象，将其透传给下级子 command 实现，由于 velero 服务的启动也是 velero 的子命令（即 velero server），因此实现了全局配置透传功能。</p>
+<h1 id="Generic-Controller"><a href="#Generic-Controller" class="headerlink" title="Generic Controller"></a>Generic Controller</h1><p><em><u>pkg&#x2F;controller&#x2F;generic_controller.go</u></em><br><em><u>pkg&#x2F;controller&#x2F;interface.go</u></em><br><em><u>internal&#x2F;util&#x2F;managercontroller&#x2F;managercontroller.go</u></em></p>
+<p>顾名思义，Generic Controller 定义所有 Controller 的通用行为，本身负责周期性调用 Controller 注册的方法处理 Key，维护 Controller  Key 的生命周期。</p>
+<p>每一个 Controller 都继承了 Generic Controller，主要包括注册 syncHandler 和 resyncFunc，以及 queue 和 cacheSyncWaiters 等。</p>
+<p>Generic Controller 主要包含以下核心属性：</p>
+<p><strong>queue</strong></p>
+<p>默认使用 K8s 提供的 NewNamedRateLimitingQueue，队列中就是需要处理的 Key，格式为 &lt;namespace&gt;&#x2F;&lt;name&gt; 或者 &lt;name&gt;（取决于对象是否是 namespaced scope）。</p>
+<p>Generic Controller 提供了 enqueue 的方法，用于 Key 的入队（本质上就是 queue 的 Add 方法，只不过转换成了上述的格式）。</p>
+<p><strong>syncHandler</strong></p>
+<p>Generic Controller 会周期性的调用 Controller 注册的 syncHandler，处理 queue 中的 Key。</p>
+<p><strong>resyncFunc</strong></p>
+<p>Generic Controller 会根据 resyncPeriod 周期性的调用 Controller 注册的 resyncFunc，执行额外声明的逻辑。</p>
+<p><strong>cacheSyncWaiters</strong></p>
+<p>Generic Controller 在执行 syncHandler 和 resyncFunc 之前会等待注册在 cacheSyncWaiters 全部缓存完成（本质上，就是一组 func() bool 均返回 true 即可，只不过传入的均为 podInformer.HasSynced 函数）。</p>
+<h2 id="Run"><a href="#Run" class="headerlink" title="Run"></a>Run</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/generic_controller.go#L54">Run 源码</a></p>
+<p>Generic Controller 的核心逻辑</p>
+<ol>
+<li>校验 syncHandler 和 resyncFunc 是否至少注册了一个</li>
+<li>如果注册了 cacheSyncWaiters，则等待其缓存同步完成<br><em>PodVolumeBackup Controller 和 PodVolumeRestore Controller 均注册了 cacheSyncWaiters，用于同步 Pod、PVC 以及 PodVolumeBackup（PodVolumeRestore）</em> </li>
+<li>启动指定 worker 数量的 Goroutine，每 1 秒钟处理一次以下逻辑<br><em>该逻辑本身是死循环，只有在 queue 关闭时返回 false，因此隔 1 秒钟还会重新执行</em><ol>
+<li>从 queue 中获取 Key（Get）</li>
+<li>调用 syncHandler 注册的 Handler，处理 Key<ul>
+<li>如果处理成功，则在 queue 中移除（Forget）</li>
+<li>如果处理失败，则限制速率重新加入 queue 中（AddRateLimited）</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>每隔 resyncPeriod 执行一次 resyncFunc 逻辑<br><em>resyncFunc 的处理不一定和 Key 相关，可以执行一些指标上报等操作，例如 Backup Controller 的 resyncFunc 实现</em></li>
+</ol>
+<h2 id="Runable"><a href="#Runable" class="headerlink" title="Runable"></a>Runable</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/internal/util/managercontroller/managercontroller.go#L31">Runable 源码</a></p>
+<p>用于将调用 Run 函数启动 Controller 的方法封装成 manager.Runable 返回，供 manager.Add 以及 manager.Start 使用<br><em>manager 为 controller-runtime 的 manager</em></p>
+<h1 id="Velero-Server"><a href="#Velero-Server" class="headerlink" title="Velero Server"></a>Velero Server</h1><p><em><u>pkg&#x2F;cmd&#x2F;server&#x2F;server.go</u></em></p>
+<p>本质上是 velero cli 的 server 子命令，根据 install 以及更多的自定义参数，启动 Velero 服务。</p>
+<h2 id="newServer"><a href="#newServer" class="headerlink" title="newServer"></a>newServer</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/3c49ec4fb4ff7f5aaa4ed56e8f7ff1a26f966d72/pkg/cmd/server/server.go#L246">newServer 源码</a></p>
+<p>工厂函数</p>
+<ol>
+<li>设置 client 的 QPS 和 Burst，最终会作用在 Kube Client，Velero Client 和 Dynamic Client</li>
+<li>初始化 Kube Client，Velero Client 和 Dynamic Client</li>
+<li>初始化 PluginRegistry，发现注册在 &#x2F;plugins 目录下的所有插件，并调用 velero run-plugins 命令启动插件的 GRPC 服务<br><em>插件包括 item-action、objectStore 以及 volumeSnapshotter 等</em></li>
+<li>如果 Velero 开启了 CSI 特性，则初始化 CSI Snapshot Client</li>
+<li>构建 controller-runtime 的 manager 对象</li>
+<li>初始化 CredentialFileStore，用于操作认证文件信息</li>
+<li>根据以上内容，构建 server 对象</li>
+</ol>
+<h2 id="run"><a href="#run" class="headerlink" title="run"></a>run</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/3c49ec4fb4ff7f5aaa4ed56e8f7ff1a26f966d72/pkg/cmd/server/server.go#L352">run 源码</a></p>
+<p>server 运行的主体逻辑</p>
+<ol>
+<li>如果配置了 profile 地址，则启动 pprof 服务</li>
+<li>检查 Velero namespace 是否存在，如果不存在则报错</li>
+<li>初始化 DiscoveryHelper，每 5 分钟刷新一次，获取可以备份的对象信息</li>
+<li>检查 Velero 服务所需要的 CRD 是否存在，如果不存在则报错</li>
+<li>检查 Restic 是否存在，如果不存在则输出 warning 信息，确保 restic 所需要的 secret 存在（即 velero-restic-credentials），初始化 RepositoryManager</li>
+<li>调用 runControllers，启动所有的 Controller</li>
+</ol>
+<h2 id="runControllers"><a href="#runControllers" class="headerlink" title="runControllers"></a>runControllers</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/3c49ec4fb4ff7f5aaa4ed56e8f7ff1a26f966d72/pkg/cmd/server/server.go#L566">runControllers 源码</a></p>
+<p>启动 controller 以及其他服务</p>
+<ol>
+<li>启动 promHttp 服务，对接 Prometheus</li>
+<li>初始化 <a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/plugin/clientmgmt/manager.go#L30">pluginManager</a>，提供与 Velero Plugin 交互的原生接口</li>
+<li>初始化 backupStoreGetter，提供操作 Backup 和 Restore 的上层接口<br><em>即 Provider 章节中的 StorageProvider</em></li>
+<li>按需初始化 CSI Snapshot Lister 和 CSI SnapshotContent Lister</li>
+<li>根据以上内容，初始化 Backup Controller、BackupSync Controller、Schedule Controller、GC Controller、BackupDeletion Controller、Restore Controller 以及 ResticRepo Controller，并将这些初步设定为默认开启的 Controller</li>
+<li>此外，ServerStatusRequest Controller 和 DownloadRequest Controller 作为服务运行时的状态 Controller，也会作为默认开启<br><em>该类型的 Controller 与步骤 5 中的 Controller 处理逻辑相同，但是是分开处理和启动的</em></li>
+<li>如果 Velero 服务为 restoreOnly 模式，则禁用 Backup Controller、Schedule Controller、GC Controller 以及 BackupDeletion Controller</li>
+<li>将启用的 Controller 和禁用的 Controller 取差集后，即为最终 Velero 服务中启动的 Controller 信息</li>
+<li>等待 Velero Client 和 CSI Snapshot Client 同步缓存（waitForCacheSync）</li>
+<li>启动 BackupStorageLocation Controller（Reconciler 方式），按需启动 ServerStatusRequest Controller 和 DownloadRequest Controller</li>
+<li>启动剩余的 Controller（不包含 Request 类型的 Controller），所有的 Controller 默认均为 1 worker</li>
+</ol>
+<h1 id="Restic-Server"><a href="#Restic-Server" class="headerlink" title="Restic Server"></a>Restic Server</h1><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;restic&#x2F;server.go</u></em></p>
+<p>本质上是 velero restic cli 的 server 子命令，根据自定义参数，启动 Restic 服务。</p>
+<h2 id="newResticServer"><a href="#newResticServer" class="headerlink" title="newResticServer"></a>newResticServer</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/cmd/cli/restic/server.go#L119">newResticServer 源码</a></p>
+<ol>
+<li>初始化 KubeClient 和 Velero Client</li>
+<li>初始化 PodInformer，仅获取调度在本节点上的 Pod</li>
+<li>构建 controller-runtime 的 manager 对象</li>
+<li>根据以上内容，构建 restic server 对象</li>
+<li>判断挂载在 restic 服务中 &#x2F;hosts_pods 目录下所有的 Pod 信息和集群中的所有的 Pod 是否一一对应</li>
+</ol>
+<h2 id="run-1"><a href="#run-1" class="headerlink" title="run"></a>run</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/cmd/cli/restic/server.go#L183">run 源码</a></p>
+<ol>
+<li>启动 promHttp 服务，对接 Prometheus</li>
+<li>初始化 CredentialFileStore，用于操作认证文件信息</li>
+<li>根据以上内容，初始化 PodVolumeBackup Controller 和 PodVolumeRestore Controller</li>
+<li>启动 PodVolumeBackup Controller 和 PodVolumeRestore Controller，默认均为 1 worker</li>
+</ol>
+<h1 id="Velero-Restic-Restore-Helper"><a href="#Velero-Restic-Restore-Helper" class="headerlink" title="Velero Restic Restore Helper"></a>Velero Restic Restore Helper</h1><p><em><u>cmd&#x2F;velero-restic-restore-helper&#x2F;main.go</u></em></p>
+<p>本质是 Velero 项目的另一个 binary 执行文件（还有一个是 velero 本身），在恢复 Pod 卷数据时，会给该 Pod 注入一个 InitContainer，该 binary 就是 InitContainer 所用镜像（velero&#x2F;velero-restic-restore-helper:&lt;velero-version&gt;）中的启动服务。</p>
+<h2 id="main"><a href="#main" class="headerlink" title="main"></a>main</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/cmd/velero-restic-restore-helper/main.go#L27">main 源码</a></p>
+<p>每一个待恢复卷数据的 Pod 的 InitContainer 中运行的服务</p>
+<ol>
+<li>命令行接受一个参数，即 Restore 的 UID</li>
+<li>启动死循环定时器，每一秒钟检查 InitContainer 的 &#x2F;restores 目录下每一个子目录的 .velero 目录下是否有所提供的 Restore UID 文件，如果每一个子目录都有该 UID 文件，则认为恢复完成，退出死循环，该 InitContainer 生命周期结束，否则，继续等待，无超时时间<br><em>&#x2F;restores 下每一个子目录代表一个待恢复的卷，命名为 Pod 使用的 PVC volumeMount 名称</em></li>
+</ol>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Velero 」 2.6 源码走读 — Server</p><p><a href="http://example.com/2022/03/06/2022-03-06-Velero 源码走读 - Server/">http://example.com/2022/03/06/2022-03-06-Velero 源码走读 - Server/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-03-06</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2022-11-16</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/Cloud-Native/">Cloud Native</a><a class="link-muted mr-2" rel="tag" href="/tags/Velero/">Velero</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/03/20/2022-03-20-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Plugin/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Velero 」 2.7 源码走读 — Plugin</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/02/20/2022-02-20-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Provider/"><span class="level-item">「 Velero 」 2.5 源码走读 — Provider</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">48</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">10</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">14</p></a></div></div></nav></div></div><!--!--><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Istio/"><span class="level-start"><span class="level-item">Istio</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Kata-Containers/"><span class="level-start"><span class="level-item">Kata Containers</span></span><span class="level-end"><span class="level-item tag">15</span></span></a><ul><li><a class="level is-mobile" href="/categories/Kata-Containers/virtcontainers/"><span class="level-start"><span class="level-item">virtcontainers</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Kubebuilder/"><span class="level-start"><span class="level-item">Kubebuilder</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Rust/"><span class="level-start"><span class="level-item">Rust</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Velero/"><span class="level-start"><span class="level-item">Velero</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Virtual-Kubelet/"><span class="level-start"><span class="level-item">Virtual Kubelet</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7">© 2023</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

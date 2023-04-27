@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Velero 」 2.5 源码走读 — Provider - Hexo</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Hexo"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Hexo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Velero 中与 StorageProvider 和 SnapshotProvider 相关的源码走读"><meta property="og:type" content="blog"><meta property="og:title" content="「 Velero 」 2.5 源码走读 — Provider"><meta property="og:url" content="http://example.com/2022/02/20/2022-02-20-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Provider/"><meta property="og:site_name" content="Hexo"><meta property="og:description" content="Velero 中与 StorageProvider 和 SnapshotProvider 相关的源码走读"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://velero.io/img/Velero.svg"><meta property="article:published_time" content="2022-02-19T16:00:00.000Z"><meta property="article:modified_time" content="2022-11-16T07:43:39.722Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Cloud Native"><meta property="article:tag" content="Velero"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://velero.io/img/Velero.svg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2022/02/20/2022-02-20-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Provider/"},"headline":"「 Velero 」 2.5 源码走读 — Provider","image":[],"datePublished":"2022-02-19T16:00:00.000Z","dateModified":"2022-11-16T07:43:39.722Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"Hexo","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"Velero 中与 StorageProvider 和 SnapshotProvider 相关的源码走读"}</script><link rel="canonical" href="http://example.com/2022/02/20/2022-02-20-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Provider/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2022-02-19T16:00:00.000Z" title="2022/2/20 00:00:00">2022-02-20</time></span><span class="level-item">Updated&nbsp;<time dateTime="2022-11-16T07:43:39.722Z" title="2022/11/16 15:43:39">2022-11-16</time></span><span class="level-item"><a class="link-muted" href="/categories/Velero/">Velero</a></span><span class="level-item">15 minutes read (About 2235 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Velero 」 2.5 源码走读 — Provider</h1><div class="content"><div align=center><img width="300" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v1.6.3</strong></p>
+</blockquote>
+<h1 id="Storage-Provider"><a href="#Storage-Provider" class="headerlink" title="Storage Provider"></a>Storage Provider</h1><p><em><u>pkg&#x2F;persistence&#x2F;object_store.go</u></em></p>
+<p>StorageProvider 提供了一系列的封装了 ObjectStore Plugin 的接口，用于操作位于 BackupStorageLocation 上数据。</p>
+<h2 id="IsValid"><a href="#IsValid" class="headerlink" title="IsValid"></a>IsValid</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>ListCommonPrefixes(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;, &#x2F;)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>针对获取到的公共前缀子目录，获取其子目录层级是否为 backups、restores、restic、metadata 和 plugins 之一，如果不是则返回 error，认为 BackupStorageLocation 不可用。</p>
+<p><em>例如，BackupStorageLocation 上的目录层级为 &lt;bucket&gt;&#x2F;&lt;prefix&gt;&#x2F;backups&#x2F;xxx 和 &lt;bucket&gt;&#x2F;&lt;prefix&gt;&#x2F;invalid&#x2F;xxx，调用 ListCommonPrefixes，获取到的公共前缀子目录层级有 prefix&#x2F;backups 和 prefix&#x2F;invalid，进一步处理后，获取到的子目录层级为 backups 和 invalid，其中，invalid 不满足 5 个固定的名称之一，因此认为 BackupStorageLocation 不可用。</em></p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>BackupStorageLocation Controller 会通过该接口周期性检查 BackupStorageLocation 是否可用</li>
+</ul>
+<h2 id="ListBackups"><a href="#ListBackups" class="headerlink" title="ListBackups"></a>ListBackups</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>ListCommonPrefixes(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;, &#x2F;)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>针对获取到的公共前缀子目录，其子目录层级为 Backup 的名称，聚合并返回。</p>
+<p><em>例如，BackupStorageLocation 上的目录层级为 &lt;bucket&gt;&#x2F;&lt;prefix&gt;&#x2F;backups&#x2F;backupA 和 &lt;bucket&gt;&#x2F;&lt;prefix&gt;&#x2F;backups&#x2F;backupB，调用 ListCommonPrefixes，获取到的公共前缀子目录层级有 &lt;prefix&gt;&#x2F;backups&#x2F;BackupA 和 &lt;prefix&gt;&#x2F;backups&#x2F;BackupB，进一步处理后，获取到的子目录层级为 BackupA 和 BackupB，则返回包含两者的列表。</em></p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>BackupSync Controller 在同步 Backup 时，用于获取 BackupStorageLocation 中的 Backup</li>
+</ul>
+<h2 id="PutBackup"><a href="#PutBackup" class="headerlink" title="PutBackup"></a>PutBackup</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>PutObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;.logs.gz, &lt;log&gt;)</li>
+<li>PutObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;velero-backup.json, &lt;metadata&gt;)</li>
+<li>PutObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;.tar.gz, &lt;content&gt;)</li>
+<li>DeleteObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;velero-backup.json)</li>
+<li>PutObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-podvolumebackups.json.gz, &lt;podvolumebackups&gt;)</li>
+<li>PutObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-volumesnapshots.json.gz, &lt;volumesnapshots&gt;)</li>
+<li>PutObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-resource-list.json.gz, &lt;resource-list&gt;)</li>
+<li>PutObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-csi-volumesnapshots.json.gz, &lt;csi-volumesnapshots&gt;)</li>
+<li>PutObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-csi-volumesnapshotcontents.json.gz, &lt;csi-volumesnapshotcontents&gt;)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>按照以下顺序上传文件</p>
+<ol>
+<li>Backup Logs<br><em>备份过程中，Velero 服务产生的日志</em></li>
+<li>Backup Metadata<br><em>描述 Backup 本身的信息</em></li>
+<li>Backup Content<br><em>被备份的资源内容</em></li>
+<li>PodVolumeBackups<br><em>被备份的 Pod 卷信息，由 Restic 创建并维护</em></li>
+<li>PodVolumeSnapshots<br><em>被备份的 Pod 卷快照信息，由 SnapshotProvider 创建并维护</em></li>
+<li>Backup ResourcesList<br><em>被备份的资源清单</em></li>
+<li>CSI VolumeSnapshot<br><em>被备份的 Pod 卷快照信息，由 CSI 创建并维护</em></li>
+<li>CSI VolumeSnapshotContents<br><em>被备份的 Pod 卷快照内容信息，由 CSI 创建并维护</em></li>
+</ol>
+<p><em>第一步日志上传失败时，仅会打印错误日志，而不会中断上传流程，是因为该步骤不影响备份的主体逻辑。此后如果有步骤失败，会影响到 Backup 的状态，并会清空之前的操作，即调用 DeleteObject 删除已上传的数据。</em></p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>Backup Controller 在备份完成时，备份的资源信息上传至 BackupStorageLocation 时</li>
+</ul>
+<h2 id="GetBackupMetadata"><a href="#GetBackupMetadata" class="headerlink" title="GetBackupMetadata"></a>GetBackupMetadata</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>GetObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;velero-backup.json)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>获取到 velero-backup.json 文件，读取内容，解析成 Backup 对象格式。</p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>BackupSync Controller 在同步 Backup 时，用于构建待同步的 Backup 对象</li>
+</ul>
+<h2 id="GetBackupVolumeSnapshots"><a href="#GetBackupVolumeSnapshots" class="headerlink" title="GetBackupVolumeSnapshots"></a>GetBackupVolumeSnapshots</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>ObjectExists(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;&lt;backups&gt;&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-volumesnapshots.json.gz)</li>
+<li>GetObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;&lt;backups&gt;&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-volumesnapshots.json.gz)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>判断 BackupVolumeSnapshots 是否存在，如果存在，则获取并解析返回。</p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>Restore Controller 在恢复时，会获取 Backup 相关联的 VolumeSnapshot 并恢复</li>
+<li>BackupDeletion Controller 在删除备份时，会一并删除 VolumeSnapshot 信息</li>
+</ul>
+<h2 id="GetBackupVolumeBackups"><a href="#GetBackupVolumeBackups" class="headerlink" title="GetBackupVolumeBackups"></a>GetBackupVolumeBackups</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>ObjectExists(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;&lt;backups&gt;&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-podvolumebackups.json.gz)</li>
+<li>GetObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;&lt;backups&gt;&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-podvolumebackups.json.gz)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>判断 PodVolumeBackup 是否存在，如果存在，则获取并解析返回。</p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>BackupSync Controller 在处理需要同步的 Backup 时，也会判断是否有相关联的 PodVolumeBackup 需要被同步</li>
+</ul>
+<h2 id="GetBackupContents"><a href="#GetBackupContents" class="headerlink" title="GetBackupContents"></a>GetBackupContents</h2><p><strong>调用接口</strong></p>
+<p>GetObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;.tar.gz)</p>
+<p><strong>主体逻辑</strong></p>
+<p>调用接口，判断指定的备份内容。</p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>Restore Controller 在恢复时，会将备份的内容下载到临时文件中，恢复创建资源</li>
+<li>BackupDeletion Controller 在删除备份时，如果定义了 action，会将备份的内容下载到临时文件中，获取到 action 定义的动作并执行</li>
+</ul>
+<h2 id="GetCSIVolumeSnapshots"><a href="#GetCSIVolumeSnapshots" class="headerlink" title="GetCSIVolumeSnapshots"></a>GetCSIVolumeSnapshots</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>ObjectExists(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;&lt;backups&gt;&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-csi-volumesnapshots.json.gz)</li>
+<li>GetObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;&lt;backups&gt;&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-csi-volumesnapshots.json.gz)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>调用 ObjectExists 判断 VolumeSnapshots 是否存在，如果存在，则获取并解析返回</p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>无</li>
+</ul>
+<h2 id="GetCSIVolumeSnapshotContents"><a href="#GetCSIVolumeSnapshotContents" class="headerlink" title="GetCSIVolumeSnapshotContents"></a>GetCSIVolumeSnapshotContents</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>ObjectExists(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;&lt;backups&gt;&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-csi-volumesnapshotscontents.json.gz)</li>
+<li>GetObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;&lt;backups&gt;&#x2F;&lt;backup&gt;&#x2F;&lt;backup&gt;-csi-volumesnapshotscontents.json.gz)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>判断 VolumeSnapshotsContents 是否存在，如果存在，则获取并解析返回</p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>BackupSync Controller 在获取到需要同步 Backup 时，如果 Velero 开启了 CSI 特性，用于获取 VolumeSnapshotContents 对象，后续也会同步该对象</li>
+</ul>
+<h2 id="BackupExists"><a href="#BackupExists" class="headerlink" title="BackupExists"></a>BackupExists</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>ObjectExists(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;velero-backup.json)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>调用接口，判断给定的备份是否存在。</p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>Backup Controller 在备份时，会判断本次创建的备份在 BackupStorageLocation 中是否已经存在，如果存在则将备份状态设为 Failed</li>
+</ul>
+<h2 id="DeleteBackup"><a href="#DeleteBackup" class="headerlink" title="DeleteBackup"></a>DeleteBackup</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>ListObjects(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;backups&#x2F;&lt;backup&gt;&#x2F;)</li>
+<li>DeleteObject(&lt;bucket&gt;, &lt;key&gt;)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>调用 ListObjects，获取指定备份名称目录下的所有文件，即 key，遍历所有文件，调用 DeleteObject 删除 key。<br><em>可以看到，Velero 在删除备份时仅会调用 DeleteBackup 删除所有的子文件，也就是所有的 key，但是不会删除这个备份目录，因此如果先要实现删除最后的空目录，需要在 StorageProvider 的 DeleteObject 接口实现。</em></p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>BackupDeletion Controller 删除指定备份时，用于删除 BackupStorageLocation 中的 Backup 数据</li>
+</ul>
+<h2 id="PutRestoreLog"><a href="#PutRestoreLog" class="headerlink" title="PutRestoreLog"></a>PutRestoreLog</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>PutObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;restores&#x2F;&lt;restore&gt;&#x2F;restore-&lt;restore&gt;-logs.gz, &lt;log&gt;)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>调用接口，上传恢复日志文件。</p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>Restore Controller 在恢复完成时，用于上传恢复过程中 Velero 产生的日志</li>
+</ul>
+<h2 id="PutRestoreResults"><a href="#PutRestoreResults" class="headerlink" title="PutRestoreResults"></a>PutRestoreResults</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>PutObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;restores&#x2F;&lt;restore&gt;&#x2F;restore-&lt;restore&gt;-logs.gz, &lt;result&gt;)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>调用接口，上传恢复结果信息。</p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>Restore Controller 在恢复完成时，用于将本次恢复过程中产生的 warning 和 error 信息上传</li>
+</ul>
+<h2 id="DeleteRestore"><a href="#DeleteRestore" class="headerlink" title="DeleteRestore"></a>DeleteRestore</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>ListObject(&lt;bucket&gt;, &lt;prefix&gt;&#x2F;restores&#x2F;&lt;restore&gt;&#x2F;)</li>
+<li>DeleteObject(&lt;bucket&gt;, &lt;key&gt;)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>调用 ListObjects，获取指定恢复名称目录下的所有文件，即 key，遍历所有文件，调用 DeleteObject 删除 key。<br><em>可以看到，Velero 在删除恢复时仅会调用 DeleteBackup 删除所有的子文件，也就是所有的 key，但是不会删除这个恢复目录，因此如果先要实现删除最后的空目录，需要在 StorageProvider 的 DeleteObject 接口实现。</em></p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>BackupDeletion Controller 在删除 Backup 时，会同步删除相关联的 Restore，并删除 BackupStorageLocation 中的 Restore 信息<br><em>BackupStorageLocation 中 Restore 的删除仅在该场景下，手动删除 Restore，不会触发 DeleteRestore 流程，也就是通过 velero restore delete xxx 是无法删除 BackupStorageLocation 中 Restore 文件的。</em></li>
+</ul>
+<h2 id="GetDownloadURL"><a href="#GetDownloadURL" class="headerlink" title="GetDownloadURL"></a>GetDownloadURL</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>CreateSignedURL(&lt;bucket&gt;, &lt;target&gt;, 10min)<br><em>target 表示要根据 DownloadRequest 对象要获取的目标文件，具体参考 DownloadRequest 章节</em></li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<p>根据 DownloadRequest 的对象类别，即 target，构建不同的目标文件路径，调用接口，获取 DownloadURL。</p>
+<p><strong>应用场景</strong></p>
+<ul>
+<li>DownloadRequest Controller 在处理 DownloadRequest 对象时，会通过该接口构建 DownloadURL，并回写至 DownloadRequest 对象中</li>
+</ul>
+<h1 id="Snapshot-Provider"><a href="#Snapshot-Provider" class="headerlink" title="Snapshot Provider"></a>Snapshot Provider</h1><p><em><u>pkg&#x2F;backup&#x2F;item_backupper.go</u></em><br><em><u>pkg&#x2F;restore&#x2F;pv_restorer.go</u></em></p>
+<p>Velero 并未像 Storage Provider 封装一些上层接口，而是将底层接口的调用简单封装了以下两个函数，用于备份和恢复时，对于 PV 类型的资源做的快照和恢复的操作。</p>
+<h2 id="takePVSnapshot"><a href="#takePVSnapshot" class="headerlink" title="takePVSnapshot"></a>takePVSnapshot</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>init(snapshotLocation.Spec.Config)</li>
+<li>GetVolumeID(&lt;Unstructured PV&gt;)</li>
+<li>GetVolumeInfo(&lt;volumeID&gt;, &lt;volumeZone&gt;)</li>
+<li>CreateSnapshot(&lt;volumeID&gt;, &lt;volumeZone&gt;, &lt;tags&gt;)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<ol>
+<li>判断 Backup 的 SnapshotVolumes 是否开启，如果开启则表示需要对卷做快照，继续执行以下逻辑</li>
+<li>如果 PV 已经被认领，则需要判断是否被 Restic 已经备份（没有被认领的 PV 肯定不会被 Restic 备份），如果已经备份，则不会再次创建卷快照</li>
+<li>通过 PV 的 label 获取 PV 的 zone 信息（topology.kubernetes.io&#x2F;zone 或者 failure-domain.beta.kubernetes.io&#x2F;zone）</li>
+<li>针对 backup 中每一个 Snapshot Location，初始化一个 volumeSnapshotter，调用 GetVolumeID 尝试获取 VolumeID<br><em>PV 卷肯定是由 Snapshot Provider 创建出来的，所以 GetVolumeID 肯定会有记录保存</em></li>
+<li>根据 Backup 的 label 创建 Tag，并追加 velero.io&#x2F;backup&#x3D;&lt;backupName&gt; 和 velero.io&#x2F;pv&#x3D;&lt;pvName&gt;</li>
+<li>调用 GetVolumeInfo 接口，获取到卷信息，包括卷类型和 IOPS</li>
+<li>根据以上信息构建 volumeSnapshot 对象，调用 CreateSnapshot 接口，创建快照</li>
+<li>更新 volumeSnapshot 状态等信息</li>
+</ol>
+<h2 id="executePVAction"><a href="#executePVAction" class="headerlink" title="executePVAction"></a>executePVAction</h2><p><strong>调用接口</strong></p>
+<ul>
+<li>init(snapshotLocation.Spec.Config)</li>
+<li>CreateVolumeFromSnapshot(&lt;snapshotID&gt;, &lt;volumeType&gt;, &lt;volumeZone&gt;,  &lt;volumeIOPS&gt;)</li>
+<li>SetVolumeID(&lt;pv&gt;, &lt;VolumeID&gt;)</li>
+</ul>
+<p><strong>主体逻辑</strong></p>
+<ol>
+<li>校验 PV 的合法性，判断名称是否存在</li>
+<li>判断是否需要通过快照恢复卷，即 Backup 中是否指定了备份卷（backup.snapshotVolumes）以及 Restore 中是否指定了恢复卷（restore.restorePVs）</li>
+<li>根据 PV 名称以及 Restore 相关信息获取 snapshot 对象</li>
+<li>如果获取到 Snapshot 对象，则初始化 volumeSnapshotter</li>
+<li>根据 snapshot 对象中的卷信息，如卷类型，zone，IOPS 等信息，调用 CreateVolumeFromSnapshot 创建卷，并获取 VolumeID 信息</li>
+<li>调用 SetVolumeID，给 PV 设置 VolumeID，并返回 PV 的解构类型</li>
+</ol>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Velero 」 2.5 源码走读 — Provider</p><p><a href="http://example.com/2022/02/20/2022-02-20-Velero 源码走读 - Provider/">http://example.com/2022/02/20/2022-02-20-Velero 源码走读 - Provider/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-02-20</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2022-11-16</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/Cloud-Native/">Cloud Native</a><a class="link-muted mr-2" rel="tag" href="/tags/Velero/">Velero</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/03/06/2022-03-06-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Server/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Velero 」 2.6 源码走读 — Server</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/02/05/2022-02-05-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Request/"><span class="level-item">「 Velero 」 2.4 源码走读 — Request</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">48</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">10</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">14</p></a></div></div></nav></div></div><!--!--><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Istio/"><span class="level-start"><span class="level-item">Istio</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Kata-Containers/"><span class="level-start"><span class="level-item">Kata Containers</span></span><span class="level-end"><span class="level-item tag">15</span></span></a><ul><li><a class="level is-mobile" href="/categories/Kata-Containers/virtcontainers/"><span class="level-start"><span class="level-item">virtcontainers</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Kubebuilder/"><span class="level-start"><span class="level-item">Kubebuilder</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Rust/"><span class="level-start"><span class="level-item">Rust</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Velero/"><span class="level-start"><span class="level-item">Velero</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Virtual-Kubelet/"><span class="level-start"><span class="level-item">Virtual Kubelet</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7">© 2023</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

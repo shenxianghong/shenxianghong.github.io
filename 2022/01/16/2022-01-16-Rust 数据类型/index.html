@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Rust 」 3.2 数据类型 - Hexo</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Hexo"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Hexo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Rust 中的数据类型，即标量类型与复合类型"><meta property="og:type" content="blog"><meta property="og:title" content="「 Rust 」 3.2 数据类型"><meta property="og:url" content="http://example.com/2022/01/16/2022-01-16-Rust%20%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/"><meta property="og:site_name" content="Hexo"><meta property="og:description" content="Rust 中的数据类型，即标量类型与复合类型"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://www.rust-lang.org/static/images/rust-logo-blk.svg"><meta property="article:published_time" content="2022-01-15T16:00:00.000Z"><meta property="article:modified_time" content="2022-05-17T07:47:33.403Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Rust"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://www.rust-lang.org/static/images/rust-logo-blk.svg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2022/01/16/2022-01-16-Rust%20%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/"},"headline":"「 Rust 」 3.2 数据类型","image":[],"datePublished":"2022-01-15T16:00:00.000Z","dateModified":"2022-05-17T07:47:33.403Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"Hexo","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"Rust 中的数据类型，即标量类型与复合类型"}</script><link rel="canonical" href="http://example.com/2022/01/16/2022-01-16-Rust%20%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2022-01-15T16:00:00.000Z" title="2022/1/16 00:00:00">2022-01-16</time></span><span class="level-item">Updated&nbsp;<time dateTime="2022-05-17T07:47:33.403Z" title="2022/5/17 15:47:33">2022-05-17</time></span><span class="level-item"><a class="link-muted" href="/categories/Rust/">Rust</a></span><span class="level-item">10 minutes read (About 1429 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Rust 」 3.2 数据类型</h1><div class="content"><div align=center><img width="150" style="border: 0px" src="https://www.rust-lang.org/static/images/rust-logo-blk.svg"></div>
+
+<hr>
+<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>Rust 是静态编译语言，在编译时必须知道所有变量的类型</p>
+<ul>
+<li>基于使用的值，编译器通常能够推断出它的具体类型</li>
+<li>但如果可能的类型比较多，例如把 String 转为整数的 parse 方法，就必须添加类型的标注，否则编译会报错</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">guess</span>: <span class="type">u32</span> = <span class="string">&quot;42&quot;</span>.<span class="title function_ invoke__">parse</span>().<span class="title function_ invoke__">expect</span>(<span class="string">&quot;Not a number&quot;</span>);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, guess);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于针对数字 42 在 Rust 中有很多数据类型可以将其包含在内，如 <code>i32</code> 和 <code>u32</code> 等等，所以要给变量具体指明类型，如果未指明，则会编译报错：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">cargo run</span></span><br><span class="line">error[E0282]: type annotations needed</span><br><span class="line"><span class="meta prompt_"> --&gt; </span><span class="language-bash">src/main.rs:2:9</span></span><br><span class="line">  |</span><br><span class="line">2 |     let guess = &quot;42&quot;.parse().expect(&quot;Not a number&quot;);</span><br><span class="line">  |         ^^^^^ consider giving `guess` a type</span><br></pre></td></tr></table></figure>
+
+<h1 id="标量类型"><a href="#标量类型" class="headerlink" title="标量类型"></a>标量类型</h1><p>一个标量类型代表一个单个的值。</p>
+<p>Rust 有四个主要的标量类型：</p>
+<ul>
+<li>整数类型</li>
+<li>浮点类型</li>
+<li>布尔类型</li>
+<li>字符类型</li>
+</ul>
+<h2 id="整数类型"><a href="#整数类型" class="headerlink" title="整数类型"></a>整数类型</h2><p>整数类型没有小数部分，无符号整数类型以 <code>u</code>（usize）开头，有符号整数类型以 <code>i</code> （integer）开头，例如 u32 就是一个无符号的整数类型，占据 32 位的空间。</p>
+<h3 id="整数类型表"><a href="#整数类型表" class="headerlink" title="整数类型表"></a>整数类型表</h3><ul>
+<li>每种都分 i 和 u，以及固定的位数</li>
+<li>有符号的范围是 <code>-(2^n^ - 1) 到 2^n-1^ - 1</code></li>
+<li>无符号范围：<code>0 到 2^n^ -1</code></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Length</th>
+<th>Signed</th>
+<th>Unsigned</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>8-bit</td>
+<td>i8</td>
+<td>u8</td>
+</tr>
+<tr>
+<td>16-bit</td>
+<td>i16</td>
+<td>u16</td>
+</tr>
+<tr>
+<td>32-bit</td>
+<td>i32</td>
+<td>u32</td>
+</tr>
+<tr>
+<td>64-bit</td>
+<td>i64</td>
+<td>u64</td>
+</tr>
+<tr>
+<td>128-bit</td>
+<td>i128</td>
+<td>u128</td>
+</tr>
+<tr>
+<td>arch</td>
+<td>isize</td>
+<td>usize</td>
+</tr>
+</tbody></table>
+<p><code>isize</code> 和 <code>usize</code> 类型的位数由程序运行的计算机的架构所决定，如果是 64 位计算机，那就是 64 位的。使用场景比如，对某个集合进行索引操作。</p>
+<h3 id="整数字面值"><a href="#整数字面值" class="headerlink" title="整数字面值"></a>整数字面值</h3><table>
+<thead>
+<tr>
+<th>Number literals</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Decimal</td>
+<td>98_222</td>
+</tr>
+<tr>
+<td>Hex</td>
+<td>0xff</td>
+</tr>
+<tr>
+<td>Octal</td>
+<td>0o77</td>
+</tr>
+<tr>
+<td>Binary</td>
+<td>0b1111_0000</td>
+</tr>
+<tr>
+<td>Byte (u8 only)</td>
+<td>b’A’</td>
+</tr>
+</tbody></table>
+<ul>
+<li><p>除了 <code>byte</code> 类型外，所有的数字字面值都允许使用类型后缀，例如 57u8</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="comment">// 此时，foo 的类型为 u8，值为 57</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">foo</span> = <span class="number">57u8</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, foo)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>整数的默认类型就是 <code>i32</code></p>
+</li>
+</ul>
+<h3 id="整数溢出"><a href="#整数溢出" class="headerlink" title="整数溢出"></a>整数溢出</h3><p>例如，u8 的范围是 0 - 255，如果把一个 u8 类型变量的值设为 256，那么：</p>
+<ul>
+<li><strong>调试模式下编译</strong>： Rust 会检查整数溢出，如果发生溢出，程序在运行时就会 panic</li>
+<li><strong>发布模式下编译</strong>： Rust 不会检查可能导致 panic 的整数溢出，如果发生溢出，Rust 会执行<strong>环绕操作</strong>，也就是 256 变为 1，257 变为 2，以此类推</li>
+</ul>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">foo</span>: <span class="type">u8</span> = <span class="number">255</span>;</span><br><span class="line">    foo = foo + <span class="number">2</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, foo)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><em>cargo run</em></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">cargo run</span></span><br><span class="line">thread &#x27;main&#x27; panicked at &#x27;attempt to add with overflow&#x27;, src/main.rs:3:11</span><br><span class="line">note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace</span><br></pre></td></tr></table></figure>
+
+<p><em>cargo build –release</em></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">./target/release/hello-world</span></span><br><span class="line">1</span><br></pre></td></tr></table></figure>
+
+<h2 id="浮点类型"><a href="#浮点类型" class="headerlink" title="浮点类型"></a>浮点类型</h2><p>Rust 的浮点类型使用了 IEEE-754 标准来表述，有两种基础的浮点类型，也就是含有小数部分的类型：</p>
+<ul>
+<li>f32，单精度</li>
+<li>f64，双精度，Rust 中默认的浮点类型</li>
+</ul>
+<h2 id="布尔类型"><a href="#布尔类型" class="headerlink" title="布尔类型"></a>布尔类型</h2><p>Rust 的布尔类型（true &amp; false）占用 1 字节大小，符号为 bool。</p>
+<h2 id="字符类型"><a href="#字符类型" class="headerlink" title="字符类型"></a>字符类型</h2><p>Rust 中 <code>char</code> 类型用来描述语言中最基础的单个字符，字符类型的字面值使用单引号，占用 4 字节的大小，是 Unicode 的标量值，可以表示比 ASCII 多得多的字符内容，如拼音，中日韩文，零长度空白字符，emoji 表情等。</p>
+<p>范围是 <code>U+0000 到 U+D7FF</code> 和 <code>U+E000</code> 到 <code>U+10FFFF</code>。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">x</span> = <span class="string">&#x27;z&#x27;</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">y</span>: <span class="type">char</span> = <span class="string">&#x27;字&#x27;</span>;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">z</span> = &#x27;😄&#x27;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="复合类型"><a href="#复合类型" class="headerlink" title="复合类型"></a>复合类型</h1><p>复合类型可以将多个值放到一个类型里。</p>
+<p>Rust 有两个主要的复合类型：</p>
+<ul>
+<li>元组</li>
+<li>数组</li>
+</ul>
+<h2 id="元组（Tuple）"><a href="#元组（Tuple）" class="headerlink" title="元组（Tuple）"></a>元组（Tuple）</h2><p>元组可以将多个类型的多个值放到一个类型里，并且长度固定，一旦声明不可改变。</p>
+<p>元组的类型为：<code>(类型1,类型2,...)</code></p>
+<p>访问元组中的元素值可以使用<strong>模式匹配（destructure）和点标记法</strong>。</p>
+<p><strong>模式匹配</strong></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">tup</span>: (<span class="type">i32</span>, <span class="type">bool</span>, <span class="type">char</span>) = (<span class="number">500</span>, <span class="literal">false</span>, <span class="string">&#x27;A&#x27;</span>);</span><br><span class="line">    <span class="comment">// x, y, z 的类型与值分别对应 tup 中的三个元素，即 let x: 132 = 500</span></span><br><span class="line">    <span class="keyword">let</span> (x, y, z) = tup;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;, &#123;&#125;, &#123;&#125;&quot;</span>, x, y, z);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>点标记法</strong></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">tup</span>: (<span class="type">i32</span>, <span class="type">bool</span>, <span class="type">char</span>) = (<span class="number">500</span>, <span class="literal">false</span>, <span class="string">&#x27;A&#x27;</span>);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;, &#123;&#125;, &#123;&#125;&quot;</span>, tup.<span class="number">0</span>, tup.<span class="number">1</span>, tup.<span class="number">2</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>点标记法的“索引“不可以是变量。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">tup</span>: (<span class="type">i32</span>, <span class="type">bool</span>, <span class="type">char</span>) = (<span class="number">500</span>, <span class="literal">false</span>, <span class="string">&#x27;A&#x27;</span>);</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">i</span> = <span class="number">0</span>;</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, tup.i)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">cargo run</span></span><br><span class="line">error[E0609]: no field `i` on type `(i32, bool, char)`</span><br><span class="line"><span class="meta prompt_"> --&gt; </span><span class="language-bash">src/main.rs:4:24</span></span><br><span class="line">  |</span><br><span class="line">4 |     println!(&quot;&#123;&#125;&quot;, tup.i)</span><br><span class="line">  |                        ^</span><br></pre></td></tr></table></figure>
+
+<p>和 Python 等其他语言一样，当元组中只有一个元素，类型和值均需要加逗号，当没有逗号时，编译器会认为其是一个标量类型，括号会被视为多余。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">tup</span>: (<span class="type">i32</span>,) = (<span class="number">1</span>,);</span><br><span class="line">    <span class="built_in">println!</span>(<span class="string">&quot;&#123;&#125;&quot;</span>, tup.<span class="number">0</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="数组"><a href="#数组" class="headerlink" title="数组"></a>数组</h2><p>数组可以将多个值放到一个类型中，但是数组中每个元素的类型必须相同，并且长度固定，一旦声明不可改变。</p>
+<p>数组的类型为：<code>[类型;长度]</code></p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="keyword">let</span> <span class="variable">a</span>: [<span class="type">i32</span>;<span class="number">5</span>] = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了上述的声明方式外，如果数组中的每个元素值都相同，那么可以快速声明为：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">    <span class="comment">// 相当于 let a = [3, 3, 3, 3, 3]</span></span><br><span class="line">    <span class="keyword">let</span> <span class="variable">a</span> = [<span class="number">3</span>;<span class="number">5</span>];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>类似于 Golang，访问数组中的元素值可以使用<strong>索引法</strong>。</p>
+<p><strong>索引越界</strong></p>
+<p>如果访问的索引超出了数组的范围，处理方式和 Golang 类似，也就是：</p>
+<ul>
+<li>编译时会通过，但是不是绝对的，Rust 编译器无法直接判断出是否越界等较复杂的情况</li>
+<li>运行时会报错，区别于 C 和 C++ 等，虽然数组在内存中为连续的地址，但是越界的内存空间不属于该数组，所以无法访问</li>
+</ul>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Rust 」 3.2 数据类型</p><p><a href="http://example.com/2022/01/16/2022-01-16-Rust 数据类型/">http://example.com/2022/01/16/2022-01-16-Rust 数据类型/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-01-16</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2022-05-17</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/Rust/">Rust</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/01/17/2022-01-17-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Location/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Velero 」 2.1 源码走读 — Location</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/01/15/2022-01-15-Rust%20%E5%8F%98%E9%87%8F%E4%B8%8E%E5%8F%AF%E5%8F%98%E6%80%A7/"><span class="level-item">「 Rust 」 3.1 变量与可变性</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">48</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">10</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">14</p></a></div></div></nav></div></div><!--!--><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Istio/"><span class="level-start"><span class="level-item">Istio</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Kata-Containers/"><span class="level-start"><span class="level-item">Kata Containers</span></span><span class="level-end"><span class="level-item tag">15</span></span></a><ul><li><a class="level is-mobile" href="/categories/Kata-Containers/virtcontainers/"><span class="level-start"><span class="level-item">virtcontainers</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Kubebuilder/"><span class="level-start"><span class="level-item">Kubebuilder</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Rust/"><span class="level-start"><span class="level-item">Rust</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Velero/"><span class="level-start"><span class="level-item">Velero</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Virtual-Kubelet/"><span class="level-start"><span class="level-item">Virtual Kubelet</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7">© 2023</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

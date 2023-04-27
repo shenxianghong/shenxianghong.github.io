@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Velero 」 2.1 源码走读 — Location - Hexo</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Hexo"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Hexo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Velero 中与 location 和 repository 相关的源码走读"><meta property="og:type" content="blog"><meta property="og:title" content="「 Velero 」 2.1 源码走读 — Location"><meta property="og:url" content="http://example.com/2022/01/17/2022-01-17-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Location/"><meta property="og:site_name" content="Hexo"><meta property="og:description" content="Velero 中与 location 和 repository 相关的源码走读"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://velero.io/img/Velero.svg"><meta property="article:published_time" content="2022-01-16T16:00:00.000Z"><meta property="article:modified_time" content="2022-11-16T07:43:27.403Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Cloud Native"><meta property="article:tag" content="Velero"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://velero.io/img/Velero.svg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2022/01/17/2022-01-17-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Location/"},"headline":"「 Velero 」 2.1 源码走读 — Location","image":[],"datePublished":"2022-01-16T16:00:00.000Z","dateModified":"2022-11-16T07:43:27.403Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"Hexo","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"Velero 中与 location 和 repository 相关的源码走读"}</script><link rel="canonical" href="http://example.com/2022/01/17/2022-01-17-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Location/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2022-01-16T16:00:00.000Z" title="2022/1/17 00:00:00">2022-01-17</time></span><span class="level-item">Updated&nbsp;<time dateTime="2022-11-16T07:43:27.403Z" title="2022/11/16 15:43:27">2022-11-16</time></span><span class="level-item"><a class="link-muted" href="/categories/Velero/">Velero</a></span><span class="level-item">13 minutes read (About 1885 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Velero 」 2.1 源码走读 — Location</h1><div class="content"><div align=center><img width="300" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v1.6.3</strong></p>
+</blockquote>
+<h1 id="BackupStorageLocation"><a href="#BackupStorageLocation" class="headerlink" title="BackupStorageLocation"></a>BackupStorageLocation</h1><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/release-1.6/pkg/apis/velero/v1/backupstoragelocation_types.go">API</a></p>
+<h2 id="backup-location"><a href="#backup-location" class="headerlink" title="backup-location"></a>backup-location</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backuplocation&#x2F;backup-location.go</u></em></p>
+<p>velero backup-location 包括 4 个子命令：create、delete、get 和 set。</p>
+<h2 id="create"><a href="#create" class="headerlink" title="create"></a>create</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup-location&#x2F;create.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>–provider 和 –bucket 为必需参数</li>
+<li>在指定 –backup-sync-period 参数时，其值必须要大于等于 0 </li>
+<li>在指定 –credential 参数时，其值仅能包含一对 key-value</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>根据命令行参数，构建 BackupStorageLocation 对象，下发至集群中创建，后续由 BackupStorageLocation Controller 负责维护</li>
+<li>如果新创建的 BackupStorageLocation 为默认的，则将集群中其余的 BackupStorageLocation 设为非默认</li>
+</ol>
+<h2 id="delete"><a href="#delete" class="headerlink" title="delete"></a>delete</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup-location&#x2F;delete.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>name、–all 和 –selector 参数有且仅能有一个</li>
+<li>要删除的 BackupStorageLocation 在集群中必须存在</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>根据命令行参数，获取集群中的 BackupStorageLocation 资源并删除</li>
+</ol>
+<h2 id="get"><a href="#get" class="headerlink" title="get"></a>get</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup-location&#x2F;get.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>如果显式指定要获取的 BackupStorageLocation，则其在集群中必须存在</li>
+</ul>
+<p><strong>流程逻辑</strong></p>
+<ol>
+<li>获取到 BackupStorageLocation 资源，根据 –output 指定的样式格式化输出</li>
+</ol>
+<h2 id="set"><a href="#set" class="headerlink" title="set"></a>set</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup-location&#x2F;set.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>在指定 –credential 参数时，其值仅能包含一对 key-value</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>根据命令行提供的参数信息，将其更新至集群中的 BackupStorageLocation 对象中</li>
+<li>其中，如果参数信息是将其设置为默认（–default），则会将集群中其余的 BackupStorageLocation 设为非默认</li>
+</ol>
+<h1 id="ResticRepository"><a href="#ResticRepository" class="headerlink" title="ResticRepository"></a>ResticRepository</h1><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/release-1.6/pkg/apis/velero/v1/restic_repository.go">API</a></p>
+<p>ResticRepository 不支持通过命令行手动创建，而是在备份流程中，由 Backup Controller 调用 <strong>ensureRepo</strong>，针对每一个卷命名空间，创建一个该对象。<br><em>注意是 Pod 所在的命名空间（即卷命名空间），而非 Velero 或者 Restic 所在的命名空间</em></p>
+<h2 id="repo"><a href="#repo" class="headerlink" title="repo"></a>repo</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;restic&#x2F;repo&#x2F;repo.go</u></em></p>
+<h3 id="get-1"><a href="#get-1" class="headerlink" title="get"></a>get</h3><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;restic&#x2F;repo&#x2F;get.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>如果显式指定要获取的 ResticRepository，则其在集群中必须存在</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>获取到 ResticRepository 资源，根据 –output 指定的样式格式化输出</li>
+</ol>
+<h2 id="server"><a href="#server" class="headerlink" title="server"></a>server</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;restic&#x2F;server.go</u></em></p>
+<p>server 本身是 velero restic 的 hidden 类型的命令，是 Restic 服务的启动命令。</p>
+<ol>
+<li>由于 Pod 会将所在所在节点的 &#x2F;var&#x2F;lib&#x2F;kubelet&#x2F;pods 挂在到容器内 &#x2F;host_pods 目录下，因此，会校验当前节点的所有 Pod 卷是否均已挂载到容器内</li>
+<li>启动 Restic 服务，内部会启动 1 个 PodVolumeBackupController 和 1 个 PodVolumeRestoreController，用于处理卷备份与恢复的流程</li>
+</ol>
+<h1 id="BackupStorageLocation-Controller"><a href="#BackupStorageLocation-Controller" class="headerlink" title="BackupStorageLocation Controller"></a>BackupStorageLocation Controller</h1><p><em><u>pkg&#x2F;controller&#x2F;backup_storage_location_controller.go</u></em></p>
+<h2 id="Reconcile"><a href="#Reconcile" class="headerlink" title="Reconcile"></a>Reconcile</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_storage_location_controller.go#L55">Reconcile 源码</a></p>
+<ol>
+<li>针对集群中的每一个 BackupStorageLocation，如果不存在默认的时，会根据 Velero 服务启动命令中的信息设置一个默认 <br><em>在 Velero 之前版本中，Velero 服务启动时可以设置默认的 BackupStorageLocation，在 2.0 之后废弃，改用 velero backup-location set –default 的方式，而在 Controller 中仍然保留了这段逻辑，用于向后兼容</em></li>
+<li>计算 BackupStorageLocation 是否已经准备好进行验证（即是否到达上次验证时间 + 验证频率），规则大致为<ul>
+<li>频率等于 0 时，不作验证</li>
+<li>频率小于 0 时，为不合法场景，将频率重置为默认的 1 分钟</li>
+<li>如果未做过验证（即第一次尝试验证时），无视其设置的验证频率，直接返回 true，表示立即开始验证流程</li>
+</ul>
+</li>
+<li>构建请求 StorageProvider 中所需要 BackupStorageLocation  对象，其中如果 BackupStorageLocation 中设置了 Credential 信息，则会获取位于 Velero 命名空间下的 Secret，将 Secret 内容以 &lt;Secret Name&gt; - &lt;Secret Key&gt; 的形式持久化到磁盘中，并将 BackupStorageLocation 的 credentialsFile 字段指向该文件<br><br><em>通常位于 &#x2F;tmp&#x2F;credentials&#x2F;velero 目录中</em></li>
+<li>通过 StorageProvider 的 IsValid 接口判断 BackupStorageLocation 是否可用</li>
+<li>更新集群中 BackupStorageLocation 状态和上次验证时间</li>
+<li>最终无论结果如何，都会重新入队</li>
+</ol>
+<h1 id="ResticRepository-Controller"><a href="#ResticRepository-Controller" class="headerlink" title="ResticRepository Controller"></a>ResticRepository Controller</h1><p><em><u>pkg&#x2F;controller&#x2F;restic_repository_controller.go</u></em></p>
+<h2 id="NewResticRepositoryController"><a href="#NewResticRepositoryController" class="headerlink" title="NewResticRepositoryController"></a>NewResticRepositoryController</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/restic_repository_controller.go#L57">NewResticRepositoryController 源码</a></p>
+<p>工厂函数</p>
+<ol>
+<li>注册 Generic Controller 中的 syncHandler 和 resyncFunc</li>
+<li>监听 ResticRepository 资源的 Add 事件，将 ResticRepository 以 key（namespace&#x2F;name）的形式加入 Generic Controller 的 queue 中</li>
+</ol>
+<h2 id="processQueueItem"><a href="#processQueueItem" class="headerlink" title="processQueueItem"></a>processQueueItem</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/restic_repository_controller.go#L111">processQueueItem 源码</a></p>
+<p>注册在 Generic Controller 中 syncHandler 的实现</p>
+<ol>
+<li>函数入参就是 Generic Controller 的 queue 中待处理的 ResticRepository key，通过解析获取的 namespace 和 name 查询到集群中的 ResticRepository 对象</li>
+<li>如果 ResticRepository 对象状态为空或者是 New，则调用 <strong>initializeRepo</strong> 初始化一个 Restic 仓库</li>
+<li>否则会进一步判断 ResticRepository 对象状态<ul>
+<li>如果状态为 Ready，则执行 restic prune 命令，判断是否可以建立连接，并更新 ResticRepository 上次维护时间信息</li>
+<li>如果状态为 NotReady，则调用 <strong>ensureRepo</strong> 尝试检查或初始化一个仓库，并根据返回结果更新 ResticRepository 的状态为 Ready 或者 NotReady<br><em>restic prune 的执行失败并不会影响到主流程，只是会在 ResticRepository 对象中记录错误信息</em></li>
+</ul>
+</li>
+</ol>
+<h2 id="initializeRepo"><a href="#initializeRepo" class="headerlink" title="initializeRepo"></a>initializeRepo</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/restic_repository_controller.go#L157">initializeRepo 源码</a></p>
+<p>尝试初始化 Restic 仓库的主体流程（真正初始化的动作位于 <strong>ensureRepo</strong>）</p>
+<ol>
+<li>ResticRepository 对象中有 BackupStorageLocation 的信息，根据这个信息获取集群中的 BackupStorageLocation 对象，如果获取失败，则更新 ResticRepository 对象的状态为 NotReady</li>
+<li>调用 <strong>GetRepoIdentifier</strong> 获取 Restic 仓库信息（即 –repo 所需的信息），并更新至 ResticRepository 对象中，如果获取失败，则将 ResticRepository 对象的状态设置为 NotReady</li>
+<li>调用 <strong>ensureRepo</strong> 尝试检查或初始化一个仓库，并根据返回结果更新 ResticRepository 的状态和上次维护时间信息</li>
+</ol>
+<h2 id="ensureRepo"><a href="#ensureRepo" class="headerlink" title="ensureRepo"></a>ensureRepo</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/restic_repository_controller.go#L205">ensureRepo 源码</a></p>
+<p>检查 Restic 仓库是否存在，如果不存在则尝试初始化一个</p>
+<ol>
+<li>通过执行 restic snapshots 的结果，来确保 Restic 仓库存在并且权限可达</li>
+<li>如果命令执行返回错误信息中包含 “Is there a repository at the following location?”  字符串，表示 Restic 仓库不存在，会通过 restic init 命令初始化一个新仓库</li>
+</ol>
+<h2 id="GetRepoIdentifier"><a href="#GetRepoIdentifier" class="headerlink" title="GetRepoIdentifier"></a>GetRepoIdentifier</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/restic/config.go#L101">GetRepoIdentifier 源码</a></p>
+<p>构建 Restic 命令行需要的 –repo 参数内容</p>
+<ol>
+<li>根据 BackupStorageLocation 的 Provider 信息获取到对应后端类型（velero.io&#x2F;provider），Velero Restic 支持的类型有 velero.io&#x2F;aws、velero.io&#x2F;azure 和 velero.io&#x2F;gcp，拼接后作为 RepoPrefix</li>
+<li>RepoPrefix 拼接上 ResticRepository 中的 VolumeNamespace 信息作为 RepoIdentifier，也就是 Restic 原生命令中的 –repo 参数</li>
+</ol>
+<h2 id="enqueueAllRepositories"><a href="#enqueueAllRepositories" class="headerlink" title="enqueueAllRepositories"></a>enqueueAllRepositories</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/restic_repository_controller.go#L97">enqueueAllRepositories 源码</a></p>
+<p>注册在 Generic Controller 中 resyncFunc 的实现，周期为 5 分钟</p>
+<ol>
+<li>获取集群中所有的 ResticRepository 对象，全量加入到 Generic Controller 的 queue 中<br><em>之所以是全量，是因为网络连接的不确定性，需要重新判断所有的 ResticRepository 可达状态</em></li>
+</ol>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Velero 」 2.1 源码走读 — Location</p><p><a href="http://example.com/2022/01/17/2022-01-17-Velero 源码走读 - Location/">http://example.com/2022/01/17/2022-01-17-Velero 源码走读 - Location/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-01-17</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2022-11-16</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/Cloud-Native/">Cloud Native</a><a class="link-muted mr-2" rel="tag" href="/tags/Velero/">Velero</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/01/17/2022-01-27-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Backup/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Velero 」 2.2 源码走读 — Backup</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/01/16/2022-01-16-Rust%20%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/"><span class="level-item">「 Rust 」 3.2 数据类型</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">48</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">10</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">14</p></a></div></div></nav></div></div><!--!--><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Istio/"><span class="level-start"><span class="level-item">Istio</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Kata-Containers/"><span class="level-start"><span class="level-item">Kata Containers</span></span><span class="level-end"><span class="level-item tag">15</span></span></a><ul><li><a class="level is-mobile" href="/categories/Kata-Containers/virtcontainers/"><span class="level-start"><span class="level-item">virtcontainers</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Kubebuilder/"><span class="level-start"><span class="level-item">Kubebuilder</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Rust/"><span class="level-start"><span class="level-item">Rust</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Velero/"><span class="level-start"><span class="level-item">Velero</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Virtual-Kubelet/"><span class="level-start"><span class="level-item">Virtual Kubelet</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7">© 2023</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

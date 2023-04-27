@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Velero 」 2.7 源码走读 — Plugin - Hexo</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Hexo"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Hexo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Velero 中与 Plugin 相关的源码走读"><meta property="og:type" content="blog"><meta property="og:title" content="「 Velero 」 2.7 源码走读 — Plugin"><meta property="og:url" content="http://example.com/2022/03/20/2022-03-20-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Plugin/"><meta property="og:site_name" content="Hexo"><meta property="og:description" content="Velero 中与 Plugin 相关的源码走读"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://velero.io/img/Velero.svg"><meta property="article:published_time" content="2022-03-19T16:00:00.000Z"><meta property="article:modified_time" content="2022-11-16T07:43:46.864Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Cloud Native"><meta property="article:tag" content="Velero"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://velero.io/img/Velero.svg"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2022/03/20/2022-03-20-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Plugin/"},"headline":"「 Velero 」 2.7 源码走读 — Plugin","image":[],"datePublished":"2022-03-19T16:00:00.000Z","dateModified":"2022-11-16T07:43:46.864Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"Hexo","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"Velero 中与 Plugin 相关的源码走读"}</script><link rel="canonical" href="http://example.com/2022/03/20/2022-03-20-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Plugin/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2022-03-19T16:00:00.000Z" title="2022/3/20 00:00:00">2022-03-20</time></span><span class="level-item">Updated&nbsp;<time dateTime="2022-11-16T07:43:46.864Z" title="2022/11/16 15:43:46">2022-11-16</time></span><span class="level-item"><a class="link-muted" href="/categories/Velero/">Velero</a></span><span class="level-item">14 minutes read (About 2154 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Velero 」 2.7 源码走读 — Plugin</h1><div class="content"><div align=center><img width="300" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v1.6.3</strong></p>
+</blockquote>
+<h1 id="ObjectStore"><a href="#ObjectStore" class="headerlink" title="ObjectStore"></a>ObjectStore</h1><p><em><u>pkg&#x2F;plugin&#x2F;velero&#x2F;object_store.go</u></em></p>
+<p><em>Velero 无该内置类型的 plugin，具体参考 <a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero-plugin-for-aws"> velero-plugin-for-aws</a>、<a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero-plugin-for-microsoft-azure">velero-plugin-for-microsoft-azure</a>、<a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero-plugin-for-gcp"> velero-plugin-for-gcp</a>。</em></p>
+<p>ObjectStore 包含以下接口</p>
+<ul>
+<li><p>Init</p>
+<p>初始化 Object<br><em>如果接口返回 error，BackupStorageLocation Controller 则无法调用 IsValid 判断 Provider 的可用性</em></p>
+</li>
+<li><p>PutObject</p>
+<p>上传 key（io.Reader）到 Provider 中</p>
+</li>
+<li><p>ObjectExists</p>
+<p>判断 key 在 Provider 中是否存在</p>
+</li>
+<li><p>GetObject</p>
+<p>获取 key 的内容（io.ReadCloser）<br><em>Velero 会在调用后负责 Close 该 io 操作，无需 plugin 操作</em></p>
+</li>
+<li><p>ListCommonPrefixes</p>
+<p>获取满足给定公共前缀的所有 key</p>
+</li>
+<li><p>ListObjects</p>
+<p>获取满足给定前缀的所有 key</p>
+</li>
+<li><p>DeleteObject</p>
+<p>删除 Provider 中的指定 key<br><em>仅会删除 key 本身，如果对于文件存储类型的 Provider，需要在 plugin 中实现删除最后一个 key 时，同时删除目录的功能</em></p>
+</li>
+<li><p>CreateSignedURL</p>
+<p>生成具有过期时间的 pre-signed url，用于获取 Provider 中的文件<br><em>对于文件存储类型等不具备提供对外服务的 Provider，该接口需要有其他服务支撑</em></p>
+</li>
+</ul>
+<h1 id="VolumeSnapshotter"><a href="#VolumeSnapshotter" class="headerlink" title="VolumeSnapshotter"></a>VolumeSnapshotter</h1><p><em><u>pkg&#x2F;plugin&#x2F;velero&#x2F;volume_snapshotter.go</u></em></p>
+<p><em>Velero 无该内置类型的 plugin，具体参考 <a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero-plugin-for-aws"> velero-plugin-for-aws</a>、<a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero-plugin-for-microsoft-azure">velero-plugin-for-microsoft-azure</a>、<a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero-plugin-for-gcp"> velero-plugin-for-gcp</a>。</em></p>
+<p>VolumeSnapshotter 包含以下接口</p>
+<ul>
+<li><p>Init</p>
+<p>初始化 VolumeSnapshotshotter</p>
+</li>
+<li><p>CreateVolumeFromSnapshot</p>
+<p>根据指定的 zone、IOPS 信息从快照恢复卷<br></p>
+<p><em>Velero 创建卷的动作为同步处理，会一直等待，直至完成或者失败</em></p>
+</li>
+<li><p>GetVolumeID</p>
+<p>根据指定的 PV 获取 VolumeID</p>
+</li>
+<li><p>SetVolumeID</p>
+<p>对指定的 PV 设置 VolumeID</p>
+</li>
+<li><p>GetVolumeInfo</p>
+<p>获取 Volume 信息</p>
+</li>
+<li><p>CreateSnapshot</p>
+<p>对指定的卷创建快照<br><em>Velero 创建 PV 快照的动作为同步处理，会一直等待，直至完成或者失败</em></p>
+</li>
+<li><p>DeleteSnapshot</p>
+<p>删除快照</p>
+</li>
+</ul>
+<h1 id="DeleteItemAction"><a href="#DeleteItemAction" class="headerlink" title="DeleteItemAction"></a>DeleteItemAction</h1><p><em><u>pkg&#x2F;plugin&#x2F;velero&#x2F;delete_item_action.go</u></em></p>
+<p><em>Velero 无该内置类型的 plugin。</em></p>
+<p>DeleteItemAction 包含以下接口</p>
+<ul>
+<li><p>AppliesTo</p>
+<p>返回应该对哪些资源执行额外操作（通过 Included&#x2F;Excluded Namespaces&#x2F;Resources 实现），结果会由 Execute 处理执行额外操作</p>
+</li>
+<li><p>Execute</p>
+<p>根据自定义的逻辑判断是否要对函数入参 Item（即符合 AppliesTo 过滤后的资源对象）在删除 Backup 时，执行一些额外的操作</p>
+</li>
+</ul>
+<h1 id="BackupItemAction"><a href="#BackupItemAction" class="headerlink" title="BackupItemAction"></a>BackupItemAction</h1><p><em><u>pkg&#x2F;plugin&#x2F;velero&#x2F;backup_item_action.go</u></em></p>
+<p>BackupItemAction 包含以下接口</p>
+<ul>
+<li><p>AppliesTo</p>
+<p>返回应该对哪些资源执行额外操作（通过 Included&#x2F;Excluded Namespaces&#x2F;Resources 实现），该过滤结果会和 Backup 本身的过滤取交集，结果会由 Execute 处理执行额外操作</p>
+</li>
+<li><p>Execute</p>
+<p>根据自定义的逻辑判断是否要对函数入参 Item（即符合 AppliesTo 过滤后的资源对象）做额外操作，函数会返回两个核心内容</p>
+<ul>
+<li>更新后的 item，此后的流程会以此 item 为基准</li>
+<li>需要额外操作的对象，会加入此后备份流程中执行备份</li>
+</ul>
+</li>
+</ul>
+<h2 id="velero-io-x2F-pv"><a href="#velero-io-x2F-pv" class="headerlink" title="velero.io&#x2F;pv"></a>velero.io&#x2F;pv</h2><p><em><u>pkg&#x2F;backup&#x2F;backup_pv_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: persistentvolumeclaims</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>PVC item 未更新</li>
+<li>获取 PVC 绑定的 PV 作为额外操作的对象返回</li>
+</ol>
+<h2 id="velero-io-x2F-pod"><a href="#velero-io-x2F-pod" class="headerlink" title="velero.io&#x2F;pod"></a>velero.io&#x2F;pod</h2><p><em><u>pkg&#x2F;backup&#x2F;pod_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: pods</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>Pod item 未更新</li>
+<li>获取 Pod 中使用的 PVC 作为额外操作的对象返回</li>
+</ol>
+<h2 id="velero-io-x2F-service-account"><a href="#velero-io-x2F-service-account" class="headerlink" title="velero.io&#x2F;service-account"></a>velero.io&#x2F;service-account</h2><p><em><u>pkg&#x2F;backup&#x2F;service_account_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: serviceaccounts</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>Service Account item 未更新</li>
+<li>获取 Service Account 关联的 ClusterRole 和 ClusterRoleBinding 作为额外操作的对象返回</li>
+</ol>
+<h2 id="velero-io-x2F-crd-remap-version"><a href="#velero-io-x2F-crd-remap-version" class="headerlink" title="velero.io&#x2F;crd-remap-version"></a>velero.io&#x2F;crd-remap-version</h2><p><em><u>pkg&#x2F;backup&#x2F;remap_crd_version_action</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: customresourcedefinition.apiextensions.k8s.io</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>如果 CRD 的 apiVersion 为 apiextensions.k8s.io&#x2F;v1，并且如果是单一版本的 CRD，或者存在位解构的字段或者预留字段时，则将 v1 版本的 CRD item 转换为 v1beta1 版本，并返回<br><em>参考：<a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions">https://kubernetes.io/zh/docs/tasks/extend-kubernetes/custom-resources/custom-resource-definitions</a></em></li>
+<li>无额外操作的对象</li>
+</ol>
+<h1 id="RestoreItemAction"><a href="#RestoreItemAction" class="headerlink" title="RestoreItemAction"></a>RestoreItemAction</h1><p><em><u>pkg&#x2F;plugin&#x2F;velero&#x2F;restore_item_action.go</u></em></p>
+<p>RestoreItemAction 包含以下接口</p>
+<ul>
+<li><p>AppliesTo</p>
+<p>返回应该对哪些资源执行额外操作（通过 Included&#x2F;Excluded Namespaces&#x2F;Resources 实现），该过滤结果会和 Restore 本身的过滤取交集，结果会由 Execute 处理执行额外操作</p>
+</li>
+<li><p>Execute</p>
+<p>根据自定义的逻辑判断是否要对 Item（即符合 AppliesTo 过滤后的资源对象）做额外操作，函数会返回三个核心内容</p>
+<ul>
+<li>更新后的 item，此后的流程会以此 item 为基准</li>
+<li>需要额外操作的对象，会加入此后恢复流程中执行恢复</li>
+<li>是否跳过恢复的标识 skipRestore</li>
+</ul>
+</li>
+</ul>
+<h2 id="velero-io-x2F-job"><a href="#velero-io-x2F-job" class="headerlink" title="velero.io&#x2F;job"></a>velero.io&#x2F;job</h2><p><em><u>pkg&#x2F;restore&#x2F;job_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: jobs</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>删除 Job item 中的 controller-uid 字段（job.Spec.Selector.MatchLabels 以及 job.Spec.Template.ObjectMeta.Labels），并返回</li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-pod-1"><a href="#velero-io-x2F-pod-1" class="headerlink" title="velero.io&#x2F;pod"></a>velero.io&#x2F;pod</h2><p><em><u>pkg&#x2F;restore&#x2F;pod_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: pods</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>清空 Pod item 的 nodeName、priority 和无需保留卷、卷挂载信息，并返回<br><em>如果 Pod 卷或卷挂载以 pod.Spec.ServiceAccountName + “-token-“ 开头，则无需保留。</em></li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-restic"><a href="#velero-io-x2F-restic" class="headerlink" title="velero.io&#x2F;restic"></a>velero.io&#x2F;restic</h2><p><em><u>pkg&#x2F;restore&#x2F;restic_restore_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: pods</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>获取到 Pod item 中的被 Restic 备份的卷信息，如果有的话，则会根据一系列的配置信息对 Pod item 注入一个 Init Container（restic-wait），并返回</li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-init-restore-hook"><a href="#velero-io-x2F-init-restore-hook" class="headerlink" title="velero.io&#x2F;init-restore-hook"></a>velero.io&#x2F;init-restore-hook</h2><p><em><u>pkg&#x2F;restore&#x2F;init_restorehook_pod_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: pods</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>获取 Pod 中有关 init.hook.restore.velero.io&#x2F;xxx 的 annotation 信息，构建一个 Init Container，如果 Pod 没有相关的 annotation，则获取 Restore 中的 hook 信息，根据 selector 的匹配结果，构建一个 Init Container。以上构建的 Init Container 会追加在 Pod 中，顺序为：restic-wait（如果 Pod 已经存在），hook1，hook2…，追加作为更新后的 Pod item 返回</li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-service"><a href="#velero-io-x2F-service" class="headerlink" title="velero.io&#x2F;service"></a>velero.io&#x2F;service</h2><p><em><u>pkg&#x2F;restore&#x2F;service_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: services</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>如果 ClusterIP 不为 None（也就是说分配了一个 Service IP），则删除 ClusterIP，如果 Restore 没有指定 –preserve-nodeports 参数，则删除 Service 的 NodePort 信息，并返回</li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-service-account-1"><a href="#velero-io-x2F-service-account-1" class="headerlink" title="velero.io&#x2F;service-account"></a>velero.io&#x2F;service-account</h2><p><em><u>pkg&#x2F;restore&#x2F;service_account_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: serviceaccounts</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>删除 Service Account 中的运行状态时生成的 &lt;serviceAccountName&gt;-token，并返回</li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-add-pvc-from-pod"><a href="#velero-io-x2F-add-pvc-from-pod" class="headerlink" title="velero.io&#x2F;add-pvc-from-pod"></a>velero.io&#x2F;add-pvc-from-pod</h2><p><em><u>pkg&#x2F;restore&#x2F;add_pvc_from_pod_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: pods</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>Pod item 未更新</li>
+<li>获取 Pod 中使用的 PVC 作为额外的操作对象返回</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-add-pv-from-pvc"><a href="#velero-io-x2F-add-pv-from-pvc" class="headerlink" title="velero.io&#x2F;add-pv-from-pvc"></a>velero.io&#x2F;add-pv-from-pvc</h2><p><em><u>pkg&#x2F;restore&#x2F;add_pv_from_pod_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: persistentvolumeclaims</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>PVC item 未更新</li>
+<li>获取 PVC 绑定的 PV 作为额外的操作对象返回</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-change-storage-class"><a href="#velero-io-x2F-change-storage-class" class="headerlink" title="velero.io&#x2F;change-storage-class"></a>velero.io&#x2F;change-storage-class</h2><p><em><u>pkg&#x2F;restore&#x2F;change_storageclass_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: persistentvolumeclaims, persistentvolumes</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li><p>获取集群中有关 StorageClass 映射关系的唯一的 ConfigMap 信息（即 ConfigMap label 中有 velero.io&#x2F;plugin-config&#x3D;”” 和 velero.io&#x2F;change-storage-class&#x3D;RestoreItemAction，如果不存在则不做映射关系），根据 PV 或 PVC 中的 StorageClassName 获得映射后的新 StorageClassName，更新 PV 或 PVC，并返回</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ConfigMap</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">change-storage-class</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">velero</span></span><br><span class="line">  <span class="attr">labels:</span> </span><br><span class="line">    <span class="attr">velero.io/plugin-config:</span> <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">velero.io/change-storage-class:</span> <span class="string">RestoreItemAction</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="attr">ussvd-sc:</span> <span class="string">local-sc</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>无额外操作的对象</p>
+</li>
+<li><p>skipRestore 为 false</p>
+</li>
+</ol>
+<h2 id="velero-io-x2F-role-bindings"><a href="#velero-io-x2F-role-bindings" class="headerlink" title="velero.io&#x2F;role-bindings"></a>velero.io&#x2F;role-bindings</h2><p><em><u>pkg&#x2F;restore&#x2F;rolebinding_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: rolebindings</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>根据 Restore 中的 namespace 映射关系，修改 RoleBinding 的 namespace，并返回</li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-cluster-role-bindings"><a href="#velero-io-x2F-cluster-role-bindings" class="headerlink" title="velero.io&#x2F;cluster-role-bindings"></a>velero.io&#x2F;cluster-role-bindings</h2><p><em><u>pkg&#x2F;restore&#x2F;clusterrolebinding_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: clusterrolebindings</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>根据 Restore 中的 namespace 映射关系，修改 ClusterRoleBinding 的 namespace，并返回</li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-crd-preserve-fields"><a href="#velero-io-x2F-crd-preserve-fields" class="headerlink" title="velero.io&#x2F;crd-preserve-fields"></a>velero.io&#x2F;crd-preserve-fields</h2><p><em><u>pkg&#x2F;restore&#x2F;crd_v1_preserve_unknown_fields_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: customresourcedefinition.apiextensions.k8s.io</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>设置版本为 apiextensions.k8s.io&#x2F;v1 的 CRD 的 PreserveUnknownFields 信息，并返回</li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-change-pvc-node-selector"><a href="#velero-io-x2F-change-pvc-node-selector" class="headerlink" title="velero.io&#x2F;change-pvc-node-selector"></a>velero.io&#x2F;change-pvc-node-selector</h2><p><em><u>pkg&#x2F;restore&#x2F;change_pvc_node_selector.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResources: persistentvolumeclaims</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>获取集群中有关 PVC NodeSelector 映射关系的唯一 ConfigMap 信息，根据 PVC annotation 中的 volume.kubernetes.io&#x2F;selected-node 获得映射后的新 Node，如果存在映射关系，则认为新的 Node 存在；如果不存在映射关系，则判断旧 Node 是否存在，不存在则删除 volume.kubernetes.io&#x2F;selected-node 信息，存在则设置 PVC annotation nodeSelector 为旧 Node。无论怎样，均更新 PVC，并返回</li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 false</li>
+</ol>
+<h2 id="velero-io-x2F-apiservice"><a href="#velero-io-x2F-apiservice" class="headerlink" title="velero.io&#x2F;apiservice"></a>velero.io&#x2F;apiservice</h2><p><em><u>pkg&#x2F;restore&#x2F;apiservice_action.go</u></em></p>
+<p><strong>AppliesTo</strong></p>
+<p>IncludedResrouces: apiservices</p>
+<p>LabelSelector: kube-aggregator.kubernetes.io&#x2F;automanaged</p>
+<p><strong>Execute</strong></p>
+<ol>
+<li>apiservices item 未更新</li>
+<li>无额外操作的对象</li>
+<li>skipRestore 为 true，因为这些 apiservices 由 kube-aggergator 负责维护，无需恢复</li>
+</ol>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Velero 」 2.7 源码走读 — Plugin</p><p><a href="http://example.com/2022/03/20/2022-03-20-Velero 源码走读 - Plugin/">http://example.com/2022/03/20/2022-03-20-Velero 源码走读 - Plugin/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-03-20</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2022-11-16</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/Cloud-Native/">Cloud Native</a><a class="link-muted mr-2" rel="tag" href="/tags/Velero/">Velero</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/04/13/2022-04-13-Kubebuilder%20%E5%9F%BA%E7%A1%80%E4%BD%BF%E7%94%A8/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Kubebuilder 」 基础使用</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/03/06/2022-03-06-Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Server/"><span class="level-item">「 Velero 」 2.6 源码走读 — Server</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">48</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">10</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">14</p></a></div></div></nav></div></div><!--!--><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Istio/"><span class="level-start"><span class="level-item">Istio</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Kata-Containers/"><span class="level-start"><span class="level-item">Kata Containers</span></span><span class="level-end"><span class="level-item tag">15</span></span></a><ul><li><a class="level is-mobile" href="/categories/Kata-Containers/virtcontainers/"><span class="level-start"><span class="level-item">virtcontainers</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Kubebuilder/"><span class="level-start"><span class="level-item">Kubebuilder</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Rust/"><span class="level-start"><span class="level-item">Rust</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Velero/"><span class="level-start"><span class="level-item">Velero</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Virtual-Kubelet/"><span class="level-start"><span class="level-item">Virtual Kubelet</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7">© 2023</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

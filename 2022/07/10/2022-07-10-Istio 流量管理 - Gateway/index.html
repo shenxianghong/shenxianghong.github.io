@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Istio 」 3.1 流量管理 — Gateway - Hexo</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="Hexo"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Hexo"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Istio 中流量管理组件 Gateway 对象介绍"><meta property="og:type" content="blog"><meta property="og:title" content="「 Istio 」 3.1 流量管理 — Gateway"><meta property="og:url" content="http://example.com/2022/07/10/2022-07-10-Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Gateway/"><meta property="og:site_name" content="Hexo"><meta property="og:description" content="Istio 中流量管理组件 Gateway 对象介绍"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/istio/logo.png"><meta property="article:published_time" content="2022-07-09T16:00:00.000Z"><meta property="article:modified_time" content="2022-11-16T07:44:13.706Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Cloud Native"><meta property="article:tag" content="Service Mesh"><meta property="article:tag" content="Istio"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/istio/logo.png"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://example.com/2022/07/10/2022-07-10-Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Gateway/"},"headline":"「 Istio 」 3.1 流量管理 — Gateway","image":["https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/istio/logo.png"],"datePublished":"2022-07-09T16:00:00.000Z","dateModified":"2022-11-16T07:44:13.706Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"Hexo","logo":{"@type":"ImageObject","url":"http://example.com/img/logo.svg"}},"description":"Istio 中流量管理组件 Gateway 对象介绍"}</script><link rel="canonical" href="http://example.com/2022/07/10/2022-07-10-Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Gateway/"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/atom-one-light.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-2-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a><a class="navbar-item" href="/about">About</a></div><div class="navbar-end"><a class="navbar-item" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item">Posted&nbsp;<time dateTime="2022-07-09T16:00:00.000Z" title="2022/7/10 00:00:00">2022-07-10</time></span><span class="level-item">Updated&nbsp;<time dateTime="2022-11-16T07:44:13.706Z" title="2022/11/16 15:44:13">2022-11-16</time></span><span class="level-item"><a class="link-muted" href="/categories/Istio/">Istio</a></span><span class="level-item">17 minutes read (About 2519 words)</span><span class="level-item" id="busuanzi_container_page_pv"><span id="busuanzi_value_page_pv">0</span>&nbsp;visits</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Istio 」 3.1 流量管理 — Gateway</h1><div class="content"><div align=center><img width="150" style="border: 0px" src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/istio/logo.png"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v1.15.0</strong></p>
+</blockquote>
+<p>Gateway 描述了在网格边缘运行的负载均衡器，用于接收传入或传出的 HTTP&#x2F;TCP 连接。该规范描述了一组应该公开的端口、要使用的协议类型、负载均衡器的 SNI 配置等。</p>
+<p>例如，以下 Gateway 配置设置代理以充当负载均衡器，将端口 80 和 9080 (http)、443 (https)、9443 (https) 和端口 2379 (TCP) 用于入口。Gateway 会应用在带有标签 app: my-gateway-controller 的 Pod 上。<br><em>虽然 Istio 配置代理侦听这些端口，但用户有责任确保允许到这些端口的外部流量进入网格。</em></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Gateway</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-gateway</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">some-config-namespace</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">my-gateway-controller</span></span><br><span class="line">  <span class="attr">servers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">HTTP</span></span><br><span class="line">    <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">uk.bookinfo.com</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">eu.bookinfo.com</span></span><br><span class="line">    <span class="attr">tls:</span></span><br><span class="line">      <span class="attr">httpsRedirect:</span> <span class="literal">true</span> <span class="comment"># sends 301 redirect for http requests</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">443</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">https-443</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">HTTPS</span></span><br><span class="line">    <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">uk.bookinfo.com</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">eu.bookinfo.com</span></span><br><span class="line">    <span class="attr">tls:</span></span><br><span class="line">      <span class="attr">mode:</span> <span class="string">SIMPLE</span> <span class="comment"># enables HTTPS on this port</span></span><br><span class="line">      <span class="attr">serverCertificate:</span> <span class="string">/etc/certs/servercert.pem</span></span><br><span class="line">      <span class="attr">privateKey:</span> <span class="string">/etc/certs/privatekey.pem</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">9443</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">https-9443</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">HTTPS</span></span><br><span class="line">    <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;bookinfo-namespace/*.bookinfo.com&quot;</span></span><br><span class="line">    <span class="attr">tls:</span></span><br><span class="line">      <span class="attr">mode:</span> <span class="string">SIMPLE</span> <span class="comment"># enables HTTPS on this port</span></span><br><span class="line">      <span class="attr">credentialName:</span> <span class="string">bookinfo-secret</span> <span class="comment"># fetches certs from Kubernetes secret</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">9080</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">http-wildcard</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">HTTP</span></span><br><span class="line">    <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;*&quot;</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">2379</span> <span class="comment"># to expose internal service via external port 2379</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">mongo</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">MONGO</span></span><br><span class="line">    <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;*&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>Gateway 描述了负载均衡器的 L4 - L6 属性。然后，可以将 VirtualService 绑定到 Gateway 控制到达特定 host 或 Gateway 端口的流量的转发。</p>
+<p>例如，下面的 VirtualService 把流量路径  <a target="_blank" rel="noopener" href="https://uk.bookinfo.com/reviews%E3%80%81https://eu.bookinfo.com/reviews%E3%80%81http://uk.bookinfo.com:9080/reviews%E3%80%81http://eu.bookinfo.com:9080/reviews">https://uk.bookinfo.com/reviews、https://eu.bookinfo.com/reviews、http://uk.bookinfo.com:9080/reviews、http://eu.bookinfo.com:9080/reviews</a> 分为了两个版本（prod 和 qa）。另外，包含 user: dev-123 cookie 的请求将发送到 7777 端口的 qa 版本。The same rule is also applicable inside the mesh for requests to the “reviews.prod.svc.cluster.local” service. This rule is applicable across ports 443, 9080. Note that <a target="_blank" rel="noopener" href="http://uk.bookinfo.com/">http://uk.bookinfo.com</a> gets redirected to <a target="_blank" rel="noopener" href="https://uk.bookinfo.com/">https://uk.bookinfo.com</a> (i.e. 80 redirects to 443).</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo-rule</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">bookinfo-namespace</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">uk.bookinfo.com</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">eu.bookinfo.com</span></span><br><span class="line">  <span class="attr">gateways:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">some-config-namespace/my-gateway</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">mesh</span> <span class="comment"># applies to all the sidecars in the mesh</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">headers:</span></span><br><span class="line">        <span class="attr">cookie:</span></span><br><span class="line">          <span class="attr">exact:</span> <span class="string">&quot;user=dev-123&quot;</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">port:</span></span><br><span class="line">          <span class="attr">number:</span> <span class="number">7777</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.qa.svc.cluster.local</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">prefix:</span> <span class="string">/reviews/</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">port:</span></span><br><span class="line">          <span class="attr">number:</span> <span class="number">9080</span> <span class="comment"># can be omitted if it&#x27;s the only port for reviews</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">      <span class="attr">weight:</span> <span class="number">80</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.qa.svc.cluster.local</span></span><br><span class="line">      <span class="attr">weight:</span> <span class="number">20</span></span><br></pre></td></tr></table></figure>
+
+<p>以下 VirtualService 将到达（外部）端口 27017 的流量转发到端口 5555 上的内部 Mongo 服务器。此规则在网格内部不适用，因为 gateways 中省略了保留名称网格（mesh）。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo-mongo</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">bookinfo-namespace</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">mongosvr.prod.svc.cluster.local</span> <span class="comment"># name of internal Mongo service</span></span><br><span class="line">  <span class="attr">gateways:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">some-config-namespace/my-gateway</span> <span class="comment"># can omit the namespace if gateway is in same namespace as virtual service.</span></span><br><span class="line">  <span class="attr">tcp:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">27017</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">mongo.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">port:</span></span><br><span class="line">          <span class="attr">number:</span> <span class="number">5555</span></span><br></pre></td></tr></table></figure>
+
+<p>可以使用 hosts 字段中的 namespace&#x2F;host 语法来限制可以绑定到 Gateway 服务器的 VirtualService。例如，下面的 Gateway 允许 ns1 命名空间中的任何 VirtualService 绑定到它，同时限制只有 ns2 命名空间中具有 foo.bar.com host 的 VirtualService 绑定。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Gateway</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-gateway</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">some-config-namespace</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">my-gateway-controller</span></span><br><span class="line">  <span class="attr">servers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">HTTP</span></span><br><span class="line">    <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;ns1/*&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;ns2/foo.bar.com&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Gateway"><a href="#Gateway" class="headerlink" title="Gateway"></a>Gateway</h1><p>Gateway 描述了在网格边缘运行的负载均衡器，用于接收传入或传出的 HTTP&#x2F;TCP 连接。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#Server">servers</a></td>
+<td>Server 集合</td>
+</tr>
+<tr>
+<td>selector</td>
+<td>一个或多个标签，用以匹配一组特定 pod&#x2F;VM 上应用此 Gateway。默认情况下，工作负载会根据标签选择器在所有命名空间中进行搜索。这意味着 Namespace foo 中的 Gateway 资源可以根据标签选择 Namespace bar 中的 Pod。这种行为可以通过 Istiod 中的 PILOT_SCOPE_GATEWAY_TO_NAMESPACE 环境变量来控制。如果此变量设置为 true，则标签搜索的范围仅限于 Gateway 资源所在的 Namespace。换言之，Gateway 资源必须与 Gateway 工作负载实例位于相同的 Namespace 中。如果选择器为 nil，则 Gateway 将应用于所有工作负载</td>
+</tr>
+</tbody></table>
+<h1 id="Server"><a href="#Server" class="headerlink" title="Server"></a><a name="Server">Server</a></h1><p>Server 描述特定负载均衡端口上的代理属性。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#Port">port</a></td>
+<td>代理监听的请求链接端口信息</td>
+</tr>
+<tr>
+<td>bind</td>
+<td>绑定到的 IP 或 Unix 域套接字。格式为 x.x.x.x、unix:&#x2F;&#x2F;&#x2F;path&#x2F;to&#x2F;uds 或 unix:&#x2F;&#x2F;@foobar（Linux 抽象命名空间）。使用 Unix 域套接字时，端口号应为 0。用于将此 server 的可达性限制为仅限 Gateway 内部。这通常在 Gateway 需要与另一个网格 server 通信时使用，例如发布指标。在这种情况下，使用指定绑定创建的 server 将不可用于外部 Gateway 客户端</td>
+</tr>
+<tr>
+<td>hosts</td>
+<td>Gateway 暴露的 host 信息。虽然通常适用于 HTTP 服务，但它也表述带有 SNI 的 TLS 的 TCP 服务。host 为带有 &lt;namespace&gt;&#x2F; 可选前缀的 dnsName（FQDN 格式，也可以类似如 prod&#x2F;*.example.com）。将 dnsName 设置为 * 表示从指定的命名空间（例如 prod&#x2F;*）中选择所有 VirtualService host。<br />namespace 可以设置为 * 或 .，分别代表任何或当前命名空间。例如，*&#x2F;foo.example.com 从任何可用的命名空间中选择 server，而 .&#x2F;foo.example.com 仅从 sidecar 的命名空间中选择服务。如果未指定 namespace&#x2F; 前缀部分，则默认为 *&#x2F;。所选命名空间中的任何关联 DestinationRule 也将被使用。<br />VirtualService 必须绑定到 Gateway，并且必须有一个或多个与 server 中匹配的 host。匹配可以是完全匹配或后缀匹配。<br /><em>例如，如果 server 的 host 指定 .example.com，则具有 host dev.example.com 或 prod.example.com 的 VirtualService 将匹配。但是，host example.com 或 newexample.com 的 VirtualService 将不匹配</em></td>
+</tr>
+<tr>
+<td><a href="#ServerTLSSettings">tls</a></td>
+<td>一组控制 server 行为的 TLS 相关选项。使用这些选项来控制是否应将所有 HTTP 请求重定向到 HTTPS，以及要使用的 TLS 模式</td>
+</tr>
+<tr>
+<td>name</td>
+<td>server 的可选名称，设置后在所有 server 中必须是唯一的。可用于例如为使用此名称生成的统计信息添加前缀等</td>
+</tr>
+</tbody></table>
+<h1 id="Port"><a href="#Port" class="headerlink" title="Port"></a><a name="Port">Port</a></h1><p>Port 描述了 server 的特定端口的属性。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>number</td>
+<td>端口号</td>
+</tr>
+<tr>
+<td>protocol</td>
+<td>端口协议。可选值 HTTP、HTTPS、GRPC、HTTP2、MONGO、TCP、TLS。TLS 意味着连接将根据 SNI 标头路由到目的地，而不会终止 TLS 连接</td>
+</tr>
+<tr>
+<td>name</td>
+<td>分配给端口的标签</td>
+</tr>
+<tr>
+<td>targetPort</td>
+<td>接收流量的 endpoint 上的端口号。仅在与 ServiceEntries 一起使用时适用</td>
+</tr>
+</tbody></table>
+<h1 id="ServerTLSSettings"><a href="#ServerTLSSettings" class="headerlink" title="ServerTLSSettings"></a><a name="ServerTLSSettings">ServerTLSSettings</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>httpsRedirect</td>
+<td>如果设置为 true，负载均衡器将为所有 HTTP 连接发送 301 重定向，要求客户端使用 HTTPS</td>
+</tr>
+<tr>
+<td><a href="#ServerTLSSettings.TLSmode">mode</a></td>
+<td>可选：表明是否应使用 TLS 保护与此端口的连接。该字段的值决定了 TLS 的实施方式</td>
+</tr>
+<tr>
+<td>serverCertificate</td>
+<td>如果 mode 是 SIMPLE 或 MUTUAL，则为必需字段。保存使用的服务器端 TLS 证书的文件的路径</td>
+</tr>
+<tr>
+<td>privateKey</td>
+<td>如果 mode 是 SIMPLE 或 MUTUAL，则为必需字段。保存服务器私钥的文件的路径</td>
+</tr>
+<tr>
+<td>caCertificates</td>
+<td>如果 mode 是 MUTUAL，则为必需字段。包含证书颁发机构证书的文件的路径，用于验证提供的客户端证书</td>
+</tr>
+<tr>
+<td>credentialName</td>
+<td>对于在 Kubernetes 上运行的网关，包含 TLS 证书（包括 CA 证书）的密钥的名称。仅适用于 Kubernetes。密钥（通用类型）应包含以下键和值：键：&lt;privateKey&gt; 和证书：&lt;serverCert&gt;。对于双向 TLS，cacert: &lt;CACertificate&gt; 可以在同一个密钥或名为 &lt;secret&gt;-cacert 的单独密钥中提供。还支持用于服务器证书的 tls 类型的密钥以及用于 CA 证书的 ca.crt 密钥。只能指定服务器证书和 CA 证书或 credentialName 之一</td>
+</tr>
+<tr>
+<td>subjectAltNames</td>
+<td>用于验证客户端提供的证书中的主体身份的备用名称列表</td>
+</tr>
+<tr>
+<td>verifyCertificateSpki</td>
+<td>授权客户端证书的 SKPI 的 base64 编码 SHA-256 哈希的可选列表。注意：当同时指定 verify_certificate_hash 和 verify_certificate_spki 时，匹配任一值的哈希将导致证书被接受</td>
+</tr>
+<tr>
+<td>verifyCertificateHash</td>
+<td>授权客户端证书的十六进制编码 SHA-256 哈希的可选列表。简单格式和冒号分隔格式都可以接受。注意：当同时指定 verify_certificate_hash 和 verify_certificate_spki 时，匹配任一值的哈希将导致证书被接受</td>
+</tr>
+<tr>
+<td><a href="#ServerTLSSettings.TLSProtocol">minProtocolVersion</a></td>
+<td>最低 TLS 协议版本</td>
+</tr>
+<tr>
+<td><a href="#ServerTLSSettings.TLSProtocol">maxProtocolVersion</a></td>
+<td>最高 TLS 协议版本</td>
+</tr>
+<tr>
+<td>cipherSuites</td>
+<td>如果指定，只支持指定的密码列表。否则默认为 Envoy 支持的默认密码列表</td>
+</tr>
+</tbody></table>
+<h1 id="ServerTLSSettings-TLSmode"><a href="#ServerTLSSettings-TLSmode" class="headerlink" title="ServerTLSSettings.TLSmode"></a><a name="ServerTLSSettings.TLSmode">ServerTLSSettings.TLSmode</a></h1><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PASSTHROUGH</td>
+<td>客户端提供的 SNI 字符串将用作 VirtualService TLS 路由中的匹配标准，以确定服务注册表中的目标服务</td>
+</tr>
+<tr>
+<td>SIMPLE</td>
+<td>使用标准 TLS 语义的安全连接</td>
+</tr>
+<tr>
+<td>MUTUAL</td>
+<td>通过提供服务器证书进行身份验证，使用双向 TLS 保护与下游的连接</td>
+</tr>
+<tr>
+<td>AUTO_PASSTHROUGH</td>
+<td>与直通模式类似，除了具有此 TLS 模式的服务器不需要关联的 VirtualService 从 SNI 值映射到注册表中的服务。诸如服务&#x2F;子集&#x2F;端口之类的目标详细信息在 SNI 值中进行编码。代理将转发到 SNI 值指定的上游（Envoy）集群（一组端点）。此服务器通常用于在不同的 L3 网络中提供服务之间的连接，否则它们各自的端点之间没有直接连接。使用此模式假定源和目标都使用 Istio mTLS 来保护流量</td>
+</tr>
+<tr>
+<td>ISTIO_MUTUAL</td>
+<td>通过提供服务器证书进行身份验证，使用双向 TLS 保护来自下游的连接。与 Mutual 模式相比，该模式使用 Istio 自动生成的代表网关工作负载身份的证书进行 mTLS 身份验证。使用此模式时，TLSOptions 中的所有其他字段都应为空</td>
+</tr>
+</tbody></table>
+<h1 id="ServerTLSSettings-TLSProtocol"><a href="#ServerTLSSettings-TLSProtocol" class="headerlink" title="ServerTLSSettings.TLSProtocol"></a><a name="ServerTLSSettings.TLSProtocol">ServerTLSSettings.TLSProtocol</a></h1><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TLS_AUTO</td>
+<td>自动选择最佳 TLS 版本</td>
+</tr>
+<tr>
+<td>TLSV1_0</td>
+<td>TLS 1.0 版本</td>
+</tr>
+<tr>
+<td>TLSV1_1</td>
+<td>TLS 1.1 版本</td>
+</tr>
+<tr>
+<td>TLSV1_2</td>
+<td>TLS 1.2 版本</td>
+</tr>
+<tr>
+<td>TLSV1_3</td>
+<td>TLS 1.3 版本</td>
+</tr>
+</tbody></table>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Istio 」 3.1 流量管理 — Gateway</p><p><a href="http://example.com/2022/07/10/2022-07-10-Istio 流量管理 - Gateway/">http://example.com/2022/07/10/2022-07-10-Istio 流量管理 - Gateway/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-07-10</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2022-11-16</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><div class="article-tags is-size-7 mb-4"><span class="mr-2">#</span><a class="link-muted mr-2" rel="tag" href="/tags/Cloud-Native/">Cloud Native</a><a class="link-muted mr-2" rel="tag" href="/tags/Service-Mesh/">Service Mesh</a><a class="link-muted mr-2" rel="tag" href="/tags/Istio/">Istio</a></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/07/11/2022-07-11-Kubernetes%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20CPU%20Manager/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Kubernetes」 源码走读 - CPU Manager</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/07/04/2022-07-04-Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20%E6%95%B4%E4%BD%93%E6%A6%82%E8%BF%B0/"><span class="level-item">「 Istio 」 3 流量管理 — 整体概述</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">48</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">10</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">14</p></a></div></div></nav></div></div><!--!--><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Istio/"><span class="level-start"><span class="level-item">Istio</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Kata-Containers/"><span class="level-start"><span class="level-item">Kata Containers</span></span><span class="level-end"><span class="level-item tag">15</span></span></a><ul><li><a class="level is-mobile" href="/categories/Kata-Containers/virtcontainers/"><span class="level-start"><span class="level-item">virtcontainers</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Kubebuilder/"><span class="level-start"><span class="level-item">Kubebuilder</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Rust/"><span class="level-start"><span class="level-item">Rust</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li><li><a class="level is-mobile" href="/categories/Velero/"><span class="level-start"><span class="level-item">Velero</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Virtual-Kubelet/"><span class="level-start"><span class="level-item">Virtual Kubelet</span></span><span class="level-end"><span class="level-item tag">1</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="Hexo" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7">© 2023</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>
