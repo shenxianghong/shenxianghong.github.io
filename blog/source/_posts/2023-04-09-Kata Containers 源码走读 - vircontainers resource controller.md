@@ -1,17 +1,16 @@
 ---
 title: "「 Kata Containers 」 4.4.4 源码走读 — virtcontainers resource controller"
-excerpt: "virtcontainers 库中 resource controller 模块源码走读"
-cover: https://unsplash.it/0/0?random&sig=1234
+excerpt: "virtcontainers 库中 ResourceController 模块源码走读"
+cover: https://unsplash.it/0/0?random&sig=20230409
 thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
 date: 2023-04-09
 toc: true
 categories:
-  - Kata Containers
-  - virtcontainers
+- Kata Containers
+- virtcontainers
 tag:
-  - Cloud Native
-  - Container Runtime
-  - Kata Containers
+- Container Runtime
+- Kata Containers
 ---
 
 <div align=center><img width="300" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>

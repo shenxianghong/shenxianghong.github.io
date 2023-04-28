@@ -1,7 +1,7 @@
 ---
 title: "「 Kata Containers 」 4.4.5 源码走读 — virtcontainers network"
-excerpt: "virtcontainers 库中 network 模块源码走读"
-cover: https://unsplash.it/0/0?random&sig=123
+excerpt: "virtcontainers 库中 Endpoint 和 Network 模块源码走读"
+cover: https://unsplash.it/0/0?random&sig=20230415
 thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
 date: 2023-04-15
 toc: true
@@ -9,7 +9,6 @@ categories:
 - Kata Containers
 - virtcontainers
 tag:
-- Cloud Native
 - Container Runtime
 - Kata Containers
 ---

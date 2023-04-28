@@ -1,13 +1,15 @@
 ---
-layout: post
 title: "「 Kata Containers 」 4.2 源码走读 — containerd-shim-kata-v2"
+excerpt: "containerd-shim-kata-v2 组件中 Shim、ShimManagement 和 EventForwarder 模块源码走读"
+cover: https://unsplash.it/0/0?random&sig=20230121
+thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
 date: 2023-01-21
-excerpt: "Kata Containers 中 containerd-shim-kata-v2 组件源码走读"
-tag:
-- Cloud Native
-- container Runtime
-- Kata Containers
+toc: true
 categories:
+- Kata Containers
+- containerd-shim-kata-v2
+tag:
+- Container Runtime
 - Kata Containers
 ---
 

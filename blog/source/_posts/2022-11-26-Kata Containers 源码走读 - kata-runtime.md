@@ -1,13 +1,15 @@
 ---
-layout: post
 title: "「 Kata Containers 」 4.1 源码走读 — kata-runtime"
+excerpt: "kata-runtime 组件源码走读"
+cover: https://unsplash.it/0/0?random&sig=20221126
+thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
 date: 2022-11-26
-excerpt: "Kata Containers 中 kata-runtime 组件源码走读"
-tag:
-- Cloud Native
-- Container Runtime
-- Kata Containers
+toc: true
 categories:
+- Kata Containers
+- kata-runtime
+tag:
+- Container Runtime
 - Kata Containers
 ---
 
