@@ -1,0 +1,61 @@
+# recent posts
+# blog\node_modules\hexo-component-inferno\lib\view\widget\recent_posts.js:L112-L117
+# blog\node_modules\hexo-component-inferno\lib\view\common\article_media.js:L57-L64
+
+# layouts
+# blog\node_modules\hexo-theme-icarus\layout\layout.jsx:L29
+# blog\node_modules\hexo-theme-icarus\layout\common\widgets.jsx:L42
+
+# font-size
+# blog\node_modules\hexo-theme-icarus\layout\common\article.jsx:L87
+
+# article metadata
+# blog\node_modules\hexo-theme-icarus\layout\common\article.jsx:L60-L71
+
+widgets:
+  - # Where should the widget be placed, left sidebar or right sidebar
+    position: left
+    type: profile
+    # Author name
+    author: 🐾Corgi
+    # Author title
+    #        author_title: Your title
+    # Author's current location
+    #        location: Your location
+    # URL or path to the avatar image
+    avatar: https://avatars.githubusercontent.com/u/35031258?v=4
+    # Whether show the rounded avatar image
+    avatar_rounded: true
+    # Email address for the Gravatar
+#    gravatar:
+    # URL or path for the follow button
+#    follow_link: https://github.com/shenxianghong
+    # Links to be shown on the bottom of the profile widget
+#    social_links:
+#      Github:
+#        icon: fab fa-github
+#        url: https://github.com/shenxianghong
+#      Facebook:
+#        icon: fab fa-facebook
+#        url: https://facebook.com
+#      Twitter:
+#        icon: fab fa-twitter
+#        url: https://twitter.com
+#      Dribbble:
+#        icon: fab fa-dribbble
+#        url: https://dribbble.com
+#      RSS:
+#        icon: fas fa-rss
+#        url: /
+  - # Where should the widget be placed, left sidebar or right sidebar
+    position: left
+    type: toc
+    # Whether to show the index of each heading
+    index: true
+    # Whether to collapse sub-headings when they are out-of-view
+    collapsed: true
+    # Maximum level of headings to show (1-6)
+    depth: 3
+  - # Where should the widget be placed, left sidebar or right sidebar
+    position: left
+    type: categories
