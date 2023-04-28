@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "/comment/twikoo.json",
+  "description": "Twikoo comment plugin configurations",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "twikoo"
+    },
+    "env_id": {
+      "type": "string",
+      "description": "envId from Tencent CloudBase or Vercel URL"
+    },
+    "region": {
+      "type": "string",
+      "description": "Region of Tencent CloudBase",
+      "nullable": true
+    },
+    "lang": {
+      "type": "string",
+      "description": "i18n support",
+      "default": "zh-CN",
+      "nullable": true
+    }
+  },
+  "required": ["type", "env_id"]
+}
