@@ -1,17 +1,17 @@
 ---
-layout: post
 title: "「 Virtual Kubelet 」 Virtual Kubelet 概述"
-date: 2022-11-22
 excerpt: "Virtual Kubelet 的架构概述、Provider 实现以及实践操作"
-tag:
-- Cloud Native
-- Container Runtime
-- Virtual Kubelet
+cover: https://picsum.photos/0?sig=20221122
+thumbnail: https://avatars.githubusercontent.com/u/34250142?s=200&v=4
+date: 2022-11-22
+toc: true
 categories:
+- Overview
+tag:
 - Virtual Kubelet
 ---
 
-<div align=center><img width="150" style="border: 0px; background-color: rgb(62, 113, 219)" src="https://virtual-kubelet.io/img/white-logo.png"></div>
+<div align=center><img width="170" style="border: 0px" src="https://virtual-kubelet.io/img/color-logo.png"></div>
 
 ------
 

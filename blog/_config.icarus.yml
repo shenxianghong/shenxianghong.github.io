@@ -109,16 +109,16 @@ navbar:
         Archives: /archives
         Categories: /categories
         Tags: /tags
-        About: /about
+#        About: /about
     # Links to be shown on the right of the navigation bar
-    links:
-        Download on GitHub:
-            icon: fab fa-github
-            url: https://github.com/ppoffice/hexo-theme-icarus
+#    links:
+#        Download on GitHub:
+#            icon: fab fa-github
+#            url: https://github.com/ppoffice/hexo-theme-icarus
 # Page footer configurations
 footer:
     # Copyright text
-    copyright: © 2023
+    copyright: <br/>And did you get what you wanted from this life, even so?
     # Links to be shown on the right of the footer section
     links:
         Creative Commons:
@@ -231,7 +231,7 @@ widgets:
         # Author name
         author: 🐾Corgi
         # Author title
-#        author_title: Your title
+#        author_title: ""
         # Author's current location
 #        location: Your location
         # URL or path to the avatar image
@@ -246,19 +246,19 @@ widgets:
         social_links:
             Github:
                 icon: fab fa-github
-                url: https://github.com/shenxianghong
-            Facebook:
-                icon: fab fa-facebook
-                url: https://facebook.com
+                url: https://github.com
+            Youtube:
+                icon: fab fa-youtube
+                url: https://youtube.com
+            Bilibili:
+                icon: fab fa-bilibili
+                url: https://bilibili.com
             Twitter:
                 icon: fab fa-twitter
                 url: https://twitter.com
-            Dribbble:
-                icon: fab fa-dribbble
-                url: https://dribbble.com
-            RSS:
-                icon: fas fa-rss
-                url: /
+            Reddit:
+                icon: fab fa-reddit
+                url: https://reddit.com
     # Table of contents widget configurations
     -
         # Where should the widget be placed, left sidebar or right sidebar
@@ -277,8 +277,8 @@ widgets:
         type: links
         # Names and URLs of the sites
         links:
-            Kubernetes: https://github.com/kubernetes
-            Kata Containers: https://github.com/kata-containers
+            Google: https://google.com
+            ChatGPT: https://freegpt.one
     # Categories widget configurations
     -
         # Where should the widget be placed, left sidebar or right sidebar
@@ -294,6 +294,7 @@ widgets:
         # Where should the widget be placed, left sidebar or right sidebar
         position: right
         type: archives
+        # format: YYYY年MM月
     # Tags widget configurations
     -
         # Where should the widget be placed, left sidebar or right sidebar
@@ -324,16 +325,16 @@ widgets:
 #        # AdSense AD unit ID
 #        slot_id: ''
 #    # Follow.it email subscription widget configurations
-#    -
-#        # Where should the widget be placed, left sidebar or right sidebar
-#        position: left
-#        type: followit
-#        # Hint text under the email input
-#        description:
-#        # Subscription form action URL
-#        action_url: ''
-#        # Feed claiming verification code
-#        verification_code: ''
+    -
+        # Where should the widget be placed, left sidebar or right sidebar
+        position: right
+        type: followit
+        # Hint text under the email input
+        description:
+        # Subscription form action URL
+        action_url: https://api.follow.it/subscription-form/Y0o0MnNESGQ5dCt2VnU1a3VXQUIwenZEbytTbFdFUUo1OVhKQWJkaC9TcCtJOENWbDc3U3ZucXdWZm9lQUJWSkhIRU1oWDl4d0xiVzJFZGdNdzF6eG9Vb0dVbEFnU1FIL0NOM3RBZGNXT0JmbEZEdmg0TTVNZlFwNlBjM1hBdkd8Y1FxU2MydlQ0eWdGQ3pxNVpJSjM0N0tHRjNSRmhBZGJDclR0WTB1K0ZzMD0=/21
+        # Feed claiming verification code
+        verification_code: CyXldm8AZluZN1tbME8v
 # Plugin configurations
 # https://ppoffice.github.io/hexo-theme-icarus/categories/Plugins/
 plugins:

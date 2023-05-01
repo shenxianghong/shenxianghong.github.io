@@ -1,15 +1,18 @@
 ---
-layout: post
 title: "「 Rust 」 1.4 Cargo"
-date: 2022-01-08
 excerpt: "Rust 包管理工具 Cargo 的介绍与使用"
-tag:
-- Rust
+cover: https://picsum.photos/0?sig=20220109
+thumbnail: https://www.rust-lang.org/static/images/rust-logo-blk.svg
+date: 2022-01-09
+toc: true
 categories:
+- Programming
+- Quick Start
+tag:
 - Rust
 ---
 
-<div align=center><img width="150" style="border: 0px" src="https://www.rust-lang.org/static/images/rust-logo-blk.svg"></div>
+<div align=center><img width="150" style="border: 0px" src="https://www.rust-lang.org/static/images/rust-social-wide.jpg"></div>
 
 ------
 

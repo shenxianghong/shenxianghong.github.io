@@ -1,16 +1,17 @@
 ---
-layout: post
 title: "「 Kubernetes」 源码走读 - CPU Manager"
-date: 2022-07-11
 excerpt: "Kubelet CM 模块中与 CPU Manager 相关的源码走读"
-tag:
-- Cloud Native
-- Kubernetes
+cover: https://picsum.photos/0?sig=20220711
+thumbnail: https://github.com/kubernetes/kubernetes/raw/master/logo/logo.png
+date: 2022-07-11
+toc: true
 categories:
+- Code Walkthrough
+tag:
 - Kubernetes
 ---
 
-<div align=center><img width="75" style="border: 0px" src="https://github.com/kubernetes/kubernetes/raw/master/logo/logo.png"></div>
+<div align=center><img width="300" style="border: 0px" src="https://kubernetes.io/images/kubernetes-horizontal-color.png"></div>
 
 ------
 

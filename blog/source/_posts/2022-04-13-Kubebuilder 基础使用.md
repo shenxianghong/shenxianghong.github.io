@@ -1,16 +1,17 @@
 ---
-layout: post
 title: "「 Kubebuilder 」 基础使用"
+excerpt: "使用 Kubebuilder 和 Code Generator 生成自定义的 K8s Operator 框架"
+cover: https://picsum.photos/0?sig=20220413
+thumbnail: https://storage.googleapis.com/kubebuilder-logos/icon-no-text.png
 date: 2022-04-13
-excerpt: "使用 Kubebuilder + Code Generator 生成自定义的 K8s Operator 框架"
-tag:
-- Cloud Native
-- Kubebuilder
+toc: true
 categories:
+- Getting Started
+tag:
 - Kubebuilder
 ---
 
-<div align=center><img width="200" style="border: 0px" src="https://book.kubebuilder.io/logos/logo-single-line.png"></div>
+<div align=center><img width="200" style="border: 0px" src="https://storage.googleapis.com/kubebuilder-logos/logo-single-line-01.png"></div>
 
 ------
 

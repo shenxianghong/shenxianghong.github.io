@@ -1,16 +1,17 @@
 ---
-layout: post
 title: "「 Velero 」 2.7 源码走读 — Plugin"
-date: 2022-03-20
 excerpt: "Velero 中与 Plugin 相关的源码走读"
-tag:
-- Cloud Native
-- Velero
+cover: https://picsum.photos/0?sig=20220320
+thumbnail: https://blogs.vmware.com/opensource/files/2022/03/velero.png
+date: 2022-03-20
+toc: true
 categories:
+- Code Walkthrough
+tag:
 - Velero
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
 
 ------
 

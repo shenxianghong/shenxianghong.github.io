@@ -1,13 +1,13 @@
 ---
-layout: post
-title: "「 Kata Containers 」 3 基础使用"
-date: 2021-04-22
-excerpt: "Kata Containers 的基础使用示例"
-tag:
-- Cloud Native
-- Container Runtime
-- Kata Containers
+title: "「 Kata Containers 」 2 基础使用"
+excerpt: "Kata Containers 基础使用示例"
+cover: https://picsum.photos/0?sig=20210415
+thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
+date: 2021-04-15
+toc: true
 categories:
+- Getting Started
+tag:
 - Kata Containers
 ---
 

@@ -1,16 +1,17 @@
 ---
-layout: post
 title: "「 Serverless 」 Serverless 概述"
-date: 2022-06-11
 excerpt: "初识无服务架构 - Serverless"
-tag:
-- Cloud Native
-- Serverless
+cover: https://picsum.photos/0?sig=20220611
+thumbnail: https://app.serverless.com/static/media/icon-text-serverless-framework.d6f82898.svg
+date: 2022-06-11
+toc: true
 categories:
+- Overview
+tag:
 - Serverless
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/serverless/logo.png"></div>
+<div align=center><img width="350" style="border: 0px" src="https://landscape.cncf.io/logos/serverless.svg"></div>
 
 ------
 

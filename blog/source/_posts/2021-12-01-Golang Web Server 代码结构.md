@@ -1,13 +1,15 @@
 ---
-layout: post
-title: "「 Elegant Coding 」 Golang Web Server 代码结构"
-date: 2021-12-01
+title: "「 Golang 」 Golang Web Server 代码结构"
 excerpt: "记一次在 Kubewebhook 中学到的 web 代码结构"
+cover: https://picsum.photos/0?sig=20211201
+thumbnail: https://go.dev/blog/go-brand/Go-Logo/SVG/Go-Logo_Blue.svg
+date: 2021-12-01
+toc: true
+categories:
+- Programming
+- Elegant Coding
 tag:
 - Golang
-- Elegant Coding
-categories:
-- Elegant Coding
 ---
 
 <div align=center><img width="150" style="border: 0px" src="https://go.dev/images/go-logo-blue.svg"></div>

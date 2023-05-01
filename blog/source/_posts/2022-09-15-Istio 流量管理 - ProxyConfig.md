@@ -1,17 +1,17 @@
 ---
-layout: post
 title: "「 Istio 」 3.7 流量管理 — ProxyConfig"
-date: 2022-09-15
 excerpt: "Istio 中流量管理组件 ProxyConfig 对象介绍"
-tag:
-- Cloud Native
-- Service Mesh
-- Istio
+cover: https://picsum.photos/0?sig=20220915
+thumbnail: https://istio.io/v1.8/img/istio-bluelogo-whitebackground-framed.svg
+date: 2022-09-15
+toc: true
 categories:
+- Overview
+tag:
 - Istio
 ---
 
-<div align=center><img width="150" style="border: 0px" src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/istio/logo.png"></div>
+<div align=center><img width="150" style="border: 0px" src="https://www.vectorlogo.zone/logos/istioio/istioio-ar21.svg"></div>
 
 ------
 

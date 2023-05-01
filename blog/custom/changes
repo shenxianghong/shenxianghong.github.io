@@ -1,13 +1,32 @@
-# recent posts
-# blog\node_modules\hexo-component-inferno\lib\view\widget\recent_posts.js:L112-L117
-# blog\node_modules\hexo-component-inferno\lib\view\common\article_media.js:L57-L64
+=== 增加文章内容页宽度 ===
+hexo-theme-icarus/layout/layout.jsx:L19,L30
+hexo-theme-icarus/layout/common/widgets.jsx:L42
+hexo-theme-icarus/include/style/responsive.styl:L5-L7,L14-L16
 
-# layouts
-# blog\node_modules\hexo-theme-icarus\layout\layout.jsx:L29
-# blog\node_modules\hexo-theme-icarus\layout\common\widgets.jsx:L42
+=== 首页文章标题字体大小 ===
+hexo-theme-icarus/layout/common/article.jsx:L87
 
-# font-size
-# blog\node_modules\hexo-theme-icarus\layout\common\article.jsx:L87
+=== 文章元数据新增图标和调整显示场景 ===
+hexo-theme-icarus/layout/common/article.jsx:L50-L56
+hexo-theme-icarus/layout/common/article.jsx:L58-L64
+hexo-theme-icarus/layout/common/article.jsx:L69
+hexo-theme-icarus/layout/common/article.jsx:L83
+hexo-theme-icarus/layout/common/article.jsx:L92
 
-# article metadata
-# blog\node_modules\hexo-theme-icarus\layout\common\article.jsx:L60-L71
+=== 文章元数据信息优化创建时间和更新时间属性 ===
+hexo-theme-icarus/source/js/main.js:L23-L27
+
+=== 文章 read more 样式更改 ===
+hexo-theme-icarus/layout/common/article.jsx:L98-L105,L109-L111
+
+=== 最近阅读文章去除目录属性 ===
+hexo-component-inferno/lib/view/widget/recent_posts.js:L112-L117
+hexo-component-inferno/lib/view/common/article_media.js:L57-L64
+
+=== 夜间模式 ===
+hexo-theme-icarus/source/css/default.styl:L2
+hexo-theme-icarus/source/css/night.styl
+hexo-theme-icarus/source/js/night.js
+hexo-theme-icarus/layout/common/scripts.jsx:L41
+hexo-theme-icarus/layout/common/navbar.jsx:L57-L59
+hexo-theme-icarus/include/style/widgets.styl:L22-L23,L28

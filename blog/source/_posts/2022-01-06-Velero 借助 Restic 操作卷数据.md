@@ -1,16 +1,17 @@
 ---
-layout: post
 title: "「 Velero 」 1.2 操作卷数据（Restic）"
-date: 2022-01-06
 excerpt: "借助 Restic 实现对容器卷数据的快速、安全和高效备份与恢复"
-tag:
-- Cloud Native
-- Velero
+cover: https://picsum.photos/0?sig=20220106
+thumbnail: https://blogs.vmware.com/opensource/files/2022/03/velero.png
+date: 2022-01-06
+toc: true
 categories:
+- Getting Started
+tag:
 - Velero
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
 
 ------
 

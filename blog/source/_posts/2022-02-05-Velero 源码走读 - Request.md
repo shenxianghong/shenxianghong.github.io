@@ -1,16 +1,17 @@
 ---
-layout: post
 title: "「 Velero 」 2.4 源码走读 — Request"
-date: 2022-02-05
 excerpt: "Velero 中与 DownloadRequest 和 ServerStatusRequest 相关的源码走读"
-tag:
-- Cloud Native
-- Velero
+cover: https://picsum.photos/0?sig=20220205
+thumbnail: https://blogs.vmware.com/opensource/files/2022/03/velero.png
+date: 2022-02-05
+toc: true
 categories:
+- Code Walkthrough
+tag:
 - Velero
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
 
 ------
 
