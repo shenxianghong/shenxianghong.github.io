@@ -64,3 +64,7 @@ deploy:
   type: git
   repo: git@github.com:shenxianghong/shenxianghong.github.io.git
   branch: gh-pages
+feed:
+  type: atom
+  path: atom.xml
+  limit: 0

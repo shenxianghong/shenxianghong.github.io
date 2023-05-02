@@ -100,7 +100,7 @@ head:
         # E.g., name=theme-color;content=#123456 => <meta name="theme-color" content="#123456">
         - ''
     # URL or path to the website's RSS atom.xml
-    rss: 
+    rss: /atom.xml
 # Page top navigation bar configurations
 navbar:
     # Navigation menu items
@@ -332,9 +332,9 @@ widgets:
         # Hint text under the email input
         description:
         # Subscription form action URL
-        action_url: https://api.follow.it/subscription-form/Y0o0MnNESGQ5dCt2VnU1a3VXQUIwenZEbytTbFdFUUo1OVhKQWJkaC9TcCtJOENWbDc3U3ZucXdWZm9lQUJWSkhIRU1oWDl4d0xiVzJFZGdNdzF6eG9Vb0dVbEFnU1FIL0NOM3RBZGNXT0JmbEZEdmg0TTVNZlFwNlBjM1hBdkd8Y1FxU2MydlQ0eWdGQ3pxNVpJSjM0N0tHRjNSRmhBZGJDclR0WTB1K0ZzMD0=/21
+        action_url: https://api.follow.it/subscription-form/SDVYYnNYeFhuZkYrbmtSKzRJaVlMWVBpSHdOU1NBWUV4ak1ybHkrRGdHcVJ5OVN0aDNnS2NHUCtTRm1TVWd1MGxScytXcTNlRDV5TlpwWm9BM2ViVmk0NWhEaVFWWE10Q3UzSUYvd3E1bnRKZFk0MUhpQ2RTYUZJQ2FzblNwMDl8dHBUT0pCcm9NSmFrd29HRVZHanlramRqMjE4Zk5udmg5eCtBdHNOVjU5UT0=/8
         # Feed claiming verification code
-        verification_code: CyXldm8AZluZN1tbME8v
+        verification_code: fKScHqPxvR6cxQqcpMgH
 # Plugin configurations
 # https://ppoffice.github.io/hexo-theme-icarus/categories/Plugins/
 plugins:
