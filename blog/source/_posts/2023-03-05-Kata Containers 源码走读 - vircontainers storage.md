@@ -11,7 +11,7 @@ tag:
 - Kata Containers
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
 
 ------
 
@@ -189,20 +189,14 @@ type FilesystemShare struct {
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/fs_share_linux.go#L227)
 
 1. 共享文件（shareFile）名称格式为 \<containerID\>-\<random bytes\>-\<dst\><br>*例如：\<containerID\>-47dcc9007bca8805-hostname*
-
 2. 调用 hypervisor 的 **Capabilities**，判断是否支持 host 文件系统共享特性（QEMU 场景下支持）
-
-   1. 如果不支持，则通过文件拷贝实现共享
-
-      1. 校验 src 是否存在。如果 src 非常规文件，则不做处理（这里并未视为错误，而是作为一种局限性将其忽略）
-
-      1. 调用 agent 的 **copyFile**，将 src 文件拷贝至 sandbox 的 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/containers/\<shareFile\> 文件位置
-
-   2. 如果支持，则通过文件挂载实现共享
-
-      1. 如果挂载为读写属性，则调用 **bindMount**，将 src 以读写和 MS_PRIVATE 的属性绑定挂载到 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/sandboxes/\<sandboxID\>/mounts/\<shareFile\>
-      2. 否则，调用 **bindMount**，将 src 以只读和 MS_PRIVATE 的属性绑定挂载到 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/sandboxes/\<sandboxID\>/private/\<shareFile\>，进而调用 **bindMount**，将 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/sandboxes/\<sandboxID\>/private/\<shareFile\> 以读写和 MS_PRIVATE 的属性绑定挂载到 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/sandboxes/\<sandboxID\>/mounts/\<shareFile\><br>*对于只读挂载，bindMount 重新挂载事件不会传播到挂载子树，并且它也不会出现在 virtiofsd 独立挂载命名空间中*
-      3. 设置挂载信息的 host 侧路径为 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/sandboxes/\<sandboxID\>/mounts/\<shareFile\>
+   - 如果不支持，则通过文件拷贝实现共享
+     1. 校验 src 是否存在。如果 src 非常规文件，则不做处理（这里并未视为错误，而是作为一种局限性将其忽略）
+     2. 调用 agent 的 **copyFile**，将 src 文件拷贝至 sandbox 的 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/containers/\<shareFile\> 文件位置
+   - 如果支持，则通过文件挂载实现共享
+     1. 如果挂载为读写属性，则调用 **bindMount**，将 src 以读写和 MS_PRIVATE 的属性绑定挂载到 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/sandboxes/\<sandboxID\>/mounts/\<shareFile\>
+     2. 否则，调用 **bindMount**，将 src 以只读和 MS_PRIVATE 的属性绑定挂载到 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/sandboxes/\<sandboxID\>/private/\<shareFile\>，进而调用 **bindMount**，将 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/sandboxes/\<sandboxID\>/private/\<shareFile\> 以读写和 MS_PRIVATE 的属性绑定挂载到 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/sandboxes/\<sandboxID\>/mounts/\<shareFile\><br>*对于只读挂载，bindMount 重新挂载事件不会传播到挂载子树，并且它也不会出现在 virtiofsd 独立挂载命名空间中*
+     3. 设置挂载信息的 host 侧路径为 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/sandboxes/\<sandboxID\>/mounts/\<shareFile\>
 
 ## UnshareFile
 

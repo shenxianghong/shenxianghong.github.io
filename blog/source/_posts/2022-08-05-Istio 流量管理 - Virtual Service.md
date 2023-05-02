@@ -11,7 +11,7 @@ tag:
 - Istio
 ---
 
-<div align=center><img width="150" style="border: 0px" src="https://www.vectorlogo.zone/logos/istioio/istioio-ar21.svg"></div>
+<div align=center><img width="120" style="border: 0px" src="https://www.vectorlogo.zone/logos/istioio/istioio-ar21.svg"></div>
 
 ------
 

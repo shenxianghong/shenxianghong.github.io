@@ -11,7 +11,7 @@ hexo-theme-icarus/layout/common/article.jsx:L50-L56
 hexo-theme-icarus/layout/common/article.jsx:L58-L64
 hexo-theme-icarus/layout/common/article.jsx:L69
 hexo-theme-icarus/layout/common/article.jsx:L83
-hexo-theme-icarus/layout/common/article.jsx:L92
+hexo-theme-icarus/layout/common/article.jsx:L91-L93
 
 === 文章元数据信息优化创建时间和更新时间属性 ===
 hexo-theme-icarus/source/js/main.js:L23-L27

@@ -30,9 +30,17 @@ widgets:
         Twitter:
             icon: fab fa-twitter
             url: https://twitter.com
-        Google:
-            icon: fab fa-google
-            url: https://google.com
+        Reddit:
+            icon: fab fa-reddit
+            url: https://reddit.com
+  -
+    # Where should the widget be placed, left sidebar or right sidebar
+    position: left
+    type: links
+    # Names and URLs of the sites
+    links:
+        Google: https://google.com
+        ChatGPT: https://freegpt.one
   - # Where should the widget be placed, left sidebar or right sidebar
     position: left
     type: toc

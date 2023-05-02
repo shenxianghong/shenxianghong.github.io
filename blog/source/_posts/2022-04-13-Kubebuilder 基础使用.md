@@ -11,7 +11,7 @@ tag:
 - Kubebuilder
 ---
 
-<div align=center><img width="200" style="border: 0px" src="https://storage.googleapis.com/kubebuilder-logos/logo-single-line-01.png"></div>
+<div align=center><img width="150" style="border: 0px" src="https://storage.googleapis.com/kubebuilder-logos/logo-single-line-01.png"></div>
 
 ------
 

@@ -11,7 +11,7 @@ tag:
 - Kubernetes
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://kubernetes.io/images/kubernetes-horizontal-color.png"></div>
+<div align=center><img width="200" style="border: 0px" src="https://kubernetes.io/images/kubernetes-horizontal-color.png"></div>
 
 ------
 
@@ -29,9 +29,9 @@ type ContainerCPUAssignments map[string]map[string]cpuset.CPUSet
 
 type stateMemory struct {
 	sync.RWMutex
-    // 记录 CPU 分配情况
+	// 记录 CPU 分配情况
 	assignments   ContainerCPUAssignments
-    // 记录 CPU 信息
+	// 记录 CPU 信息
 	defaultCPUSet cpuset.CPUSet
 }
 ```
@@ -54,9 +54,9 @@ type stateMemory struct {
 
 ```go
 type Policy interface {
-    // 返回策略名称
+	// 返回策略名称
 	Name() string
-    // 针对 State 的校验流程
+	// 针对 State 的校验流程
 	Start(s state.State) error
 	// 容器 CPU 的分配流程
 	Allocate(s state.State, pod *v1.Pod, container *v1.Container) error
@@ -93,37 +93,22 @@ CPU Manager 的 none 策略并未做任何实际的逻辑处理，不提供任�
 ### Allocate
 
 1. 判断 Pod QoS 是否是 Guaranteed 级别，并且 Container 的 CPU request 为整数，如果不满足条件，直接返回，不做处理
-
 2. 从已分配的 CPU 信息中判断该 Pod 是否已经分配过，如果分配过，则本地更新
-
 3. 调用 Topology Manager 获取所有的 hint providers 返回的 hint
-
 4. 获取可申领的 CPU（即可分配 CPU + 步骤二中可复用的 CPU）
-
 5. 如果开启了 NUMA 亲和特性，则获取到涉及到的  NUMA 中的所有 CPU，取 NUMA CPU 之和和申请 CPU 中的最小值作为待对齐分配的 CPU 数量，校验申请的 CPU 数量是否大于 1 且小于所有可用的 CPU，
-
 6. 执行拓扑感知 best-fit 算法，优先对齐能满足 NUMA 的部分
-
    *参考 pkg/kubelet/cm/cpumanager/cpu_assignment_test.go 单元测试示例*
-
    1. 如果请求的 CPU 数量不小于单块 CPU Socket 中 Thread 数量，那么会优先将整块 CPU Socket 中的Thread 分配 
-
       *acc.freeSockets()，返回单 Socket 中所有 Thread 均可用的 Socket 列表*
-
    2. 如果剩余请求的 CPU 数量不小于单块物理 CPU Core 提供的 Thread 数量，那么会优先将整块物理 CPU Core 上的 Thread 分配
-
       *acc.freeCores()，返回单 Core 中所有 Thread 均可用的 Core 列表，按照 SocketID 做升序排列*
-
    3. 剩余请求的 CPU 数量则从按照如下规则排好序的 Thread 列表中选择
-
       *acc.freeCPUs()，返回所有可用的 Thread 列表，按照 SocketID 和 CoreID 做升序排列*
-
       1. 相同 Socket 上可用的 Thread
       2. 相同 Core 上可用的 Thread
       3. CPU ID 升序排列
-
 7. 对于剩余的 CPU，进行如上拓扑感知 best-fit 算法，合并以上两部分，作为最终的 CPU 绑定结果
-
 8. 从共享池 CPU 中去除待分配的 CPU
 
 ### RemoveContainer
@@ -173,7 +158,7 @@ type Manager interface {
 	AddContainer(p *v1.Pod, c *v1.Container, containerID string) error
 
 	// 在 Kubelet 决定杀死或删除一个对象后调用，在此调用之后，CPU Manager 停止尝试协调该容器并且释放绑定于该容器的任何 CPU
-    // 目前未发现调用处
+	// 目前未发现调用处
 	RemoveContainer(containerID string) error
 
 	// 返回内部 CPU Manager 的状态

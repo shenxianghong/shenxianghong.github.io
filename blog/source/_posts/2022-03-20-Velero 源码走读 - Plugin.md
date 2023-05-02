@@ -11,7 +11,7 @@ tag:
 - Velero
 ---
 
-<div align=center><img width="200" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+<div align=center><img width="170" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
 
 ------
 

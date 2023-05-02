@@ -11,7 +11,7 @@ tag:
 - Kata Containers
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
 
 ------
 
@@ -34,11 +34,11 @@ Kubernetes 提供了 PV （persistent volume）资源来管理存储卷，制定
 
 **当前 CSI 挂载方式**
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/current-mounts.png)
+<div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/kubernetes/enhancements/8202b8a7e4f1c19d8f32b40288cc73060828fc34/keps/sig-storage/2857-runtime-assisted-pv-mounts/images/CurrentMounts.png"></div>
 
 **CSI 与 Runtime 协调挂载**
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/runtime-assisted-mounts.png)
+<div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/kubernetes/enhancements/8202b8a7e4f1c19d8f32b40288cc73060828fc34/keps/sig-storage/2857-runtime-assisted-pv-mounts/images/RuntimeAssistedMounts.png"></div>
 
 # 现阶段缺陷
 
@@ -51,11 +51,11 @@ Kubernetes 提供了 PV （persistent volume）资源来管理存储卷，制定
 
 **原挂载方案**
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/kata-mount-current.png)
+<div align=center><img width="600" style="border: 0px" src="/gallery/kata-containers/kata-mount-current.png"></div>
 
 **直通挂载方案**
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/kata-mount-direct.png)
+<div align=center><img width="600" style="border: 0px" src="/gallery/kata-containers/kata-mount-direct.png"></div>
 
 因此，需要 CSI 具备直通卷的挂载能力，Kata Containers 社区提供了一些参考方案
 

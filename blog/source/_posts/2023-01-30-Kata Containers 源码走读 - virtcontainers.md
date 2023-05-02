@@ -11,7 +11,7 @@ tag:
 - Kata Containers
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
 
 ------
 
@@ -184,12 +184,12 @@ VCSandbox 中声明的 **Annotations**、**GetNetNs**、**GetAllContainers**、*
    >
    > SWAP = 
    >
-   > | `io.katacontainers.container.resource.swap_in_bytes` | `memory_limit_in_bytes` | swap size                                                    |
-   > | ---------------------------------------------------- | ----------------------- | ------------------------------------------------------------ |
-   > | set                                                  | set                     | `io.katacontainers.container.resource.swap_in_bytes`- `memory_limit_in_bytes` |
-   > | not set                                              | set                     | `memory_limit_in_bytes`                                      |
-   > | not set                                              | not set                 | `io.katacontainers.config.hypervisor.default_memory`         |
-   > | set                                                  | not set                 | cgroup doesn't support this usage                            |
+   > | `swap_in_bytes` | `memory_limit_in_bytes` | swap size                                                    |
+   > | --------------- | ----------------------- | ------------------------------------------------------------ |
+   > | set             | set                     | `io.katacontainers.container.resource.swap_in_bytes`- `memory_limit_in_bytes` |
+   > | not set         | set                     | `memory_limit_in_bytes`                                      |
+   > | not set         | not set                 | `io.katacontainers.config.hypervisor.default_memory`         |
+   > | set             | not set                 | cgroup doesn't support this usage                            |
 
    *截至 Kata 3.0，在 K8s 场景下，SWAP 功能仍存在异常：参考 https://github.com/kata-containers/kata-containers/issues/5627*
 3. 如果预期 SWAP 比当前 sandbox 的 SWAP 多，则需要新增一个大小为两者差值的 SWAP 文件

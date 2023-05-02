@@ -11,7 +11,7 @@ tag:
 - Kata Containers
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
 
 ------
 
@@ -68,7 +68,7 @@ type KataMonitor struct {
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/kata-monitor/metrics.go#L74)
 
 1. 获取请求中的 sandbox 参数
-2. 如果指定了 sandbox 参数，则通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 http://shim/metrics，获取指定 sandbox 的指标信息并返回（等价于 kata-runtime metrics \<sandboxID\>）
+2. 如果指定了 sandbox 参数，则通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 `http://shim/metrics`，获取指定 sandbox 的指标信息并返回（等价于 kata-runtime metrics \<sandboxID\>）
 3. 如果没有指定 sandbox 参数，则通过 Prometheus 聚合所有 sandbox 的指标处理并返回
 
 ****
@@ -91,7 +91,7 @@ type KataMonitor struct {
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/kata-monitor/monitor.go#L179)
 
 1. 检验请求中的 sandbox 参数是否不为空
-2. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 http://shim/agent-url，解析内容获得 sandbox socket 地址
+2. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 `http://shim/agent-url`，解析内容获得 sandbox socket 地址
 
 ****
 
@@ -104,6 +104,6 @@ type KataMonitor struct {
 1. 不同的 endpoint 在转发前会设置特定的请求头，例如 Content-Type 和 Content-Disposition
 2. 代理请求
    1. 检验请求中的 sandbox 参数是否不为空
-   2. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 转发 HTTP GET 请求至 shim server 的 http://shim/\<URL\>
+   2. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 转发 HTTP GET 请求至 shim server 的 `http://shim/<URL>`
    3. 根据调用传参中的请求处理方式加工数据并返回
 

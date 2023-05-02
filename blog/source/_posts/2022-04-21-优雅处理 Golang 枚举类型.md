@@ -12,7 +12,7 @@ tag:
 - Golang
 ---
 
-<div align=center><img width="150" style="border: 0px" src="https://go.dev/images/go-logo-blue.svg"></div>
+<div align=center><img width="100" style="border: 0px" src="https://go.dev/images/go-logo-blue.svg"></div>
 
 ------
 

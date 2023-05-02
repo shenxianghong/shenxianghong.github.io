@@ -11,7 +11,7 @@ tag:
 - Kata Containers
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
 
 ------
 
@@ -216,7 +216,7 @@ shim server 对外暴露的 gRPC 服务。
       1. 如果请求中 r.Rootfs 指定了一个，则判断其是否为块设备，并且 [hypervisor].disable_block_device_use 为 false（disable_block_device_use 禁止块设备用于容器的 rootfs。 在像 devicemapper 这样的存储驱动程序中，容器的 rootfs 由块设备支持，出于性能原因，块设备直接传递给 hypervisor。 这个标志阻止块设备被传递给 hypervisor，而使用 virtio-fs 传递 rootfs）；或者，rootfs 的类型为 fuse.nydus-overlayfs。满足条件之一，即不需要挂载，而是走后续的热插流程
       2. 创建 rootfs 目录（如果不存在），遍历 r.Rootfs，挂载 rootfs 目录
    3. 基于上述构建的 OCI spec、runtimeConfig、rootfs、bundle、containerID 等信息创建 container 类型容器
-      1. 遍历 spec.Mounts，如果挂载源路径由 K8s 临时存储（即路径中有 kubernetes.io~empty-dir 标识，且文件类型为 tmpfs），则将 spec.Mounts 中对应挂载点的类型设置为 ephemeral；如果挂载源路径由 K8s emptydir（即路径中有 kubernetes.io~empty-dir 标识，且文件类型不为 tmpfs） 且 runtimeConfig 没有禁用 disable_guest_empty_dir（如果启用，将不会在 guest 的文件系统中创建 emptydir 挂载，而是在 host 上创建，由 virtiofs 共享，性能较差，但是可以实现 host 和 guest 共享文件），则将 spec.Mounts 中对应挂载点的类型设置为 local （对于给定的 Pod，临时卷仅在 VM 内由 tmpfs 支持时创建一次。 对于同一 Pod 的连续容器，将重复使用已经存在的卷）
+      1. 遍历 spec.Mounts，如果挂载源路径由 K8s 临时存储（即路径中有 kubernetes.io\~empty-dir 标识，且文件类型为 tmpfs），则将 spec.Mounts 中对应挂载点的类型设置为 ephemeral；如果挂载源路径由 K8s emptydir（即路径中有 kubernetes.io\~empty-dir 标识，且文件类型不为 tmpfs） 且 runtimeConfig 没有禁用 disable_guest_empty_dir（如果启用，将不会在 guest 的文件系统中创建 emptydir 挂载，而是在 host 上创建，由 virtiofs 共享，性能较差，但是可以实现 host 和 guest 共享文件），则将 spec.Mounts 中对应挂载点的类型设置为 local （对于给定的 Pod，临时卷仅在 VM 内由 tmpfs 支持时创建一次。 对于同一 Pod 的连续容器，将重复使用已经存在的卷）
       2. 将 OCI spec 和 runtimeConfig 转为 virtcontainers 所需的配置结构（即 containerConfig）
       3. 根据 spec.Annotations 中的 io.kubernetes.cri.sandbox-id、io.kubernetes.cri-SandboxID 和 io.kubernetes.sandbox.id 的 key（分别代表 Containerd、CRI-O 和 Dockershim 三种 CRI），获取到 value（value 即为 sandboxID）
       4. 调用 VCSandbox 的 **CreateContainer**，创建容器

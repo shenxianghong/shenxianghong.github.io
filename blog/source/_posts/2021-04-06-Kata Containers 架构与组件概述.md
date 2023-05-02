@@ -11,7 +11,7 @@ tag:
 - Kata Containers
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
 
 ------
 
@@ -55,7 +55,7 @@ Hypervisor 使用一个镜像文件，该文件提供了一个最小的根文件
 | `chronyd`                                                    | VM root      | yes              | [VM guest image](https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture/guest-assets.md#guest-image) | [debug console](https://github.com/kata-containers/kata-containers/blob/main/docs/Developer-Guide.md#connect-to-debug-console) | Used to synchronise the time with the host |
 | container workload (`sh(1)` in [the example](https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture/example-command.md)) | VM container | no               | User specified (Ubuntu in [the example](https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture/example-command.md)) | [exec command](https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture/README.md#exec-command) | Managed by the agent                       |
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/rootfs.png)
+<div align=center><img width="600" style="border: 0px" src="/gallery/kata-containers/rootfs.png"></div>
 
 ```shell
 $ ps -ef
@@ -98,7 +98,7 @@ initrd 镜像是一个压缩的 cpio(1) 归档文件，它是从加载到内存�
 | [Agent](https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture/README.md#agent) | VM root      | [VM guest image](https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture/guest-assets.md#guest-image) | [debug console](https://github.com/kata-containers/kata-containers/blob/main/docs/Developer-Guide.md#connect-to-debug-console) | Runs as the init daemon (PID 1) |
 | container workload                                           | VM container | User specified (Ubuntu in this example)                      | [exec command](https://github.com/kata-containers/kata-containers/blob/main/docs/design/architecture/README.md#exec-command) | Managed by the agent            |
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/initrd.png)
+<div align=center><img width="600" style="border: 0px" src="/gallery/kata-containers/initrd.png"></div>
 
 ```shell
 $ ps -ef
@@ -140,7 +140,9 @@ Kata 容器是在传统命名空间容器提供的隔离之上创建的第二层
 
 ## 概念映射
 
-Kata 容器的典型部署将通过容器运行时接口（即 CRI）实现在 Kubernetes 中进行。在每个节点上，Kubelet 将与 CRI 实现者（例如 Containerd 或 CRI-O）交互，后者将依次与 Kata Containers（基于 OCI 的运行时）交互。![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/virtual-map.png)
+Kata 容器的典型部署将通过容器运行时接口（即 CRI）实现在 Kubernetes 中进行。在每个节点上，Kubelet 将与 CRI 实现者（例如 Containerd 或 CRI-O）交互，后者将依次与 Kata Containers（基于 OCI 的运行时）交互。
+
+<div align=center><img width="700" style="border: 0px" src="/gallery/kata-containers/virtual-map.png"></div>
 
 ## Hypervisor（VMM）
 
@@ -260,10 +262,9 @@ virtio-fs 本身采用类似于 CS 的架构，选择 FUSE 作为文件系统，
 
 最大的特点是利用了 VM 和 VMM 同时部署在一个 host 上的，数据的共享访问都是通过共享内存的方式，避免了 VM 和 VMM 之间的网络通讯，共享内存访问比基于网络文件系统协议访问要更轻量级也有更好的本地文件系统语义和一致性。在面对多 Guest 要 mmap 同一个文件的时候，virtio-fs 会将该文件 mmap 到 QEMU 的进程空间里，其余的 guest 通过 DAX 直接访问。
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/virtiofs.png)
+<div align=center><img width="400" style="border: 0px" src="/gallery/kata-containers/virtiofs.png"></div>
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/virtiofs-detail.png)
-
+<div align=center><img width="700" style="border: 0px" src="/gallery/kata-containers/virtiofs-detail.png"></div>
 
 ```shell
 # qemu 进程参数节选
@@ -325,7 +326,7 @@ drwxr-xr-x 3 root root  60 Jul 19 06:57 f13846d4f1d58e82b2d3f461c3f2296c57992d41
 -rw-r--r-- 1 root root 103 Jul 19 06:57 f13846d4f1d58e82b2d3f461c3f2296c57992d415e32d7b41f689cf1126ee8d9-172f4c5d001a82b4-resolv.conf
 ```
 
-![](D:\Github\shenxianghong.github.io\docs\_posts\assert\img\kata-containers\storage-compare.png)
+<div align=center><img width="600" style="border: 0px" src="/gallery/kata-containers/storage-compare.png"></div>
 
 ## Devicemapper
 
@@ -383,8 +384,7 @@ Kata Containers 受限于 hypervisor 的功能，没有直接采用 Docker 默�
 Docker 默认采用的容器网络方案是基于 network namespace + bridge + veth pairs 的，即在 host 上创建一个 network namespace，在 docker0 网桥上连接 veth pairs 的一端，再去 network namespace 中连上另一端，打通容器和 host 之间的网络。
 这种方案得益于 namespace 技术，而许多 hypervisor 比如 QEMU 不能处理 veth interfaces。所以 Kata Containers 为 VM 创建了 TAP interfaces 来打通 VM 和 host 之间的网络。传统的 Container Engine 比如 Docker，会为容器创建 network namespace 和 veth pair，然后 Kata 会将 veth pair 的一端连上 TAP，即 MACVTAP 方案。
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/networking.png)
-
+<div align=center><img width="700" style="border: 0px" src="https://github.com/kata-containers/kata-containers/blob/main/docs/design/arch-images/network.png?raw=true"></div>
 
 Kata Containers 网络由 network namespaces、tap 和 tc 打通，创建 sandbox 之前首先创建网络命名空间，里面有 veth-pair 和 tap 两种网络接口，eth0 属于 veth-pair 类型接口，一端接入 CNI 创建的网络命名空间，一端接入宿主机；tap0_kata 属于 tap 类型接口，一端接入 cni 创建的网络命名空间，一端接入 QEMU 创建的 hypervisor，并且在 CNI 创建的网络命名空间使用 tc 策略打通 eth0 网络接口和 tap0_kata 网络接口，相当于把 eth0 和 tap0_kata 两个网络接口连成一条线。
 
@@ -448,8 +448,7 @@ filter protocol all pref 49152 u32 fh 800::800 order 2048 key ht 800 bkt 0 termi
         Sent 768 bytes 12 pkt (dropped 0, overlimits 0 requeues 0)
         backlog 0b 0p requeues 0
 ```
-
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/networking2.png)
+<div align=center><img width="600" style="border: 0px" src="/gallery/kata-containers/networking2.png"></div>
 
 # Kata Containers
 
@@ -477,8 +476,7 @@ Kata Shim 的出现主要是考虑了 VM 内有多个容器的情况。在此之
 
 ## 整体架构
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/architecture.png)
-
+<div align=center><img width="800" style="border: 0px" src="https://github.com/kata-containers/kata-containers/raw/main/docs/design/arch-images/shimv2.svg"></div>
 
 - 蓝色区域代表的是 Kubernetes CRI 的组件；红色区域代表的是 Kata Containers 的组件；黄色区域代表的是 Kata Containers 的 VM
 - ShimV1 中 CRI 的流程只会通过 Kata-Proxy （非 Vsock 环境）和 VM 通信管理容器进程等
@@ -512,7 +510,7 @@ Kata Shim 的出现主要是考虑了 VM 内有多个容器的情况。在此之
 
 **与 Kubernetes 集成架构**
 
-<div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/kata-containers/with-kubernetes.png"></div>
+<div align=center><img width="800" style="border: 0px" src="/gallery/kata-containers/with-kubernetes.png"></div>
 
 # 流程示例
 

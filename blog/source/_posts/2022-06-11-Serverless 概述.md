@@ -11,7 +11,7 @@ tag:
 - Serverless
 ---
 
-<div align=center><img width="350" style="border: 0px" src="https://landscape.cncf.io/logos/serverless.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://landscape.cncf.io/logos/serverless.svg"></div>
 
 ------
 
@@ -51,7 +51,7 @@ PaaS（Platform as a Service）是构建在 IaaS 之上的一种平台服务，�
 
 PaaS 是对软件的一个更高的抽象层次，已经接触到应用程序的运行环境本身，可以由开发者自定义，而不必接触更底层的操作系统。
 
-![](https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/serverless/overview.png)
+<div align=center><img width="600" style="border: 0px" src="/gallery/serverless/overview.png"></div>
 
 ## 什么是 Serverless
 

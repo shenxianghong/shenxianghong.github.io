@@ -11,7 +11,7 @@ tag:
 - Kata Containers
 ---
 
-<div align=center><img width="300" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
 
 ------
 
@@ -71,12 +71,12 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
 
    ***amd64***
 
-   1. 如果 hypervisor 为 QEMU、Cloud Hypervisor、Firecracker 时，*验证流程参考：[kvmIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_amd64.go#L234)*；hypervisor 为 ACRN 时，*验证流程参考：[acrnIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_amd64.go#L240)*。满足要求时输出 System can currently create Kata Containers
+   1. 如果 hypervisor 为 QEMU、Cloud Hypervisor、Firecracker 时，验证流程参考：[kvmIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_amd64.go#L234)；hypervisor 为 ACRN 时，验证流程参考：[acrnIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_amd64.go#L240)。满足要求时输出 System can currently create Kata Containers
 
    ***arm64***
 
-   1. 不区分 hypervisor 类型，*验证流程参考：[kvmIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_arm64.go#L66)*
-   2. 验证是否支持 KVM Extension，*验证流程参考：[checkKVMExtensions](#https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_arm64.go#L70)*
+   1. 不区分 hypervisor 类型，验证流程参考：[kvmIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_arm64.go#L66)
+   2. 验证是否支持 KVM Extension，验证流程参考：[checkKVMExtensions](#https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_arm64.go#L70)
 
 ****
 
@@ -102,7 +102,7 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
 
 1. 如果没有指定 --kata-debug-port 参数或者指定为 0，则 debug 端口设置为默认的 1026
 2. 校验指定的 sandboxID 参数是否不为空，且正则匹配满足 ^\[a-zA-Z0-9][a-zA-Z0-9_.-]+$
-3. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 http://shim/agent-url，解析内容获得 sandbox 的 console socket，示例如下
+3. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 `http://shim/agent-url`，解析内容获得 sandbox 的 console socket，示例如下
 
    ```SHELL
    $ curl --unix-socket /run/vc/sbs/dd2aa45873a9c0f5e1e93fc38cc0e1fe561e79e33aa85be49487162c1ebc7f43/shim-monitor.sock http://shim/agent-url
@@ -121,7 +121,7 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-metrics.go#L16)
 
 1. 校验指定的 sandboxID 参数是否不为空，且正则匹配满足 ^\[a-zA-Z0-9][a-zA-Z0-9_.-]+$
-2. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 http://shim/metrics，展示请求返回内容
+2. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 `http://shim/metrics`，展示请求返回内容
 
 ****
 
@@ -204,7 +204,7 @@ type MountInfo struct {
 1. 对指定的 --volume-path 参数进行 URLEncoding 后，拼接成 /run/kata-containers/shared/direct-volumes/\<volumePath (base64)\> 路径目录
 2. 遍历目录，获取到 sandboxID（直通卷模式下，该目录中仅有一个 sandboxID 目录与 mountInfo.json 文件，因此名称不为 mountInfo.json 即为 sandboxID）
 3. 获取并解析目录中的 mountInto.json 文件内容，得到 mountInfo.Device（即位于 host 上待直通至 VM 中的设备）
-4. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 http://shim/direct-volume/stats?path=\<device\>，展示请求返回内容
+4. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 `http://shim/direct-volume/stats?path=<device>`，展示请求返回内容
 
 ## resize
 
@@ -215,7 +215,7 @@ type MountInfo struct {
 1. 对指定的 --volume-path 参数进行 URLEncoding 后，拼接成 /run/kata-containers/shared/direct-volumes/\<volumePath (base64)\> 路径目录
 2. 遍历目录，获取到 sandboxID（直通卷模式下，该目录中仅有一个 sandboxID 目录与 mountInfo.json 文件，因此名称不为 mountInfo.json 的即为 sandboxID）
 3. 获取并解析目录中的 mountInto.json 文件内容，得到 mountInfo.Device（即位于 host 上待直通至 VM 中的设备）
-4. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送格式为 application/json 的 HTTP POST 请求至 shim server 的 http://shim/direct-volume/resize，其中请求体包含 mountInfo.Device 和卷扩容后的期望大小
+4. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送格式为 application/json 的 HTTP POST 请求至 shim server 的 `http://shim/direct-volume/resize`，其中请求体包含 mountInfo.Device 和卷扩容后的期望大小
 
 ****
 
@@ -229,7 +229,7 @@ type MountInfo struct {
 
 1. 校验指定的 sandboxID 参数是否不为空，且正则匹配满足 ^\[a-zA-Z0-9][a-zA-Z0-9_.-]+$
 2. 如果额外指定了 --v6 参数，则 url 为 /ip6tables，否则为 /iptables
-3. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 http://shim/\<url\>，展示请求返回内容
+3. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 `http://shim/<url>`，展示请求返回内容
 
 ## set
 
@@ -240,4 +240,4 @@ type MountInfo struct {
 1. 校验指定的 sandboxID 参数是否不为空，且正则匹配满足 ^\[a-zA-Z0-9][a-zA-Z0-9_.-]+$
 2. 校验指定的 iptables 参数对应的文件是否存在，并读取 iptables 文件内容
 3. 如果额外指定了 --v6 参数，则 url 为 /ip6tables，否则为 /iptables
-4. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送格式为 application/octet-stream 的 HTTP PUT 请求至 shim server 的 http://shim/\<url\>，其中请求体包含 iptables 文件内容流
+4. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送格式为 application/octet-stream 的 HTTP PUT 请求至 shim server 的 `http://shim/<url>`，其中请求体包含 iptables 文件内容流

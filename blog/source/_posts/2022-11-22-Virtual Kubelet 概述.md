@@ -11,7 +11,7 @@ tag:
 - Virtual Kubelet
 ---
 
-<div align=center><img width="170" style="border: 0px" src="https://virtual-kubelet.io/img/color-logo.png"></div>
+<div align=center><img width="150" style="border: 0px" src="https://virtual-kubelet.io/img/color-logo.png"></div>
 
 ------
 
@@ -79,9 +79,7 @@ Admiralty Multi-Cluster Scheduler 将特定的 Pod 运行在 Virtual Kubelet 节
 
 Azure 容器实例 Provider 允许在同一个 Kubernetes 集群中同时使用 VM 上的 Pod 和 Azure 容器实例。
 
-<figure>
-	<a href="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/virtual-kubelet/virtual-kubelet-aci.png"><img src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/virtual-kubelet/virtual-kubelet-aci.png"></a>
-</figure>
+<div align=center><img width="600" style="border: 0px" src="/gallery/virtual-kubelet/aci.png"></div>
 
 *参考：[Azure Container Instances documentation](https://github.com/virtual-kubelet/azure-aci/blob/master/README.md)*
 

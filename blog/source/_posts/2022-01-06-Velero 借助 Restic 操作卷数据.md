@@ -11,7 +11,7 @@ tag:
 - Velero
 ---
 
-<div align=center><img width="200" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+<div align=center><img width="170" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
 
 ------
 
@@ -380,9 +380,7 @@ spec:
 
 **velero.io/aws**
 
-<figure>
-	<a href="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/velero/resticrepositories-in-minio.png"><img src="https://raw.githubusercontent.com/shenxianghong/shenxianghong.github.io/main/docs/_posts/assert/img/velero/resticrepositories-in-minio.png"></a>
-</figure>
+<div align=center><img width="600" style="border: 0px" src="/gallery/velero/resticrepositories-in-minio.png"></div>
 
 ### PodVolumeBackup
 
