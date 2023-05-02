@@ -1,5 +1,5 @@
 ---
-title: "「 Istio 」 3.5 流量管理 — WorkloadEntry"
+title: "「 Istio 」流量管理 — WorkloadEntry"
 excerpt: "Istio 中流量管理组件 WorkloadEntry 对象介绍"
 cover: https://picsum.photos/0?sig=20220823
 thumbnail: https://istio.io/v1.8/img/istio-bluelogo-whitebackground-framed.svg

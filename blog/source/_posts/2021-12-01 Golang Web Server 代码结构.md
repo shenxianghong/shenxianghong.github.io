@@ -1,5 +1,5 @@
 ---
-title: "「 Golang 」 Golang Web Server 代码结构"
+title: "「 Golang 」Golang Web Server 代码结构"
 excerpt: "记一次在 Kubewebhook 中学到的 web 代码结构"
 cover: https://picsum.photos/0?sig=20211201
 thumbnail: https://go.dev/blog/go-brand/Go-Logo/SVG/Go-Logo_Blue.svg

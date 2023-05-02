@@ -1,5 +1,5 @@
 ---
-title: "「 Virtual Kubelet 」 Virtual Kubelet 概述"
+title: "「 Virtual Kubelet 」Virtual Kubelet 概述"
 excerpt: "Virtual Kubelet 的架构概述、Provider 实现以及实践操作"
 cover: https://picsum.photos/0?sig=20221122
 thumbnail: https://avatars.githubusercontent.com/u/34250142?s=200&v=4

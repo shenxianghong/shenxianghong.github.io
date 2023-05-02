@@ -1,5 +1,5 @@
 ---
-title: "「 Velero 」 2.7 源码走读 — Plugin"
+title: "「 Velero 」源码走读 — Plugin"
 excerpt: "Velero 中与 Plugin 相关的源码走读"
 cover: https://picsum.photos/0?sig=20220320
 thumbnail: https://blogs.vmware.com/opensource/files/2022/03/velero.png

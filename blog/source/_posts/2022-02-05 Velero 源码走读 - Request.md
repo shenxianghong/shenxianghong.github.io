@@ -1,5 +1,5 @@
 ---
-title: "「 Velero 」 2.4 源码走读 — Request"
+title: "「 Velero 」源码走读 — Request"
 excerpt: "Velero 中与 DownloadRequest 和 ServerStatusRequest 相关的源码走读"
 cover: https://picsum.photos/0?sig=20220205
 thumbnail: https://blogs.vmware.com/opensource/files/2022/03/velero.png

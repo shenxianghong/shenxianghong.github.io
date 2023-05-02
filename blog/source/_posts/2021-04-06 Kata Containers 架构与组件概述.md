@@ -1,5 +1,5 @@
 ---
-title: "「 Kata Containers 」 1.1 架构与组件概述"
+title: "「 Kata Containers 」架构与组件概述"
 excerpt: "Kata Containers 2.x 与 1.x 版本差异对比、整体架构与组件功能概述"
 cover: https://picsum.photos/0?sig=20210406
 thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67

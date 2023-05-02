@@ -1,5 +1,5 @@
 ---
-title: "「 Rust 」 1.4 Cargo"
+title: "「 Rust 」Cargo"
 excerpt: "Rust 包管理工具 Cargo 的介绍与使用"
 cover: https://picsum.photos/0?sig=20220109
 thumbnail: https://www.rust-lang.org/static/images/rust-logo-blk.svg

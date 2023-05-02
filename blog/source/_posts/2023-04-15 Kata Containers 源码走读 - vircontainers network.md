@@ -1,5 +1,5 @@
 ---
-title: "「 Kata Containers 」 3.4.5 源码走读 — virtcontainers network"
+title: "「 Kata Containers 」源码走读 — virtcontainers network"
 excerpt: "virtcontainers 库中 Endpoint 和 Network 模块源码走读"
 cover: https://picsum.photos/0?sig=20230415
 thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
@@ -49,7 +49,7 @@ type IPVlanEndpoint struct {
 	EndpointProperties NetworkInfo
 	// NetPair.TapInterface.Name 为 br<idx>_kata
 	// NetPair.TapInterface.TAPIface.Name 为 tap<idx>_kata
-    // NetPair.VirtIface.Name 为初始化入参指定，缺省为 eth<idx>
+	// NetPair.VirtIface.Name 为初始化入参指定，缺省为 eth<idx>
 	// NetPair.VirtIface.HardAddr 为随机生成
 	// NetPair.NetInterworkingModel 为 NetXConnectTCFilterModel
 	NetPair            NetworkInterfacePair

@@ -1,5 +1,5 @@
 ---
-title: "「 Istio 」 3.3 流量管理 — DestinationRule"
+title: "「 Istio 」流量管理 — DestinationRule"
 excerpt: "Istio 中流量管理组件 DestinationRule 对象介绍"
 cover: https://picsum.photos/0?sig=20220809
 thumbnail: https://istio.io/v1.8/img/istio-bluelogo-whitebackground-framed.svg

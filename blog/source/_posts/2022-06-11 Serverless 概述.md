@@ -1,5 +1,5 @@
 ---
-title: "「 Serverless 」 Serverless 概述"
+title: "「 Serverless 」Serverless 概述"
 excerpt: "初识无服务架构 - Serverless"
 cover: https://picsum.photos/0?sig=20220611
 thumbnail: https://app.serverless.com/static/media/icon-text-serverless-framework.d6f82898.svg

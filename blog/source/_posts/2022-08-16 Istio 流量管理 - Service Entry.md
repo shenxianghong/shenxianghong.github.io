@@ -1,5 +1,5 @@
 ---
-title: "「 Istio 」 3.4 流量管理 — ServiceEntry"
+title: "「 Istio 」流量管理 — ServiceEntry"
 excerpt: "Istio 中流量管理组件 ServiceEntry 对象介绍"
 cover: https://picsum.photos/0?sig=20220816
 thumbnail: https://istio.io/v1.8/img/istio-bluelogo-whitebackground-framed.svg

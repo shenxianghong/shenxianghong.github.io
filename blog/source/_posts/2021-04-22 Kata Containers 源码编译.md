@@ -1,5 +1,5 @@
 ---
-title: "「 Kata Containers 」 2.1 源码编译"
+title: "「 Kata Containers 」源码编译"
 excerpt: "基于源码在 x86 和 arm64 架构下容器化编译 Kata Containers 的参考流程"
 cover: https://picsum.photos/0?sig=20210422
 thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67

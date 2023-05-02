@@ -1,5 +1,5 @@
 ---
-title: "「 Istio 」 3.8 流量管理 — Sidecar"
+title: "「 Istio 」流量管理 — Sidecar"
 excerpt: "Istio 中流量管理组件 Sidecar 对象介绍"
 cover: https://picsum.photos/0?sig=20220916
 thumbnail: https://istio.io/v1.8/img/istio-bluelogo-whitebackground-framed.svg

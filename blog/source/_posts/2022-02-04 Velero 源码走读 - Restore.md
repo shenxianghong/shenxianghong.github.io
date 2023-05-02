@@ -1,5 +1,5 @@
 ---
-title: "「 Velero 」 2.3 源码走读 — Restore"
+title: "「 Velero 」源码走读 — Restore"
 excerpt: "Velero 中与 Restore 相关的源码走读"
 cover: https://picsum.photos/0?sig=20220204
 thumbnail: https://blogs.vmware.com/opensource/files/2022/03/velero.png

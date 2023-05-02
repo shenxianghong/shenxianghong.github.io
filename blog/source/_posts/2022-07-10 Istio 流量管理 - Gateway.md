@@ -1,5 +1,5 @@
 ---
-title: "「 Istio 」 3.1 流量管理 — Gateway"
+title: "「 Istio 」流量管理 — Gateway"
 excerpt: "Istio 中流量管理组件 Gateway 对象介绍"
 cover: https://picsum.photos/0?sig=20220710
 thumbnail: https://istio.io/v1.8/img/istio-bluelogo-whitebackground-framed.svg

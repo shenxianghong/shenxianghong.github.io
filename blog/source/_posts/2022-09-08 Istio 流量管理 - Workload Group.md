@@ -1,5 +1,5 @@
 ---
-title: "「 Istio 」 3.6 流量管理 — WorkloadGroup"
+title: "「 Istio 」流量管理 — WorkloadGroup"
 excerpt: "Istio 中流量管理组件 WorkloadGroup 对象介绍"
 cover: https://picsum.photos/0?sig=20220908
 thumbnail: https://istio.io/v1.8/img/istio-bluelogo-whitebackground-framed.svg

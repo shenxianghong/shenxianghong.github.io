@@ -1,5 +1,5 @@
 ---
-title: "「 Velero 」 2.5 源码走读 — Provider"
+title: "「 Velero 」源码走读 — Provider"
 excerpt: "Velero 中与 StorageProvider 和 SnapshotProvider 相关的源码走读"
 cover: https://picsum.photos/0?sig=20220220
 thumbnail: https://blogs.vmware.com/opensource/files/2022/03/velero.png

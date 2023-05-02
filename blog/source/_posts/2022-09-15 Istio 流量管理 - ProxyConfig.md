@@ -1,5 +1,5 @@
 ---
-title: "「 Istio 」 3.7 流量管理 — ProxyConfig"
+title: "「 Istio 」流量管理 — ProxyConfig"
 excerpt: "Istio 中流量管理组件 ProxyConfig 对象介绍"
 cover: https://picsum.photos/0?sig=20220915
 thumbnail: https://istio.io/v1.8/img/istio-bluelogo-whitebackground-framed.svg

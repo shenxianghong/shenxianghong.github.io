@@ -1,5 +1,5 @@
 ---
-title: "「 Velero 」 1.3 操作卷数据（CSI）"
+title: "「 Velero 」操作卷数据（CSI）"
 excerpt: "借助 CSI 实现对容器卷数据的备份与恢复"
 cover: https://picsum.photos/0?sig=20220110
 thumbnail: https://blogs.vmware.com/opensource/files/2022/03/velero.png

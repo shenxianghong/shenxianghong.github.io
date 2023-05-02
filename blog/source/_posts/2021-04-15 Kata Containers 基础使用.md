@@ -1,5 +1,5 @@
 ---
-title: "「 Kata Containers 」 2 基础使用"
+title: "「 Kata Containers 」基础使用"
 excerpt: "Kata Containers 基础使用示例"
 cover: https://picsum.photos/0?sig=20210415
 thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
