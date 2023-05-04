@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Istio 」流量管理 — VirtualService - 🐾Corgi</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="🐾Corgi"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="🐾Corgi"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Istio 中流量管理组件 VirtualService 对象介绍"><meta property="og:type" content="blog"><meta property="og:title" content="「 Istio 」流量管理 — VirtualService"><meta property="og:url" content="http://shenxianghong.github.io/2022/08/05/2022-08-05%20Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Virtual%20Service/"><meta property="og:site_name" content="🐾Corgi"><meta property="og:description" content="Istio 中流量管理组件 VirtualService 对象介绍"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://picsum.photos/0?sig=20220805"><meta property="article:published_time" content="2022-08-04T16:00:00.000Z"><meta property="article:modified_time" content="2023-05-04T00:54:28.332Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Istio"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://picsum.photos/0?sig=20220805"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://shenxianghong.github.io/2022/08/05/2022-08-05%20Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Virtual%20Service/"},"headline":"「 Istio 」流量管理 — VirtualService","image":[],"datePublished":"2022-08-04T16:00:00.000Z","dateModified":"2023-05-04T00:54:28.332Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"🐾Corgi","logo":{"@type":"ImageObject","url":"http://shenxianghong.github.io/img/logo.svg"}},"description":"Istio 中流量管理组件 VirtualService 对象介绍"}</script><link rel="canonical" href="http://shenxianghong.github.io/2022/08/05/2022-08-05%20Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Virtual%20Service/"><link rel="alternate" href="/atom.xml" title="🐾Corgi" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/xcode.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item night" id="night-nav" title="Night Mode" href="javascript:;"><i class="fas fa-moon" id="night-icon"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="https://picsum.photos/0?sig=20220805" alt="「 Istio 」流量管理 — VirtualService"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><i class="fa fa-calendar"></i> <time dateTime="${date_xml(page.date)}" title="${date_xml(page.date)}">2022-08-05</time></span><span class="level-item is-hidden-mobile"><i class="fa fa-calendar-check"></i> <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">2023-05-04</time></span><span class="level-item"><i class="far fa-folder-open"></i> <a class="link-muted" href="/categories/Overview/">Overview</a></span><span class="level-item"><i class="far fa-clock"></i> an hour read (About 7338 words)</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Istio 」流量管理 — VirtualService</h1><div class="content"><div align=center><img width="120" style="border: 0px" src="https://www.vectorlogo.zone/logos/istioio/istioio-ar21.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v1.15.0</strong></p>
+</blockquote>
+<p>VirtualService 定义了一组流量路由规则，以在 host 被寻址时应用。每个路由规则都为特定协议的流量定义了匹配标准。如果流量匹配，则将其发送到注册表中定义的命名目标服务（或其子集&#x2F;版本）</p>
+<p>流量来源也可以在路由规则中匹配。这允许为特定的客户端上下文定制路由。</p>
+<p><strong>Service</strong></p>
+<p>绑定到 service registry 中唯一名称的应用程序行为单元。Service 由多个 endpoints 组成，这些 endpoints 也就是运行在 Pod、容器、VM 等上的工作负载实例。</p>
+<p><strong>Service versions（subsets）</strong></p>
+<p>在持续部署场景中，一个服务可以有不同的实例子集的不同变体，这些变体不一定是不同的 API 版本，它们可能是对同一服务的迭代更改，部署在不同的环境（prod, staging, dev 等）中。常见场景包括 A&#x2F;B 测试、金丝雀发布等。不同版本的选择可以根据各种标准（headers, url 等）的权重来决定。每个服务都有一个由其所有实例组成的默认版本。</p>
+<p><strong>Source</strong></p>
+<p>调用服务的下游客户端。</p>
+<p><strong>Host</strong></p>
+<p>客户端尝试连接到服务时使用的地址。</p>
+<p><strong>Access model</strong></p>
+<p>应用程序仅处理目标服务（Host），而不知道各个服务版本（subsets）。版本的实际选择由代理或者 sidecar 决定，这样应用程序代码能够将自身与依赖服务的解耦。</p>
+<p>例如，以下示例默认将所有 HTTP 流量路由到标签为 review：v1 的 review 服务的 Pod。此外，路径以 &#x2F;wpcatalog&#x2F; 或 &#x2F;consumercatalog&#x2F; 开头的 HTTP 请求将被重写为 &#x2F;newcatalog 并发送到标签为 version: v2 的 Pod。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews-route</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">&quot;reviews-v2-routes&quot;</span></span><br><span class="line">    <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">prefix:</span> <span class="string">&quot;/wpcatalog&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">prefix:</span> <span class="string">&quot;/consumercatalog&quot;</span></span><br><span class="line">    <span class="attr">rewrite:</span></span><br><span class="line">      <span class="attr">uri:</span> <span class="string">&quot;/newcatalog&quot;</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v2</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">&quot;reviews-v1-route&quot;</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br></pre></td></tr></table></figure>
+
+<p>路由目的地的子集或者版本通过对必须在相应 DestinationRule 中声明的命名服务子集的引用来标识。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews-destination</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">subsets:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">v1</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="attr">version:</span> <span class="string">v1</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">v2</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="attr">version:</span> <span class="string">v2</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="VirtualService"><a href="#VirtualService" class="headerlink" title="VirtualService"></a>VirtualService</h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>hosts</td>
+<td>向其发送流量的目标主机（只有访问客户端的 Host 字段为 hosts 配置的地址才能路由到后端服务）。可以是带有通配符前缀的 DNS 名称或 IP 地址。根据平台的不同，也可以使用短名称代替 FQDN（即名称中没有点）。在这种情况下，主机的 FQDN 将基于底层平台派生<br />单个 VirtualService 可用于描述相应 host 的所有流量属性，包括多个 HTTP 和 TCP 端口的流量属性。或者，可以使用多个 VirtualService 定义 host 的流量属性，但有一些注意事项，参阅<a target="_blank" rel="noopener" href="https://istio.io/latest/docs/ops/best-practices/traffic-management/#split-virtual-services">操作指南</a><br />Kubernetes 用户注意事项：当使用短名称时（例如 reviews 而不是 reviews.default.svc.cluster.local），Istio 将根据规则的命名空间而不是服务来解析短名称。名为 reviews 的 host 在 default 命名空间中的规则将被解析为 reviews.default.svc.cluster.local，而与 reviews 服务关联的实际命名空间无关。为避免潜在的错误配置，建议始终使用完全限定域名而不是短名称<br />hosts 字段适用于 HTTP 和 TCP 服务。网格内的服务，即服务注册表中的服务，必须始终使用它们的字母数字名称来引用。 IP 地址仅允许用于通过 Gateway 定义的服务<br />注意：对于 delegate VirtualService 而言，必须为空。</td>
+</tr>
+<tr>
+<td>gateways</td>
+<td>应用这些路由规则的 Gateway 和 sidecar 的名称。 其他命名空间中的 Gateway 的引用方式为&lt;gateway namespace&gt;&#x2F;&lt;gateway name&gt;；指定没有显式的指定命名空间则与 VirtualService 的命名空间相同。单个 VirtualService 用于网格内的 sidecar 以及一个或多个 Gateway。可以使用协议特定路由的匹配条件中的源字段覆盖该字段强加的选择条件。保留字 mesh 用于表述网格中的所有 sidecar。当省略该字段时，将使用默认 Gateway 即 mesh，这会将规则应用于网格中的所有 sidecar。如果提供了 Gateway 名称列表，则规则将仅适用该相关的 Gateway。要将规则应用于 Gateway 和 sidecar，请将 mesh 指定为 gateways 之一</td>
+</tr>
+<tr>
+<td><a href="#HTTPRoute">http</a></td>
+<td>HTTP 流量的路由规则的有序列表。 使用匹配传入请求的第一个规则</td>
+</tr>
+<tr>
+<td><a href="#TLSRoute">tls</a></td>
+<td>An ordered list of route rule for non-terminated TLS &amp; HTTPS traffic. Routing is typically performed using the SNI value presented by the ClientHello message. TLS routes will be applied to platform service ports named ‘https-*’, ‘tls-*’, unterminated gateway ports using HTTPS&#x2F;TLS protocols (i.e. with “passthrough” TLS mode) and service entry ports using HTTPS&#x2F;TLS protocols. The first rule matching an incoming request is used. NOTE: Traffic ‘https-*’ or ‘tls-*’ ports without associated virtual service will be treated as opaque TCP traffic.</td>
+</tr>
+<tr>
+<td><a href="#TCPRoute">tcp</a></td>
+<td>不透明 TCP 流量的路由规则的有序列表。 TCP 路由将应用于不是 HTTP 或 TLS 端口的任何端口。使用匹配传入请求的第一个规则</td>
+</tr>
+<tr>
+<td>exportTo</td>
+<td>此 VirtualService 暴露到的命名空间列表。暴露 VirtualService 允许它被其他命名空间中定义的 sidecar 和 Gateway 使用。此功能为服务所有者和网格管理员提供了一种机制来控制跨命名空间边界的 VirtualService 的可见性<br />如果未指定命名空间，则默认情况下将 VirtualService 暴露到所有命名空间<br /> . 为保留标识代表暴露到 VirtualService 的同一命名空间中。类似地，* 代表暴露到所有命名空间</td>
+</tr>
+</tbody></table>
+<h1 id="Destination"><a href="#Destination" class="headerlink" title="Destination"></a>Destination</h1><p>Destination 表示在处理路由规则后将请求（连接）发送到的网络可寻址服务。 destination.host 应该明确引用服务注册表中的服务。 Istio 的服务注册表由平台服务注册表中的所有服务（例如 Kubernetes 服务、Consul 服务）以及通过 ServiceEntry 资源声明的服务组成。</p>
+<p>以下示例中默认将所有流量路由到带有标签 version：v1（即 subset v1）的 review 服务的 Pod，并将符合条件的路由到 subset v2。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews-route</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">foo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">reviews</span> <span class="comment"># interpreted as reviews.foo.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">prefix:</span> <span class="string">&quot;/wpcatalog&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">prefix:</span> <span class="string">&quot;/consumercatalog&quot;</span></span><br><span class="line">    <span class="attr">rewrite:</span></span><br><span class="line">      <span class="attr">uri:</span> <span class="string">&quot;/newcatalog&quot;</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews</span> <span class="comment"># interpreted as reviews.foo.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v2</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews</span> <span class="comment"># interpreted as reviews.foo.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br></pre></td></tr></table></figure>
+
+<p>以下 VirtualService 为 productpage.prod.svc.cluster.local 服务的设置了 5s 的超时时间。此规则中没有定义子集，Istio 将从服务注册表中获取 productpage.prod.svc.cluster.local 服务的所有实例，并填充 sidecar 的负载均衡池。另外，此规则设置在 istio-system 命名空间中，但使用的是 productpage 服务的完全限定域名 productpage.prod.svc.cluster.local。因此，规则的命名空间对解析 productpage 服务的名称没有影响。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-productpage-rule</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">istio-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">productpage.prod.svc.cluster.local</span> <span class="comment"># ignores rule namespace</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">timeout:</span> <span class="string">5s</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">productpage.prod.svc.cluster.local</span></span><br></pre></td></tr></table></figure>
+
+<p>为了路由到网格外服务的流量，必须首先使用 ServiceEntry 资源将外部服务添加到 Istio 的内部服务注册表中。然后可以定义 VirtualServices 来控制绑定到这些外部服务的流量。例如，以下规则为 wikipedia.org 定义了一个 Service，并为 HTTP 请求设置了 5s 的超时时间。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceEntry</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">external-svc-wikipedia</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">wikipedia.org</span></span><br><span class="line">  <span class="attr">location:</span> <span class="string">MESH_EXTERNAL</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">number:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">example-http</span></span><br><span class="line">    <span class="attr">protocol:</span> <span class="string">HTTP</span></span><br><span class="line">  <span class="attr">resolution:</span> <span class="string">DNS</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-wiki-rule</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">wikipedia.org</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">timeout:</span> <span class="string">5s</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">wikipedia.org</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>host</td>
+<td>服务注册表中的服务名称。服务名称从平台的服务注册表（例如，Kubernetes 服务、Consul 服务等）和 ServiceEntry 声明的 host 中查找。两者都找不到的流量将被丢弃。<br /><em>同样的，推荐使用完全限定域名</em></td>
+</tr>
+<tr>
+<td>subset</td>
+<td>服务中子集的名称。仅适用于网格内的服务。子集必须在相应的 DestinationRule 中定义</td>
+</tr>
+<tr>
+<td><a href="#PortSelector">port</a></td>
+<td>指定寻址目标主机上的端口。如果服务只公开一个端口，则不需要显式选择端口</td>
+</tr>
+</tbody></table>
+<h1 id="HTTPRoute"><a href="#HTTPRoute" class="headerlink" title="HTTPRoute"></a><a name="HTTPRoute">HTTPRoute</a></h1><p>描述路由 HTTP&#x2F;1.1、HTTP2 和 gRPC 流量的匹配条件和行为。有关使用示例，请参阅 VirtualService。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>name</td>
+<td>分配给路由的名称，用作调试。该名称将与匹配的路由结果一起记录在访问日志</td>
+</tr>
+<tr>
+<td><a href="#HTTPMatchRequest">match</a></td>
+<td>应用规则需要满足的匹配条件。单个匹配块内的所有条件都具有 AND 语义，而匹配块列表具有 OR 语义。如果任何一个匹配块匹配成功，则应用该规则</td>
+</tr>
+<tr>
+<td><a href="#HTTPRouteDestination">route</a></td>
+<td>HTTP 规则可以重定向或转发（默认）流量。转发目标可以是服务的多个版本之一（subset）。与服务版本相关的权重决定了它接收的流量比例</td>
+</tr>
+<tr>
+<td><a href="#HTTPRedirect">redirect</a></td>
+<td>HTTP 规则可以重定向或转发（默认）流量。如果在规则中指定了流量直通选项，则重定向将被忽略。重定向可用于将 HTTP 301 重定向发送到不同的 URI</td>
+</tr>
+<tr>
+<td><a href="#Delegate">delegate</a></td>
+<td>委托是指定可用于定义委托 HTTPRoute 的特定 VirtualService。只有Route和Redirect都为空时才可以设置，并且delegate VirtualService的路由规则会与当前的路由规则合并。<br /><em>注意：仅支持一级委派，delegate 的 HTTPMatchRequest 必须是 root 的严格子集，否则会发生冲突，HTTPRoute 不会生效</em></td>
+</tr>
+<tr>
+<td><a href="#HTTPRewrite">rewrite</a></td>
+<td>重写 HTTP URI 和 Authority header。 Rewrite 不能与 Redirect 原语一起使用。转发前会进行重写</td>
+</tr>
+<tr>
+<td>timeout</td>
+<td>HTTP 请求超时，默认禁用</td>
+</tr>
+<tr>
+<td><a href="#HTTPRetry">retries</a></td>
+<td>HTTP 请求的重试策略</td>
+</tr>
+<tr>
+<td><a href="#HTTPFaultInjection">fault</a></td>
+<td>故障注入策略应用于客户端的 HTTP 流量。<br /><em>注意，在客户端启用故障时，将不会启用超时或重试</em></td>
+</tr>
+<tr>
+<td><a href="#Destination">mirror</a></td>
+<td>除了将请求转发到预期目标之外，还将 HTTP 流量镜像到另一个目标。镜像流量是在尽力而为的基础上，sidercar &#x2F; gateway 在从原始目的地返回响应之前不会等待镜像集群响应。会为镜像目的地生成统计信息。</td>
+</tr>
+<tr>
+<td><a href="#Percent">mirrorPercentage</a></td>
+<td>要镜像的流量百分比。默认为所有的流量（100%）都会被镜像。最大值为 100%。</td>
+</tr>
+<tr>
+<td><a href="#CorsPolicy">corsPolicy</a></td>
+<td>跨域资源共享策略 (CORS)。有关跨源资源共享的更多详细信息，参阅 <a target="_blank" rel="noopener" href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS">CORS</a></td>
+</tr>
+<tr>
+<td><a href="#Headers">headers</a></td>
+<td>Header 操作规则</td>
+</tr>
+</tbody></table>
+<h1 id="Delegate"><a href="#Delegate" class="headerlink" title="Delegate"></a><a name="Delegate">Delegate</a></h1><p>在 Istio 1.5 中，VirtualService 资源之间是无法进行转发的，在 Istio 1.6 版本中规划了 VirtualService Chain 机制，也就是说，我们可以通过 delegate 配置项将一个 VirtualService 代理到另外一个 VirtualService 中进行规则匹配。</p>
+<p>例如，路由规则通过名为 productpage 的委托 VirtualService 将流量转发到 &#x2F;productpage，通过名为 reviews 的委托 VirtualService 将流量转发到 &#x2F;reviews。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1alpha3</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;bookinfo.com&quot;</span></span><br><span class="line">  <span class="attr">gateways:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">mygateway</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">prefix:</span> <span class="string">&quot;/productpage&quot;</span></span><br><span class="line">    <span class="attr">delegate:</span></span><br><span class="line">       <span class="attr">name:</span> <span class="string">productpage</span></span><br><span class="line">       <span class="attr">namespace:</span> <span class="string">nsA</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">prefix:</span> <span class="string">&quot;/reviews&quot;</span></span><br><span class="line">    <span class="attr">delegate:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">reviews</span></span><br><span class="line">        <span class="attr">namespace:</span> <span class="string">nsB</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1alpha3</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">productpage</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">nsA</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">     <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">prefix:</span> <span class="string">&quot;/productpage/v1/&quot;</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">productpage-v1.nsA.svc.cluster.local</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">productpage.nsA.svc.cluster.local</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1alpha3</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">nsB</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.nsB.svc.cluster.local</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>name</td>
+<td>委托 VirtualService 的名称</td>
+</tr>
+<tr>
+<td>namespace</td>
+<td>委托 VirtualService 所在的命名空间。默认情况下，它与根的相同</td>
+</tr>
+</tbody></table>
+<h1 id="Headers"><a href="#Headers" class="headerlink" title="Headers"></a><a name="Headers">Headers</a></h1><p>当 Envoy 将请求转发到目标服务或从目标服务转发响应时，可以操作 header 信息。可以为特定路由目的地或所有目的地指定 header 操作规则。以下 VirtualService 将值为 test: true 的请求头添加到路由到任何 reviews 服务目标的请求中。同时，删除了仅来自 reviews 服务的 v1 版本的响应头中的 foo。 </p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews-route</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">headers:</span></span><br><span class="line">      <span class="attr">request:</span></span><br><span class="line">        <span class="attr">set:</span></span><br><span class="line">          <span class="attr">test:</span> <span class="string">&quot;true&quot;</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v2</span></span><br><span class="line">      <span class="attr">weight:</span> <span class="number">25</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br><span class="line">      <span class="attr">headers:</span></span><br><span class="line">        <span class="attr">response:</span></span><br><span class="line">          <span class="attr">remove:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">foo</span></span><br><span class="line">      <span class="attr">weight:</span> <span class="number">75</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#HeaderOperations">request</a></td>
+<td>在将请求转发到目标服务之前应用的标头操作规则</td>
+</tr>
+<tr>
+<td><a href="#HeaderOperations">response</a></td>
+<td>在向调用者返回响应之前应用的标头操作规则</td>
+</tr>
+</tbody></table>
+<h1 id="TLSRoute"><a href="#TLSRoute" class="headerlink" title="TLSRoute"></a><a name="TLSRoute">TLSRoute</a></h1><p>描述路由未终止的 TLS 流量 (TLS&#x2F;HTTPS) 的匹配条件和操作。</p>
+<p>以下路由规则根据 SNI 值将到达名为 mygateway 的 Gateway 的端口 443 的未终止 TLS 流量转发到网格中的内部服务。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo-sni</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">&quot;*.bookinfo.com&quot;</span></span><br><span class="line">  <span class="attr">gateways:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">mygateway</span></span><br><span class="line">  <span class="attr">tls:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">443</span></span><br><span class="line">      <span class="attr">sniHosts:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">login.bookinfo.com</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">login.prod.svc.cluster.local</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">443</span></span><br><span class="line">      <span class="attr">sniHosts:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">reviews.bookinfo.com</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#TLSMatchAttributes%5B%5D">match</a></td>
+<td>应用规则需要满足的匹配条件。单个匹配块内的所有条件都具有 AND 语义，而匹配块列表具有 OR 语义。如果任何一个匹配块匹配成功，则应用该规则</td>
+</tr>
+<tr>
+<td><a href="#RouteDestination">route</a></td>
+<td>连接应转发到的目的地</td>
+</tr>
+</tbody></table>
+<h1 id="TCPRoute"><a href="#TCPRoute" class="headerlink" title="TCPRoute"></a><a name="TCPRoute">TCPRoute</a></h1><p>描述路由 TCP 流量的匹配条件和操作。</p>
+<p>以下路由规则将到达端口 27017 的 mongo.prod.svc.cluster.local 的流量转发到端口 5555 上的另一个 Mongo 服务器。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">bookinfo-mongo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">mongo.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">tcp:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">27017</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">mongo.backup.svc.cluster.local</span></span><br><span class="line">        <span class="attr">port:</span></span><br><span class="line">          <span class="attr">number:</span> <span class="number">5555</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#L4MatchAttributes%5B%5D">match</a></td>
+<td>应用规则需要满足的匹配条件。单个匹配块内的所有条件都具有 AND 语义，而匹配块列表具有 OR 语义。如果任何一个匹配块匹配成功，则应用该规则</td>
+</tr>
+<tr>
+<td><a href="#RouteDestination%5B%5D">route</a></td>
+<td>连接应转发到的目的地</td>
+</tr>
+</tbody></table>
+<h1 id="HTTPMatchRequest"><a href="#HTTPMatchRequest" class="headerlink" title="HTTPMatchRequest"></a><a name="HTTPMatchRequest">HTTPMatchRequest</a></h1><p>HttpMatchRequest 指定要满足的一组标准，以便将规则应用于 HTTP 请求。</p>
+<p>例如，以下内容将规则限制为仅匹配 URL 路径以 &#x2F;ratings&#x2F;v2&#x2F; 开头的请求，并且请求包含具有值 jason 的自定义最终用户标头。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ratings-route</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">headers:</span></span><br><span class="line">        <span class="attr">end-user:</span></span><br><span class="line">          <span class="attr">exact:</span> <span class="string">jason</span></span><br><span class="line">      <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">prefix:</span> <span class="string">&quot;/ratings/v2/&quot;</span></span><br><span class="line">      <span class="attr">ignoreUriCase:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br></pre></td></tr></table></figure>
+
+<p>HTTPMatchRequest 不能为空。注意：指定委托 VirtualService 时，不能设置正则表达式字符串匹配。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>name</td>
+<td>分配给匹配项的名称。匹配的名称将与父路由的名称一同记录在与该路由匹配的请求的访问日志中</td>
+</tr>
+<tr>
+<td><a href="#StringMatch">uri</a></td>
+<td>区分大小写，格式包括 exact（精准匹配）、prefix（前缀匹配）和 regex（正则）<br /><em>注意：可以通过 ignore_uri_case 标志启用不区分大小写的匹配</em></td>
+</tr>
+<tr>
+<td><a href="#StringMatch">scheme</a></td>
+<td>区分大小写，格式包括 exact（精准匹配）、prefix（前缀匹配）和 regex（正则）</td>
+</tr>
+<tr>
+<td><a href="#StringMatch">method</a></td>
+<td>区分大小写，格式包括 exact（精准匹配）、prefix（前缀匹配）和 regex（正则）</td>
+</tr>
+<tr>
+<td><a href="#StringMatch">authority</a></td>
+<td>区分大小写，格式包括 exact（精准匹配）、prefix（前缀匹配）和 regex（正则）</td>
+</tr>
+<tr>
+<td><a href="#StringMatch">headers</a></td>
+<td>header 的 key 必须为小写并使用连字符作为分隔符，例如 x-request-id。区分大小写，格式包括 exact（精准匹配）、prefix（前缀匹配）和 regex（正则）。如果该值为空并且仅指定了 header 的名称，则检查标头的存在<br /><em>注意：键 uri、scheme、method 和 authority 将被忽略</em></td>
+</tr>
+<tr>
+<td>port</td>
+<td>指定正在寻址的 host 上的端口。许多服务只公开单个端口或使用它们支持的协议标记端口，在这些情况下，不需要显式选择端口</td>
+</tr>
+<tr>
+<td>sourceLabels</td>
+<td>一个或多个标签，用于限制规则对具有给定标签的源（客户端）工作负载的适用性。如果 VirtualService 在顶级 gateways 字段中指定了网关列表，仅当列表中包含保留的 gateway — mesh 时，该字段才生效</td>
+</tr>
+<tr>
+<td>gateways</td>
+<td>待应用规则的网关的名称。 VirtualService 的顶级 gateways 字段中的网关名称（如果有）被覆盖。Gateway 匹配独立于 sourceLabels</td>
+</tr>
+<tr>
+<td><a href="#StringMatch">queryParams</a></td>
+<td>用于匹配的查询参数，例如 exact: “true”，extact: “” 和 regex: “\d+$”<br /><em>注意：目前不支持前缀匹配</em></td>
+</tr>
+<tr>
+<td>ignoreUriCase</td>
+<td>用于指定 URI 匹配是否不区分大小写的标志。<br /><em>注意：只有在完全和前缀 URI 匹配的情况下才会忽略大小写</em></td>
+</tr>
+<tr>
+<td><a href="#StringMatch">withoutHeaders</a></td>
+<td>withoutHeaders 与 header 的语法相同，但含义相反。如果 header 与 withoutHeaders 中的匹配规则匹配，则流量变为不匹配</td>
+</tr>
+<tr>
+<td>sourceNamespace</td>
+<td>源命名空间限制规则对该命名空间中工作负载的适用性。如果 VirtualService 在顶级 gateways 字段中指定了网关列表，仅当列表中包含保留的 gateway — mesh 时，该字段才生效</td>
+</tr>
+</tbody></table>
+<h1 id="HTTPRouteDestination"><a href="#HTTPRouteDestination" class="headerlink" title="HTTPRouteDestination"></a><a name="HTTPRouteDestination">HTTPRouteDestination</a></h1><p>每个路由规则都与一个或多个服务版本相关联。与版本相关的权重决定了它接收的流量比例。</p>
+<p>例如，以下规则会将 reviews 服务的 25% 流量路由到 v2 版本的实例中，而剩余流量（即 75%）将路由到 v1 版本。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews-route</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v2</span></span><br><span class="line">      <span class="attr">weight:</span> <span class="number">25</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br><span class="line">      <span class="attr">weight:</span> <span class="number">75</span></span><br></pre></td></tr></table></figure>
+
+<p>流量也可以分成两个完全不同的服务，而无需定义新的子集（也就是内部分流）。</p>
+<p>例如，以下规则将 25% 的流量从 reviews.com 转发到 dev.reviews.com。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews-route-two-domains</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">reviews.com</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">dev.reviews.com</span></span><br><span class="line">      <span class="attr">weight:</span> <span class="number">25</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.com</span></span><br><span class="line">      <span class="attr">weight:</span> <span class="number">75</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#Destination">destination</a></td>
+<td>请求&#x2F;连接应转发到的服务实例</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>要转发到目的地的流量的相对比例（即权重&#x2F;所有权重的总和）。如果规则中只有一个目的地，它将接收所有流量。如果权重为 0，则目的地将不会收到任何流量</td>
+</tr>
+<tr>
+<td><a href="#Headers">headers</a></td>
+<td>header 操作规则</td>
+</tr>
+</tbody></table>
+<h1 id="RouteDestination"><a href="#RouteDestination" class="headerlink" title="RouteDestination"></a><a name="RouteDestination">RouteDestination</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#Destination">destination</a></td>
+<td>请求&#x2F;连接应转发到的服务实例</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>要转发到目的地的流量的相对比例（即权重&#x2F;所有权重的总和）。如果规则中只有一个目的地，它将接收所有流量。如果权重为 0，则目的地将不会收到任何流量</td>
+</tr>
+</tbody></table>
+<h1 id="L4MatchAttributes"><a href="#L4MatchAttributes" class="headerlink" title="L4MatchAttributes"></a><a name="L4MatchAttributes">L4MatchAttributes</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>destinationSubnets</td>
+<td>带有可选子网的目标 IPv4 或 IPv6 IP 地址。例如，a.b.c.d&#x2F;xx  或只是 a.b.c.d</td>
+</tr>
+<tr>
+<td>port</td>
+<td>指定正在寻址的 host 上的端口。许多服务只公开单个端口或使用它们支持的协议标记端口，在这些情况下，不需要显式选择端口</td>
+</tr>
+<tr>
+<td>sourceLabels</td>
+<td>一个或多个标签，用于限制规则对具有给定标签的源（客户端）工作负载的适用性。如果 VirtualService 在顶级 gateways 字段中指定了网关列表，仅当列表中包含保留的 gateway — mesh 时，该字段才生效</td>
+</tr>
+<tr>
+<td>gateways</td>
+<td>待应用规则的网关的名称。 VirtualService 的顶级 gateways 字段中的网关名称（如果有）被覆盖。Gateway 匹配独立于 sourceLabels</td>
+</tr>
+<tr>
+<td>sourceNamespace</td>
+<td>源命名空间限制规则对该命名空间中工作负载的适用性。如果 VirtualService 在顶级 gateways 字段中指定了网关列表，仅当列表中包含保留的 gateway — mesh 时，该字段才生效</td>
+</tr>
+</tbody></table>
+<h1 id="TLSMatchAttributes"><a href="#TLSMatchAttributes" class="headerlink" title="TLSMatchAttributes"></a><a name="TLSMatchAttributes">TLSMatchAttributes</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sniHosts</td>
+<td>要匹配的 SNI（server name indicator）。通配符前缀可用于 SNI 值，例如，*.com 将匹配 foo.example.com 以及 example.com。 SNI 值必须是相应虚拟服务主机的子集（即属于域内）</td>
+</tr>
+<tr>
+<td>destinationSubnets</td>
+<td>带有可选子网的目标 IPv4 或 IPv6 IP 地址。例如，a.b.c.d&#x2F;xx  或只是 a.b.c.d</td>
+</tr>
+<tr>
+<td>port</td>
+<td>指定正在寻址的 host 上的端口。许多服务只公开单个端口或使用它们支持的协议标记端口，在这些情况下，不需要显式选择端口</td>
+</tr>
+<tr>
+<td>sourceLabels</td>
+<td>一个或多个标签，用于限制规则对具有给定标签的源（客户端）工作负载的适用性。如果 VirtualService 在顶级 gateways 字段中指定了网关列表，仅当列表中包含保留的 gateway — mesh 时，该字段才生效</td>
+</tr>
+<tr>
+<td>gateways</td>
+<td>待应用规则的网关的名称。 VirtualService 的顶级 gateways 字段中的网关名称（如果有）被覆盖。Gateway 匹配独立于 sourceLabels</td>
+</tr>
+<tr>
+<td>sourceNamespace</td>
+<td>源命名空间限制规则对该命名空间中工作负载的适用性。如果 VirtualService 在顶级 gateways 字段中指定了网关列表，仅当列表中包含保留的 gateway — mesh 时，该字段才生效</td>
+</tr>
+</tbody></table>
+<h1 id="HTTPRedirect"><a href="#HTTPRedirect" class="headerlink" title="HTTPRedirect"></a><a name="HTTPRedirect">HTTPRedirect</a></h1><p>HTTPRedirect 可用于向调用者发送 301 重定向响应。例如，以下规则将 review 服务上的 &#x2F;v1&#x2F;getProductRatings API 请求重定向到 bookratings 服务提供的 &#x2F;v1&#x2F;bookRatings。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ratings-route</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">exact:</span> <span class="string">/v1/getProductRatings</span></span><br><span class="line">    <span class="attr">redirect:</span></span><br><span class="line">      <span class="attr">uri:</span> <span class="string">/v1/bookRatings</span></span><br><span class="line">      <span class="attr">authority:</span> <span class="string">newratings.default.svc.cluster.local</span></span><br><span class="line">  <span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>uri</td>
+<td>在重定向时，使用此值覆盖 URL 的 path 部分。<br /><em>无论请求 URI 是否匹配为确切路径或前缀，都将替换整个路径</em></td>
+</tr>
+<tr>
+<td>authority</td>
+<td>在重定向时，使用此值覆盖 URL 的 Authority&#x2F;Host 部分</td>
+</tr>
+<tr>
+<td>port</td>
+<td>在重定向时，使用此值覆盖 URL 的 Port 部分</td>
+</tr>
+<tr>
+<td><a href="#HTTPRedirect.RedirectPortSelection">derivePort</a></td>
+<td>在重定向时，动态设置端口</td>
+</tr>
+<tr>
+<td>scheme</td>
+<td>在重定向时，使用此值覆盖 URL 的 Scheme 部分。例如，http 或 https。如果未设置，将使用原 Scheme。如果 derivePort 设置为 FROM_PROTOCOL_DEFAULT，这也会影响该端口</td>
+</tr>
+<tr>
+<td>redirectCode</td>
+<td>在重定向时，指定要在重定向响应中使用的 HTTP 状态代码。默认响应代码为 MOVED_PERMANENTLY (301)</td>
+</tr>
+</tbody></table>
+<h1 id="HTTPRewrite"><a href="#HTTPRewrite" class="headerlink" title="HTTPRewrite"></a><a name="HTTPRewrite">HTTPRewrite</a></h1><p>HTTPRewrite 可用于在将请求转发到目标之前重写 HTTP 请求的特定部分。HTTPRewrite 只能与 HTTPRouteDestination 一起使用。</p>
+<p>以下示例演示如何在实际调用之前将 &#x2F;ratings 前缀重写为 rating 服务。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ratings-route</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">        <span class="attr">prefix:</span> <span class="string">/ratings</span></span><br><span class="line">    <span class="attr">rewrite:</span></span><br><span class="line">      <span class="attr">uri:</span> <span class="string">/v1/bookRatings</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>uri</td>
+<td>用这个值重写 URI 的 Path 或 Prefix 部分。如果原始 URI 是根据前缀匹配的，则此字段中提供的值将替换相应匹配的前缀</td>
+</tr>
+<tr>
+<td>authority</td>
+<td>用这个值重写  Authority&#x2F;Host header</td>
+</tr>
+</tbody></table>
+<h1 id="StringMatch"><a href="#StringMatch" class="headerlink" title="StringMatch"></a><a name="StringMatch">StringMatch</a></h1><p>匹配 HTTP header 中的特定字符串的策略。匹配区分大小写。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>exact</td>
+<td>精准匹配</td>
+</tr>
+<tr>
+<td>prefix</td>
+<td>前缀匹配</td>
+</tr>
+<tr>
+<td>regex</td>
+<td>正则匹配 （参阅：<a target="_blank" rel="noopener" href="https://github.com/google/re2/wiki/Syntax%EF%BC%89">https://github.com/google/re2/wiki/Syntax）</a></td>
+</tr>
+</tbody></table>
+<h1 id="HTTPRetry"><a href="#HTTPRetry" class="headerlink" title="HTTPRetry"></a><a name="HTTPRetry">HTTPRetry</a></h1><p>HTTP 请求失败时的重试策略。</p>
+<p>例如，以下规则将调用 rating 服务 v1 版本时的最大重试次数设置为 3，每次重试超时为 2 秒。如果出现 gateway-error，connect-failure 和 refused-stream 的错误将重试。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ratings-route</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br><span class="line">    <span class="attr">retries:</span></span><br><span class="line">      <span class="attr">attempts:</span> <span class="number">3</span></span><br><span class="line">      <span class="attr">perTryTimeout:</span> <span class="string">2s</span></span><br><span class="line">      <span class="attr">retryOn:</span> <span class="string">gateway-error,connect-failure,refused-stream</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>attempts</td>
+<td>请求允许的重试次数。重试间隔将自动确定（25ms+）。当配置了 HTTP 路由的请求超时或 perTryTimeout 时，实际尝试的重试次数还取决于指定的请求超时和 perTryTimeout 值</td>
+</tr>
+<tr>
+<td>perTryTimeout</td>
+<td>给定请求的每次尝试超时，包括初始调用和任何重试。格式：1h&#x2F;1m&#x2F;1s&#x2F;1ms。必须 &gt;&#x3D;1 ms。默认值与 HTTP 路由的请求超时相同，即没有超时</td>
+</tr>
+<tr>
+<td>retryOn</td>
+<td>指定重试发生的条件。可以使用 , 分隔列表指定一个或多个策略。如果 retryOn 指定了一个有效的 HTTP 状态，它将被添加到 retriable_status_codes 重试策略中。<br /><em>有关更多详细信息，参阅<a target="_blank" rel="noopener" href="https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-on">重试策略</a>和 <a target="_blank" rel="noopener" href="https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#x-envoy-retry-grpc-on">gRPC 重试策略</a></em></td>
+</tr>
+<tr>
+<td>retryRemoteLocalities</td>
+<td>是否应重试到其他位置。<br /><em>有关更多详细信息，参阅<a target="_blank" rel="noopener" href="https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/http/http_connection_management#retry-plugin-configuration">重试插件配置</a></em></td>
+</tr>
+</tbody></table>
+<h1 id="CorsPolicy"><a href="#CorsPolicy" class="headerlink" title="CorsPolicy"></a><a name="CorsPolicy">CorsPolicy</a></h1><p>描述给定服务的跨域资源共享（CORS）策略。有关跨源资源共享的更多详细信息，参阅 <a target="_blank" rel="noopener" href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS">CORS</a>。</p>
+<p>例如，以下规则使用 HTTP POST&#x2F;GET 将跨源请求限制为来自 example.com 域的请求，并将 Access-Control-Allow-Credentials header 设置为 false。此外，它只暴露 X-Foo-bar header 并设置 1 天的有效期。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ratings-route</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br><span class="line">    <span class="attr">corsPolicy:</span></span><br><span class="line">      <span class="attr">allowOrigins:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">exact:</span> <span class="string">https://example.com</span></span><br><span class="line">      <span class="attr">allowMethods:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">POST</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">GET</span></span><br><span class="line">      <span class="attr">allowCredentials:</span> <span class="literal">false</span></span><br><span class="line">      <span class="attr">allowHeaders:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">X-Foo-Bar</span></span><br><span class="line">      <span class="attr">maxAge:</span> <span class="string">&quot;24h&quot;</span></span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#StringMatch">allowOrigins</a></td>
+<td>匹配允许的来源的字符串模式。如果任何字符串匹配器匹配，则允许来源。如果找到匹配项，则传出的 Access-Control-Allow-Origin 将设置为客户端提供的源</td>
+</tr>
+<tr>
+<td>allowMethods</td>
+<td>允许访问资源的 HTTP 方法列表。内容将被序列化到 Access-Control-Allow-Methods header 中</td>
+</tr>
+<tr>
+<td>allowHeaders</td>
+<td>请求资源时可以使用的 HTTP header 列表。序列化为 Access-Control-Allow-Headers header</td>
+</tr>
+<tr>
+<td>exposeHeaders</td>
+<td>允许浏览器访问的 HTTP header 列表。序列化为 Access-Control-Expose-Headers header</td>
+</tr>
+<tr>
+<td>maxAge</td>
+<td>指定预检请求的结果可以缓存多长时间。转换为 Access-Control-Max-Age header</td>
+</tr>
+<tr>
+<td>allowCredentials</td>
+<td>是否允许调用者使用凭据发送实际请求（而不是预检）。转换为 Access-Control-Allow-Credentials header</td>
+</tr>
+</tbody></table>
+<h1 id="HTTPFaultInjection"><a href="#HTTPFaultInjection" class="headerlink" title="HTTPFaultInjection"></a><a name="HTTPFaultInjection">HTTPFaultInjection</a></h1><p>HTTPFaultInjection 可用于在将 HTTP 请求转发到路由中注入故障。故障规范是 VirtualService 规则的一部分。错误包括从下游服务中止 HTTP 请求、延迟请求代理等。故障规则中至少有 delay 或者 abort。<br /><em>注意：delay 和 abort 故障相互独立，即使两者同时指定。</em></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#HTTPFaultInjection.Delay">delay</a></td>
+<td>在转发之前延迟请求，模拟网络问题、上游服务过载等各种故障</td>
+</tr>
+<tr>
+<td><a href="#HTTPFaultInjection.Abort">abort</a></td>
+<td>中止 HTTP 请求尝试并将错误代码返回给下游服务，模拟上游服务故障</td>
+</tr>
+</tbody></table>
+<h1 id="PortSelector"><a href="#PortSelector" class="headerlink" title="PortSelector"></a><a name="PortSelector">PortSelector</a></h1><p>PortSelector 指定用于匹配或选择最终路由的端口号。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>number</td>
+<td>有效的端口号</td>
+</tr>
+</tbody></table>
+<h1 id="Percent"><a href="#Percent" class="headerlink" title="Percent"></a><a name="Percent">Percent</a></h1><p>百分比范围 0 ~ 100。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>value</td>
+<td>百分比范围</td>
+</tr>
+</tbody></table>
+<h1 id="Headers-HeaderOperations"><a href="#Headers-HeaderOperations" class="headerlink" title="Headers.HeaderOperations"></a><a name="Headers.HeaderOperations">Headers.HeaderOperations</a></h1><p>header 操作方式。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>set</td>
+<td>用给定的值覆盖原 header 中的 Key</td>
+</tr>
+<tr>
+<td>add</td>
+<td>讲给定的值追加到 header 中的 Key 中</td>
+</tr>
+<tr>
+<td>remove</td>
+<td>移除指定的 header</td>
+</tr>
+</tbody></table>
+<h1 id="HTTPFaultInjection-Delay"><a href="#HTTPFaultInjection-Delay" class="headerlink" title="HTTPFaultInjection.Delay"></a><a name="HTTPFaultInjection.Delay">HTTPFaultInjection.Delay</a></h1><p>延迟类故障注入。</p>
+<p>例如，在所有标签为 env: prod 的 Pod 中对 reviews 服务的 v1 版本的发起的每 1000 个请求中引入 1 个延迟 5 秒的故障。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews-route</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">sourceLabels:</span></span><br><span class="line">        <span class="attr">env:</span> <span class="string">prod</span></span><br><span class="line">    <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br><span class="line">    <span class="attr">fault:</span></span><br><span class="line">      <span class="attr">delay:</span></span><br><span class="line">        <span class="attr">percentage:</span></span><br><span class="line">          <span class="attr">value:</span> <span class="number">0.1</span></span><br><span class="line">        <span class="attr">fixedDelay:</span> <span class="string">5s</span></span><br></pre></td></tr></table></figure>
+
+<p>fixedDelay 字段用于指示延迟量（以秒为单位）。可选的百分比字段可用于仅延迟一定百分比的请求。如果未指定，所有请求都将被延迟。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>fixedDelay</td>
+<td>在转发请求之前添加一个固定的延迟。格式：1h&#x2F;1m&#x2F;1s&#x2F;1ms。必须 &gt;&#x3D; 1 ms</td>
+</tr>
+<tr>
+<td>percentage</td>
+<td>注入延迟的请求的百分比</td>
+</tr>
+<tr>
+<td>percent</td>
+<td>注入延迟的请求的百分比（0-100）。不推荐使用整数百分比值。请改用 percentage 字段</td>
+</tr>
+</tbody></table>
+<h1 id="HTTPFaultInjection-Abort"><a href="#HTTPFaultInjection-Abort" class="headerlink" title="HTTPFaultInjection.Abort"></a><a name="HTTPFaultInjection.Abort">HTTPFaultInjection.Abort</a></h1><p>中止类故障注入。</p>
+<p>例如，为 ratings 服务 v1 版本的每 1000 个请求中的 1 个返回 HTTP 400 错误代码。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ratings-route</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">ratings.prod.svc.cluster.local</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br><span class="line">    <span class="attr">fault:</span></span><br><span class="line">      <span class="attr">abort:</span></span><br><span class="line">        <span class="attr">percentage:</span></span><br><span class="line">          <span class="attr">value:</span> <span class="number">0.1</span></span><br><span class="line">        <span class="attr">httpStatus:</span> <span class="number">400</span></span><br></pre></td></tr></table></figure>
+
+<p>httpStatus 字段表示返回给调用者的 HTTP 状态码。可选的百分比字段只能用于中止一定百分比的请求。如果未指定，则中止所有请求。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>httpStatus</td>
+<td>用于中止 HTTP 请求的 HTTP 状态码</td>
+</tr>
+<tr>
+<td><a href="#Percent">percentage</a></td>
+<td>中止请求的百分比</td>
+</tr>
+</tbody></table>
+<h1 id="HTTPRedirect-RedirectPortSelection"><a href="#HTTPRedirect-RedirectPortSelection" class="headerlink" title="HTTPRedirect.RedirectPortSelection"></a><a name="HTTPRedirect.RedirectPortSelection">HTTPRedirect.RedirectPortSelection</a></h1><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FROM_PROTOCOL_DEFAULT</td>
+<td>对于 HTTP 自动设置为 80，对于 HTTPS 自动设置为 443</td>
+</tr>
+<tr>
+<td>FROM_REQUEST_PORT</td>
+<td>自动使用请求的端口</td>
+</tr>
+</tbody></table>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Istio 」流量管理 — VirtualService</p><p><a href="http://shenxianghong.github.io/2022/08/05/2022-08-05 Istio 流量管理 - Virtual Service/">http://shenxianghong.github.io/2022/08/05/2022-08-05 Istio 流量管理 - Virtual Service/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-08-05</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-05-04</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><hr style="height:1px;margin:1rem 0"><div class="level is-mobile is-flex"><div class="article-tags is-size-7 is-uppercase"><i class="fas fa-tags has-text-grey"></i> <a class="link-muted" rel="tag" href="/tags/Istio/">Istio </a></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/08/09/2022-08-09%20Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Destination%20Rule/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Istio 」流量管理 — DestinationRule</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/08/01/2022-08-01%20Kata%20Containers%20Block%20Volume%20%E7%9B%B4%E9%80%9A/"><span class="level-item">「 Kata Containers 」Block Volume 直通</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">50</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">7</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">9</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/shenxianghong" target="_blank" rel="noopener">Follow</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Youtube" href="https://youtube.com"><i class="fab fa-youtube"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Bilibili" href="https://bilibili.com"><i class="fab fa-bilibili"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Reddit" href="https://reddit.com"><i class="fab fa-reddit"></i></a></div></div></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://google.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Google</span></span><span class="level-right"><span class="level-item tag">google.com</span></span></a></li><li><a class="level is-mobile" href="https://freegpt.one" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">ChatGPT</span></span><span class="level-right"><span class="level-item tag">freegpt.one</span></span></a></li></ul></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#VirtualService"><span class="level-left"><span class="level-item">1</span><span class="level-item">VirtualService</span></span></a></li><li><a class="level is-mobile" href="#Destination"><span class="level-left"><span class="level-item">2</span><span class="level-item">Destination</span></span></a></li><li><a class="level is-mobile" href="#HTTPRoute"><span class="level-left"><span class="level-item">3</span><span class="level-item">HTTPRoute</span></span></a></li><li><a class="level is-mobile" href="#Delegate"><span class="level-left"><span class="level-item">4</span><span class="level-item">Delegate</span></span></a></li><li><a class="level is-mobile" href="#Headers"><span class="level-left"><span class="level-item">5</span><span class="level-item">Headers</span></span></a></li><li><a class="level is-mobile" href="#TLSRoute"><span class="level-left"><span class="level-item">6</span><span class="level-item">TLSRoute</span></span></a></li><li><a class="level is-mobile" href="#TCPRoute"><span class="level-left"><span class="level-item">7</span><span class="level-item">TCPRoute</span></span></a></li><li><a class="level is-mobile" href="#HTTPMatchRequest"><span class="level-left"><span class="level-item">8</span><span class="level-item">HTTPMatchRequest</span></span></a></li><li><a class="level is-mobile" href="#HTTPRouteDestination"><span class="level-left"><span class="level-item">9</span><span class="level-item">HTTPRouteDestination</span></span></a></li><li><a class="level is-mobile" href="#RouteDestination"><span class="level-left"><span class="level-item">10</span><span class="level-item">RouteDestination</span></span></a></li><li><a class="level is-mobile" href="#L4MatchAttributes"><span class="level-left"><span class="level-item">11</span><span class="level-item">L4MatchAttributes</span></span></a></li><li><a class="level is-mobile" href="#TLSMatchAttributes"><span class="level-left"><span class="level-item">12</span><span class="level-item">TLSMatchAttributes</span></span></a></li><li><a class="level is-mobile" href="#HTTPRedirect"><span class="level-left"><span class="level-item">13</span><span class="level-item">HTTPRedirect</span></span></a></li><li><a class="level is-mobile" href="#HTTPRewrite"><span class="level-left"><span class="level-item">14</span><span class="level-item">HTTPRewrite</span></span></a></li><li><a class="level is-mobile" href="#StringMatch"><span class="level-left"><span class="level-item">15</span><span class="level-item">StringMatch</span></span></a></li><li><a class="level is-mobile" href="#HTTPRetry"><span class="level-left"><span class="level-item">16</span><span class="level-item">HTTPRetry</span></span></a></li><li><a class="level is-mobile" href="#CorsPolicy"><span class="level-left"><span class="level-item">17</span><span class="level-item">CorsPolicy</span></span></a></li><li><a class="level is-mobile" href="#HTTPFaultInjection"><span class="level-left"><span class="level-item">18</span><span class="level-item">HTTPFaultInjection</span></span></a></li><li><a class="level is-mobile" href="#PortSelector"><span class="level-left"><span class="level-item">19</span><span class="level-item">PortSelector</span></span></a></li><li><a class="level is-mobile" href="#Percent"><span class="level-left"><span class="level-item">20</span><span class="level-item">Percent</span></span></a></li><li><a class="level is-mobile" href="#Headers-HeaderOperations"><span class="level-left"><span class="level-item">21</span><span class="level-item">Headers.HeaderOperations</span></span></a></li><li><a class="level is-mobile" href="#HTTPFaultInjection-Delay"><span class="level-left"><span class="level-item">22</span><span class="level-item">HTTPFaultInjection.Delay</span></span></a></li><li><a class="level is-mobile" href="#HTTPFaultInjection-Abort"><span class="level-left"><span class="level-item">23</span><span class="level-item">HTTPFaultInjection.Abort</span></span></a></li><li><a class="level is-mobile" href="#HTTPRedirect-RedirectPortSelection"><span class="level-left"><span class="level-item">24</span><span class="level-item">HTTPRedirect.RedirectPortSelection</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Code-Walkthrough/"><span class="level-start"><span class="level-item">Code Walkthrough</span></span><span class="level-end"><span class="level-item tag">17</span></span></a></li><li><a class="level is-mobile" href="/categories/Getting-Started/"><span class="level-start"><span class="level-item">Getting Started</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Meetup/"><span class="level-start"><span class="level-item">Meetup</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Overview/"><span class="level-start"><span class="level-item">Overview</span></span><span class="level-end"><span class="level-item tag">13</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/"><span class="level-start"><span class="level-item">Programming</span></span><span class="level-end"><span class="level-item tag">7</span></span></a><ul><li><a class="level is-mobile" href="/categories/Programming/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/Quick-Start/"><span class="level-start"><span class="level-item">Quick Start</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7"><br/>And did you get what you wanted from this life, even so?</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><script src="/js/night.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

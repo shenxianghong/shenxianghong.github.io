@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Kata Containers 」源码走读 — virtcontainers - 🐾Corgi</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="🐾Corgi"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="🐾Corgi"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="virtcontainers 库中 VC、VCSandbox 和 VCContainer 模块源码走读"><meta property="og:type" content="blog"><meta property="og:title" content="「 Kata Containers 」源码走读 — virtcontainers"><meta property="og:url" content="http://shenxianghong.github.io/2023/01/30/2023-01-30%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20virtcontainers/"><meta property="og:site_name" content="🐾Corgi"><meta property="og:description" content="virtcontainers 库中 VC、VCSandbox 和 VCContainer 模块源码走读"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://picsum.photos/0?sig=20230130"><meta property="article:published_time" content="2023-01-29T16:00:00.000Z"><meta property="article:modified_time" content="2023-05-04T00:54:28.336Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Kata Containers"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://picsum.photos/0?sig=20230130"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://shenxianghong.github.io/2023/01/30/2023-01-30%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20virtcontainers/"},"headline":"「 Kata Containers 」源码走读 — virtcontainers","image":[],"datePublished":"2023-01-29T16:00:00.000Z","dateModified":"2023-05-04T00:54:28.336Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"🐾Corgi","logo":{"@type":"ImageObject","url":"http://shenxianghong.github.io/img/logo.svg"}},"description":"virtcontainers 库中 VC、VCSandbox 和 VCContainer 模块源码走读"}</script><link rel="canonical" href="http://shenxianghong.github.io/2023/01/30/2023-01-30%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20virtcontainers/"><link rel="alternate" href="/atom.xml" title="🐾Corgi" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/xcode.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item night" id="night-nav" title="Night Mode" href="javascript:;"><i class="fas fa-moon" id="night-icon"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="https://picsum.photos/0?sig=20230130" alt="「 Kata Containers 」源码走读 — virtcontainers"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><i class="fa fa-calendar"></i> <time dateTime="${date_xml(page.date)}" title="${date_xml(page.date)}">2023-01-30</time></span><span class="level-item is-hidden-mobile"><i class="fa fa-calendar-check"></i> <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">2023-05-04</time></span><span class="level-item"><i class="far fa-folder-open"></i> <a class="link-muted" href="/categories/Code-Walkthrough/">Code Walkthrough</a></span><span class="level-item"><i class="far fa-clock"></i> an hour read (About 6785 words)</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Kata Containers 」源码走读 — virtcontainers</h1><div class="content"><div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v3.0.0</strong></p>
+</blockquote>
+<p>virtcontainers 本质上不是一个独立组建，而是一个用于构建硬件虚拟化容器运行时的 Golang 库。</p>
+<p>现有的少数部分基于 VM 的容器运行时都共享相同的硬件虚拟化语义，但是使用不同的代码库来实现，virtcontainers 的目标就是将这部分封装成一个通用的 Golang 库。</p>
+<p>理想情况下，基于 VM 的容器运行时，会从将它们实现的运行时规范（例如 OCI spec 或 Kubernetes CRI）转换成 virtcontainers API。</p>
+<p>virtcontainers API 大致受到 Kubernetes CRI 的启发。然而，尽管这两个项目之间的 API 相似，但 virtcontainers 的目标不是构建 CRI 实现，而是提供一个通用的、运行时规范不可知的、硬件虚拟化的容器库，其他项目可以利用它来自己实现 CRI。</p>
+<hr>
+<h1 id="VC"><a href="#VC" class="headerlink" title="VC"></a>VC</h1><p><em><u>src&#x2F;runtime&#x2F;virtcontainers&#x2F;interfaces.go</u></em></p>
+<p>virtcontainers 库的入口模块，VC 初始化 VCSandbox 模块管理 sandbox，进而初始化 VCContainer 模块管理容器。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> VCImpl <span class="keyword">struct</span> &#123;</span><br><span class="line">	factory Factory</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><em>工厂函数为参数赋值初始化，无复杂逻辑，不作详述。</em></p>
+<p>VC 中声明的 <strong>SetLogger</strong> 和 <strong>SetFactory</strong> 均为参数赋值，无复杂逻辑，不作详述。</p>
+<h2 id="CreateSandbox"><a href="#CreateSandbox" class="headerlink" title="CreateSandbox"></a>CreateSandbox</h2><p><strong>创建 sandbox 与 pod_sandbox 容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/implementation.go#L34">source code</a></p>
+<ol>
+<li>创建 sandbox<ol>
+<li>校验 sandboxConfig 的 annotation 中自定义运行时配置（称为 assets ）的合法性并设置<br><em>annotation 例如 io.katacontainers.hypervisor.kernel 为用户上层通过 Pod annotation 定义，CRI 会透传给底层运行时</em></li>
+<li>初始化 VCSandbox，准备所需环境</li>
+<li>如果 sandbox 中状态信息（即 sandbox.state）已经存在，则表明不是新创建的 pod_sandbox 容器，无需后续动作，仅用于状态更新维护，直接返回 sandbox 即可</li>
+<li>调用 fsShare 的 <strong>Prepare</strong>，准备 sandbox 所需的共享文件系统目录</li>
+<li>调用 agent 的 <strong>createSandbox</strong>，准备 sandbox 所需环境</li>
+<li>设置 sandbox 状态为 ready</li>
+</ol>
+</li>
+<li>创建 sandbox 网络环境<ol>
+<li>如果 [runtime].disable_new_netns 未启用并且不是 VM factory 场景（在 VM factory 场景下，网卡是在 VM 启动后热插进去的），则扫描容器环境中 netns 下现有的网卡信息（比如 eth0 网卡）</li>
+<li>将容器环境的网卡 attach 到 VM 中</li>
+<li>根据 [runtime].internetworking_model 的类型，给 VM 添加特定类型的 tap0_kata 网卡，配置 TC 策略（如果 internetworking_model 为 TcFilter），打通 CNI 网络和 VM 网络之间的连通性</li>
+</ol>
+</li>
+<li>调用 resCtrl 的 <strong>setupResourceController</strong>，将当前进程加入 cgroup 中管理</li>
+<li>启动 VM（在 1-2 步骤中的 VCSandbox 初始化流程中，已经创建了 VM）<ol>
+<li>如果 [hypervisor].enable_debug 启用（用于输出  hypervisor 和 kernel 产生的消息），则调用 hypervisor 的 <strong>GetVMConsole</strong>，获取 VM console 地址（&#x2F;run&#x2F;vc&#x2F;vm&#x2F;&lt;sandboxID&gt;&#x2F;console.sock）</li>
+<li>在 VM factory 场景下，获取 factory 中缓存的 VM，调用 agent 的 <strong>reuseAgent</strong>，更新 agent 实例，并创建软链接 &#x2F;run&#x2F;vc&#x2F;vm&#x2F;&lt;sandboxID&gt; 指向 &#x2F;run&#x2F;vc&#x2F;vm&#x2F;&lt;vmID&gt;；否则，调用 hypervisor 的 <strong>StartVM</strong>，启动 VM 进程</li>
+<li>在 VM factory 场景下，扫描容器环境中 netns 下现有的网卡信息，热插到 VM 中</li>
+<li>如果 [hypervisor].enable_debug 启用，实时读取 VM console 地址获取其实时内容，并以 debug 级别日志形式输出</li>
+<li>调用 agent 的 <strong>startSandbox</strong></li>
+</ol>
+</li>
+<li>关闭 veth-pair（如 br0_kata）位于 host 侧的 vhost_net 句柄（&#x2F;dev&#x2F;vhost-net）</li>
+<li>调用 agent 的 <strong>getGuestDetails</strong>，获取 guest 信息详情，更新至 sandbox 中</li>
+<li>创建 sandbox 中的每一个容器（其实，此时 sandbox 中仅有一个容器，就是 pod_sandbox 容器本身）<ol>
+<li>初始化 VCContainer，准备容器所需环境</li>
+<li>根据 [hypervisor].disable_block_device_use、agent 是否具备使用块设备能力以及 hypervisor 是否允许块设备热插拔，判断是否当前支持块设备，并且容器的 rootfs 类型不是 fuse.nydus-overlayfs，也就是 rootfs 是基于块设备创建的<ol>
+<li>通过 &#x2F;sys&#x2F;dev&#x2F;block&#x2F;&lt;major&gt;-&lt;minor&gt;&#x2F;dm 的存在性，判断是否为 devicemapper 块设备</li>
+<li>如果是 devicemapper 块设备，则调用 devManager <strong>NewDevice</strong>，初始化设备，并调用 devManager 的 <strong>AttachDevice</strong>，热插到 VM 中 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;containers&#x2F;&lt;sandboxID&gt; 路径</li>
+</ol>
+</li>
+<li>针对容器中的每一个设备，调用 devManager 的 <strong>AttachDevice</strong>，attach 到 VM 中</li>
+<li>调用 agent 的 <strong>createContainer</strong>，创建 pod_sandbox 容器</li>
+<li>设置容器状态为 ready</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+<li>更新维护在 sandbox 中的容器信息</li>
+</ol>
+</li>
+<li>调用 <strong>updateResources</strong>，热更新 VM 的资源规格（由于该流程中仅为创建 pod_sandbox，不涉及 pod_container，因此为配置中声明的 [hypervisor].default_vcpus 和 [hypervisor].default_memory）</li>
+<li>调用 resCtrl 的 <strong>resourceControllerUpdate</strong>，更新 sandbox 的 cgroup</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+</ol>
+<h2 id="CleanupContainer"><a href="#CleanupContainer" class="headerlink" title="CleanupContainer"></a>CleanupContainer</h2><p><strong>关停、删除容器并销毁 sandbox 环境</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/implementation.go#L41">source code</a></p>
+<ol>
+<li>调用 store 的 <strong>FromDisk</strong>，读取 sandbox 状态信息</li>
+<li>获取 sandbox 并更新其中的容器（更新的意义在于后续的删除操作以文件内容为准）</li>
+<li>调用 VCSandbox 的 <strong>StopContainer</strong> 和 <strong>DeleteContainer</strong>，关停并删除该容器</li>
+<li>调用 VCSandbox 的 <strong>GetAllContainers</strong>，获取 sandbox 中的所有容器，如果仍大于 0（说明当前 sandbox 仍有容器存在，需要保留 sandbox 环境），否则调用 VCSandbox 的 <strong>Stop</strong>，关停 sandbox，并调用 VCSandbox 的 <strong>Delete</strong>，删除 sandbox</li>
+</ol>
+<hr>
+<h1 id="VCSandbox"><a href="#VCSandbox" class="headerlink" title="VCSandbox"></a>VCSandbox</h1><p><em><u>src&#x2F;runtime&#x2F;virtcontainers&#x2F;interfaces.go</u></em></p>
+<p>virtcontainers 库中用于管理 sandbox 的模块，同时调用 VCContainer 模块间接管理容器。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Sandbox <span class="keyword">struct</span> &#123;</span><br><span class="line">	ctx        context.Context</span><br><span class="line">	devManager api.DeviceManager</span><br><span class="line">	factory    Factory</span><br><span class="line">	hypervisor Hypervisor</span><br><span class="line">	agent      agent</span><br><span class="line">	store      persistapi.PersistDriver</span><br><span class="line">	fsShare    FilesystemSharer</span><br><span class="line"></span><br><span class="line">	swapDevices []*config.BlockDrive</span><br><span class="line">	volumes     []types.Volume</span><br><span class="line"></span><br><span class="line">	monitor         *monitor</span><br><span class="line">	config          *SandboxConfig</span><br><span class="line">	annotationsLock *sync.RWMutex</span><br><span class="line">	wg              *sync.WaitGroup</span><br><span class="line">	cw              *consoleWatcher</span><br><span class="line"></span><br><span class="line">	sandboxController  resCtrl.ResourceController</span><br><span class="line">	overheadController resCtrl.ResourceController</span><br><span class="line"></span><br><span class="line">	containers <span class="keyword">map</span>[<span class="type">string</span>]*Container</span><br><span class="line"></span><br><span class="line">	id <span class="type">string</span></span><br><span class="line"></span><br><span class="line">	network Network</span><br><span class="line"></span><br><span class="line">	state types.SandboxState</span><br><span class="line"></span><br><span class="line">	sync.Mutex</span><br><span class="line"></span><br><span class="line">	swapSizeBytes <span class="type">int64</span></span><br><span class="line">	shmSize       <span class="type">uint64</span></span><br><span class="line">	swapDeviceNum <span class="type">uint</span></span><br><span class="line"></span><br><span class="line">	sharePidNs        <span class="type">bool</span></span><br><span class="line">	seccompSupported  <span class="type">bool</span></span><br><span class="line">	disableVMShutdown <span class="type">bool</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>工厂函数</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L527">source code</a></p>
+<ol>
+<li>校验 [runtime].experimental 是否为可支持的特性</li>
+<li>初始化 hypervisor、agent、store、fsSharer、devManager 等</li>
+<li>初始化 resourceController（[runtime].sandbox_cgroup_only 为 true 表示 Pod 所有的线程全部由 sandboxController 管理；反之，仅 vCPU 线程由 sandboxController 管理，而其余的由 overheadController 管理）<ol>
+<li>获取到 spec.Linux.CgroupsPath（缺省为 &#x2F;vc），如果 cgroup 不是由 systemd 纳管（通过 cgroupPath 格式判断），则最后一级路径新增 kata_ 前缀</li>
+<li>获取 spec.Linux.Resources.Devices 中 &#x2F;dev&#x2F;null 和 &#x2F;dev&#x2F;urandom 设备信息（如果未声明，则构建）</li>
+<li>调用 devManager 的 <strong>GetAllDevices</strong>，获取所有的设备；进一步调用 device 的 <strong>GetHostPath</strong>，获取设备位于 host 上的路径，将其构建成 cgroup 管理形式</li>
+<li>调用 resCtrl 的 <strong>NewSandboxResourceController</strong>，初始化 sandboxController（cgroupPath 为步骤 1 处理后的结果）</li>
+<li>如果 [runtime].sandbox_cgroup_only 为 false，则调用 resCtrl 的 <strong>NewResourceController</strong>，初始化 overheadController （cgroupPath 为 &#x2F;kata_overhead&#x2F;&lt;sandboxID&gt;）</li>
+</ol>
+</li>
+<li>从文件恢复 sandbox 状态信息<ol>
+<li>调用 store 的 <strong>FromDisk</strong>，尝试从文件中恢复 sandbox 状态信息<br><em>当 sandbox 新创建的时候，并没有状态文件，因此必然失败，但是会忽略错误信息</em></li>
+<li>调用 hypervisor 的 <strong>Load</strong>，加载 hypervisor 信息</li>
+<li>调用 devManager 的 <strong>LoadDevices</strong>，加载设备信息</li>
+<li>调用 agent 的 <strong>load</strong>，加载 agent 信息</li>
+<li>调用 endpoint 的 <strong>load</strong>，加载网络 endpoint 信息</li>
+</ol>
+</li>
+<li>校验 sandboxConfig 中的 hypervisor 配置的合法性，其中包括 [hypervisor].kernel 是否不为空，[hypervisor].image 和 [hypervisor].initrd 有且仅有一个。并设置 [hypervisor].default_vcpus 缺省时为 1，[hypervisor].default_memory 缺省时为 2048</li>
+<li>调用 hypervisor 的 <strong>CreateVM</strong>，创建 VM</li>
+<li>调用 agent 的 <strong>init</strong>，准备 agent 环境</li>
+</ol>
+<p>VCSandbox 中声明的 <strong>Annotations</strong>、<strong>GetNetNs</strong>、<strong>GetAllContainers</strong>、<strong>GetAnnotations</strong>、<strong>GetContainer</strong>、<strong>ID</strong> 和 <strong>SetAnnotations</strong> 均为参数获取与赋值，无复杂逻辑，不作详述。</p>
+<h2 id="updateResources"><a href="#updateResources" class="headerlink" title="updateResources"></a>updateResources</h2><p><strong>热更新 VM 的资源规格</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1966">source code</a></p>
+<ol>
+<li><p>如果 [runtime].static_sandbox_resource_mgmt 启用时（Kata 将在启动虚拟机之前确定合适的 sandbox 内存和 CPU 大小，而非动态更新。 作为 hypervisor 不支持 CPU、内存热插拔时的解决方案），则不触发更新操作，直接返回</p>
+</li>
+<li><p>计算 sandbox 中所有状态非 stopped 容器的 CPU 、内存和 SWAP 总量（前提是 [hypervisor].enable_guest_swap 开启，并且 memory.swappiness 大于 0，才会考虑 SWAP 资源），加上基础 VM 大小，得出最后预期的 VM 大小，公式为</p>
+<blockquote>
+<p>CPU &#x3D; (C1.cpu-quota * 1000 &#x2F; C1.cpu-period + 999) &#x2F; 1000 + C2… + [hypervisor].default_vcpus</p>
+<p>MEM &#x3D; C1.memory-limit + C1.hugepages-limit + C2… + [hypervisor].default_memory</p>
+<p>SWAP &#x3D; </p>
+<table>
+<thead>
+<tr>
+<th><code>swap_in_bytes</code></th>
+<th><code>memory_limit_in_bytes</code></th>
+<th>swap size</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>set</td>
+<td>set</td>
+<td><code>io.katacontainers.container.resource.swap_in_bytes</code>- <code>memory_limit_in_bytes</code></td>
+</tr>
+<tr>
+<td>not set</td>
+<td>set</td>
+<td><code>memory_limit_in_bytes</code></td>
+</tr>
+<tr>
+<td>not set</td>
+<td>not set</td>
+<td><code>io.katacontainers.config.hypervisor.default_memory</code></td>
+</tr>
+<tr>
+<td>set</td>
+<td>not set</td>
+<td>cgroup doesn’t support this usage</td>
+</tr>
+</tbody></table>
+</blockquote>
+<p><em>截至 Kata 3.0，在 K8s 场景下，SWAP 功能仍存在异常：参考 <a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/issues/5627">https://github.com/kata-containers/kata-containers/issues/5627</a></em></p>
+</li>
+<li><p>如果预期 SWAP 比当前 sandbox 的 SWAP 多，则需要新增一个大小为两者差值的 SWAP 文件</p>
+<ol>
+<li>创建 &#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;swap&lt;ID&gt; 文件（sandbox 中的 SWAP 序号从 0 递增）</li>
+<li>调整文件的大小为差值和 10 倍内存分页中最大值（小于 10 倍内页分页的 SWAP 会被 mkswap 拒绝：mkswap: error: swap area needs to be at least 40 KiB，内存分页：4096），并额外追加一个内存分页大小（SWAP 文件需要一个内存分页大小储存元数据）</li>
+<li>调用系统命令 mkswap，转换为 SWAP 文件，并构建 raw 格式的块设备类型</li>
+<li>调用 hypervisor 的 <strong>HotplugAddDevice</strong>，热添加 SWAP 文件到 VM 中</li>
+<li>调用 agent 的 <strong>addSwap</strong>，配置 SWAP 文件</li>
+</ol>
+</li>
+<li><p>调用 hypervisor 的 <strong>ResizeVCPUs</strong>，调整 VM CPU 数量</p>
+</li>
+<li><p>如果为新增调整，则调用 agent 的 <strong>onlineCPUMem</strong>，通知 agent 上线热添加部分的 CPU</p>
+</li>
+<li><p>循环调用 hypervisor 的 <strong>GetTotalMemoryMB</strong>，获取当前 VM 的内存数量，比对预期 VM 的内存数量，在不超出最大热添加内存数量限制的前提下（部分场景下，例如 ACPI 热插拔，内存的单次热添加有最大数量限制；而在 virtio-mem 下，即 [hypervisor].enable_virtio_mem 启用， 且 &#x2F;proc&#x2F;sys&#x2F;vm&#x2F;overcommit_memory 文件内容为 1，则没有最大热添加数量限制），调用 hypervisor 的 <strong>ResizeMemory</strong>，分批热添加 VM 内存</p>
+</li>
+<li><p>调用 agent 的 <strong>memHotplugByProbe</strong>，通知 agent 内存热插事件（如果 guest 内核支持内存热添加探测），并调用 agent 的 <strong>onlineCPUMem</strong>，通知 agent 上线热添加部分的内存</p>
+</li>
+</ol>
+<h2 id="Stats"><a href="#Stats" class="headerlink" title="Stats"></a>Stats</h2><p><strong>获取 sandbox 的统计信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1547">source code</a></p>
+<ol>
+<li>调用 sandboxController 的 <strong>Stat</strong>，获取 sandbox 全部的 cgroup 统计信息（截至当前，并未聚合 kata_overhead 的统计信息，即 overheadController 部分）</li>
+<li>调用 hypervisor 的 <strong>GetThreadIDs</strong>，获取 hypervisor 使用的 CPU 数量</li>
+<li>聚合以上信息并返回</li>
+</ol>
+<h2 id="Start"><a href="#Start" class="headerlink" title="Start"></a>Start</h2><p><strong>启动 sandbox 与 pod_sandbox 容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1662">source code</a></p>
+<ol>
+<li>校验 sandbox 状态是否为 ready、paused 或 stopped</li>
+<li>设置 sandbox 状态为 running</li>
+<li>针对 sandbox 中的每一个容器，调用 VCContainer 的 <strong>start</strong>，启动容器（其实，此时 sandbox 中仅有一个容器，就是 pod_sandbox 容器本身）</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+</ol>
+<h2 id="Stop"><a href="#Stop" class="headerlink" title="Stop"></a>Stop</h2><p><strong>关停 sandbox 与容器，并清理相关资源</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1687">source code</a></p>
+<ol>
+<li>如果 sandbox 状态已经为 stopped，则不做任何操作</li>
+<li>校验 sandbox 状态是否为 ready、running 或者 paused</li>
+<li>针对 sandbox 中的每一个容器，调用 VCContainer 的 <strong>stop</strong>，关停容器</li>
+<li>调用 agent 的 <strong>stopSandbox</strong>，关停 sandbox</li>
+<li>调用 hypervisor 的 <strong>StopVM</strong>，关停 VM</li>
+<li>如果 [hypervisor]. enable_debug 启用，则关闭 VM console</li>
+<li>设置 sandbox 状态为 stopped</li>
+<li>移除 host 上的 sandbox 网络资源</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+<li>调用 agent 的 <strong>disconnect</strong>，关闭与 agent 的连接</li>
+<li>移除 host 上的 &#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;swap&lt;ID&gt; 文件（sandbox 中的 SWAP 序号从 0 递增）</li>
+</ol>
+<h2 id="Delete"><a href="#Delete" class="headerlink" title="Delete"></a>Delete</h2><p><strong>销毁 sandbox 与容器，并清理相关资源</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L798">source code</a></p>
+<ol>
+<li>校验 sandbox 的状态是否为 ready、paused 和 stopped</li>
+<li>针对 sandbox 中的每一个容器，调用 VCContainer 的 <strong>delete</strong>，删除容器</li>
+<li>如果在 root 权限下，则调用 resCtrl 的 <strong>resourceControllerDelete</strong>，删除相关的 resourceController 以及 cgroup 资源</li>
+<li>关停 sandbox 的 monitor</li>
+<li>调用 hypervisor 的 <strong>Cleanup</strong>，清理 hypervisor 资源</li>
+<li>调用 fsShare 的 <strong>Cleanup</strong>，清理 sandbox 的共享文件系统</li>
+<li>调用 store 的 <strong>Destroy</strong>，删除状态数据目录</li>
+</ol>
+<h2 id="Status"><a href="#Status" class="headerlink" title="Status"></a>Status</h2><p><strong>获取 sandbox 与容器的详细信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L333">source code</a></p>
+<ol>
+<li>针对 sandbox 中的每一个容器，获取其状态信息（例如：ID、rootfs、状态、启动时间、annotation、PID 等）</li>
+<li>结合 sandbox 的状态信息（例如 ID、状态、hypervisor 类别、hypervisor 配置、annotation 等）返回</li>
+</ol>
+<h2 id="CreateContainer"><a href="#CreateContainer" class="headerlink" title="CreateContainer"></a>CreateContainer</h2><p><strong>创建 pod_container 容器并热更新 sandbox 规格</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1300">source code</a></p>
+<ol>
+<li>初始化 VCContainer，准备容器环境，挂载设备等</li>
+<li>根据 [hypervisor].disable_block_device_use、agent 是否具备使用块设备能力以及 hypervisor 是否允许块设备热插拔，判断是否当前支持块设备，并且容器的 rootfs 类型不是 fuse.nydus-overlayfs，也就是 rootfs 是基于块设备创建的<ol>
+<li>通过 &#x2F;sys&#x2F;dev&#x2F;block&#x2F;&lt;major&gt;-&lt;minor&gt;&#x2F;dm 的存在性，判断是否为 devicemapper 块设备</li>
+<li>如果是 devicemapper 块设备，则调用 devManager <strong>NewDevice</strong>，初始化设备，并调用 devManager 的 <strong>AttachDevice</strong>，热插到 VM 中 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;containers&#x2F;&lt;sandboxID&gt; 路径</li>
+</ol>
+</li>
+<li>针对容器中的每一个设备，调用 devManager 的 <strong>AttachDevice</strong>，热插到 VM 中</li>
+<li>调用 agent 的 <strong>createContainer</strong>，创建 pod_container 容器</li>
+<li>设置容器状态为 ready</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+<li>更新维护在 sandbox 中的容器信息</li>
+<li>调用 <strong>updateResources</strong>，热更新 VM 的资源规格</li>
+<li>调用 resCtrl 的 <strong>resourceControllerUpdate</strong>，更新 sandbox 的 cgroup</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+</ol>
+<h2 id="DeleteContainer"><a href="#DeleteContainer" class="headerlink" title="DeleteContainer"></a>DeleteContainer</h2><p><strong>删除 sandbox 中的指定容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1431">source code</a></p>
+<ol>
+<li>获取 sandbox 中的指定容器，并调用 VCContainer 的 <strong>delete</strong>，删除维护的容器信息</li>
+<li>调用 resCtrl 的 <strong>resourceControllerUpdate</strong>，更新 sandbox 的 cgroup</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+</ol>
+<h2 id="StartContainer"><a href="#StartContainer" class="headerlink" title="StartContainer"></a>StartContainer</h2><p><strong>启动 sandbox 中的 pod_container 容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1364">source code</a></p>
+<ol>
+<li>获取 sandbox 中的指定容器，并调用 VCContainer 的 <strong>start</strong>，启动容器</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+<li>调用 <strong>updateResources</strong>，热更新 VM 的资源信息</li>
+</ol>
+<h2 id="StopContainer"><a href="#StopContainer" class="headerlink" title="StopContainer"></a>StopContainer</h2><p><strong>关停 sandbox 中的指定容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1392">source code</a></p>
+<ol>
+<li>获取 sandbox 中的指定容器，并调用 VCContainer 的 <strong>stop</strong>，关停容器并清理相关资源</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+</ol>
+<h2 id="KillContainer"><a href="#KillContainer" class="headerlink" title="KillContainer"></a>KillContainer</h2><p><strong>杀死 sandbox 中的指定容器进程</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1411">source code</a></p>
+<ol>
+<li>获取 sandbox 中的指定容器，并调用 VCContainer 的 <strong>signalProcess</strong>，发送 kill 信号（理论上是这样，然而并未有真实调用）</li>
+</ol>
+<h2 id="StatusContainer"><a href="#StatusContainer" class="headerlink" title="StatusContainer"></a>StatusContainer</h2><p><strong>获取 sandbox 中指定容器的状态</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1467">source code</a></p>
+<ol>
+<li>获取 sandbox 中的指定容器，获取其状态信息（例如：ID、rootfs、状态、启动时间、annotation、PID 等）</li>
+</ol>
+<h2 id="StatsContainer"><a href="#StatsContainer" class="headerlink" title="StatsContainer"></a>StatsContainer</h2><p><strong>获取 sandbox 中指定容器的统计信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1532">source code</a></p>
+<ol>
+<li>获取 sandbox 中的指定容器，校验其状态是否为 running</li>
+<li>调用 agent 的 <strong>statsContainer</strong>，获取容器状态信息</li>
+</ol>
+<h2 id="PauseContainer"><a href="#PauseContainer" class="headerlink" title="PauseContainer"></a>PauseContainer</h2><p><strong>暂停 sandbox 中的指定容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1576">source code</a></p>
+<ol>
+<li>获取 sandbox 中的指定容器，校验其状态是否为 running</li>
+<li>调用 agent 的 <strong>pauseContainer</strong>，暂停容器</li>
+<li>设置容器状态为 paused</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+</ol>
+<h2 id="ResumeContainer"><a href="#ResumeContainer" class="headerlink" title="ResumeContainer"></a>ResumeContainer</h2><p><strong>恢复 sandbox 中的指定容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1595">source code</a></p>
+<ol>
+<li>获取 sandbox 中的指定容器，校验其状态是否为 running</li>
+<li>调用 agent 的 <strong>resumeContainer</strong>，恢复容器</li>
+<li>设置容器状态为 running</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+</ol>
+<h2 id="EnterContainer"><a href="#EnterContainer" class="headerlink" title="EnterContainer"></a>EnterContainer</h2><p><strong>在 sandbox 中的指定容器中执行命令</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1493">source code</a></p>
+<ol>
+<li>获取 sandbox 中的指定容器，校验其状态是否为 running</li>
+<li>调用 agent 的 <strong>exec</strong>，进入容器执行指定命令</li>
+</ol>
+<h2 id="UpdateContainer"><a href="#UpdateContainer" class="headerlink" title="UpdateContainer"></a>UpdateContainer</h2><p><strong>更新 sandbox 中的指定容器资源规格</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1510">source code</a></p>
+<ol>
+<li>获取 sandbox 中的指定容器，校验其状态是否为 running</li>
+<li>调用 <strong>updateResources</strong>，热更新 VM 的资源规格</li>
+<li>调用 agent 的 <strong>updateContainer</strong>，更新容器</li>
+<li>调用 resCtrl 的 <strong>resourceControllerUpdate</strong>，更新 sandbox 的 cgroup</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+</ol>
+<h2 id="WaitProcess"><a href="#WaitProcess" class="headerlink" title="WaitProcess"></a>WaitProcess</h2><p><strong>等待 sandbox 中的指定容器进程返回退出码</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L377">source code</a></p>
+<ol>
+<li>校验 sandbox 的状态是否为 running</li>
+<li>获取 sandbox 中的指定容器，校验其状态是否为 ready 或 running</li>
+<li>调用 agent 的 <strong>waitProcess</strong>，等待进程返回退出码</li>
+</ol>
+<h2 id="SignalProcess"><a href="#SignalProcess" class="headerlink" title="SignalProcess"></a>SignalProcess</h2><p><strong>向 sandbox 中的指定容器进程发送指定信号</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L392">source code</a></p>
+<ol>
+<li>校验 sandbox 的状态是否为 running</li>
+<li>获取 sandbox 中的指定容器，调用 VCContainer 的 <strong>signalProcess</strong>，向容器进程发送指定信号</li>
+</ol>
+<h2 id="WinsizeProcess"><a href="#WinsizeProcess" class="headerlink" title="WinsizeProcess"></a>WinsizeProcess</h2><p><strong>设置 sandbox 中的指定容器 tty 大小</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L406">source code</a></p>
+<ol>
+<li>校验 sandbox 的状态是否为 running</li>
+<li>获取 sandbox 中的指定容器，校验其状态是否为 ready 或 running</li>
+<li>调用 agent 的 <strong>winsizeProcess</strong>，设置进程的 tty 大小</li>
+</ol>
+<h2 id="IOStream"><a href="#IOStream" class="headerlink" title="IOStream"></a>IOStream</h2><p><strong>获取 sandbox 中的指定容器 IO 流</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L420">source code</a></p>
+<ol>
+<li>校验 sandbox 的状态是否为 running</li>
+<li>获取 sandbox 中的指定容器，校验其状态是否为 ready 或 running</li>
+<li>初始化 IO 流，返回其 stdin、stdout 和 stderr</li>
+</ol>
+<h2 id="AddDevice"><a href="#AddDevice" class="headerlink" title="AddDevice"></a>AddDevice</h2><p><strong>向 sandbox 中添加设备</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L1932">source code</a></p>
+<ol>
+<li>调用 devManager 的 <strong>NewDevice</strong>，初始化对应类型的设备</li>
+<li>调用 devManager 的 <strong>AttachDevice</strong>，添加该设备</li>
+</ol>
+<h2 id="AddInterface"><a href="#AddInterface" class="headerlink" title="AddInterface"></a>AddInterface</h2><p><strong>向 sandbox 中添加网卡</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L918">source code</a></p>
+<ol>
+<li>将 rpc 请求体转换成网卡信息结构</li>
+<li>调用 network 的 <strong>AddEndpoints</strong>，添加该网卡</li>
+<li>获取网卡 PCI 地址，调用 agent 的 <strong>updateInterface</strong>，更新网卡信息</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+</ol>
+<h2 id="RemoveInterface"><a href="#RemoveInterface" class="headerlink" title="RemoveInterface"></a>RemoveInterface</h2><p><strong>移除 sandbox 中的指定网卡</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L956">source code</a></p>
+<ol>
+<li>调用 network 的 <strong>RemoveEndpoints</strong>，移除指定网卡</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存状态数据到文件中</li>
+</ol>
+<h2 id="ListInterfaces"><a href="#ListInterfaces" class="headerlink" title="ListInterfaces"></a>ListInterfaces</h2><p><strong>获取 sandbox 的所有网卡配置</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L975">source code</a></p>
+<ol>
+<li>调用 agent 的 <strong>listInterfaces</strong>，获取所有网卡配置</li>
+</ol>
+<h2 id="UpdateRoutes"><a href="#UpdateRoutes" class="headerlink" title="UpdateRoutes"></a>UpdateRoutes</h2><p><strong>更新 sandbox 的路由表</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L980">source code</a></p>
+<ol>
+<li>调用 agent 的 <strong>updateRoutes</strong>，更新路由表</li>
+</ol>
+<h2 id="ListRoutes"><a href="#ListRoutes" class="headerlink" title="ListRoutes"></a>ListRoutes</h2><p><strong>获取 sandbox 的所有路由配置</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L985">source code</a></p>
+<ol>
+<li>调用 agent 的 <strong>listRoutes</strong>，获取所有路由配置</li>
+</ol>
+<h2 id="GetOOMEvent"><a href="#GetOOMEvent" class="headerlink" title="GetOOMEvent"></a>GetOOMEvent</h2><p><strong>获取 sandbox 的 OOM 事件信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L2320">source code</a></p>
+<ol>
+<li>调用 agent 的 <strong>getOOMEvent</strong>，获取 OOM 事件信息</li>
+</ol>
+<h2 id="GetHypervisorPid"><a href="#GetHypervisorPid" class="headerlink" title="GetHypervisorPid"></a>GetHypervisorPid</h2><p><strong>获取 sandbox 的 hypervisor PID</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L292">source code</a></p>
+<ol>
+<li>调用 hypervisor 的 <strong>GetPids</strong>，获取所有 PID 列表</li>
+<li>返回 PID 列表首位（因为首位是 hypervisor PID，次位为 virtiofsd PID）</li>
+</ol>
+<h2 id="UpdateRuntimeMetrics"><a href="#UpdateRuntimeMetrics" class="headerlink" title="UpdateRuntimeMetrics"></a>UpdateRuntimeMetrics</h2><p><strong>更新 sandbox 的 hypervisor 相关指标</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox_metrics.go#L134">source code</a></p>
+<ol>
+<li>调用 hypervisor 的 <strong>GetPids</strong>，获取 hypervisor 的 PID</li>
+<li>获取 &#x2F;proc&#x2F;&lt;hypervisorPID&gt;&#x2F;fd 目录下的文件数量（进程打开的所有文件描述符，这些文件描述符是指向实际文件的一个符号链接，例如 0 表示 stdin、1 表示 stdout、2 表示 stderr 等等），上报 kata_hypervisor_fds 指标</li>
+<li>解析 &#x2F;proc&#x2F;&lt;hypervisorPID&gt;&#x2F;net&#x2F;dev 文件内容（网络设备状态信息，例如 eth0、lo、tap0_kata 和 tunl0 接受和发送的数据包、错误和冲突的数量以及其他基本统计，参考 ifconfig 命令结果），上报 kata_hypervisor_netdev 指标</li>
+<li>解析 &#x2F;proc&#x2F;&lt;hypervisorPID&gt;&#x2F;stat 文件内容（进程的状态信息，参考 ps 命令结果），上报 kata_hypervisor_proc_stat 指标</li>
+<li>解析 &#x2F;proc&#x2F;&lt;hypervisorPID&gt;&#x2F;status 文件内容（进程的状态信息，相较于 &#x2F;proc&#x2F;&lt;hypervisorPID&gt;&#x2F;stat 更易读），上报 kata_hypervisor_proc_status 指标</li>
+<li>解析 &#x2F;proc&#x2F;&lt;hypervisorPID&gt;&#x2F;io 文件内容（进程的 IO 统计信息），上报 kata_hypervisor_io 指标</li>
+<li>调用 hypervisor 的 <strong>GetVirtioFsPid</strong>，获取 virtiofsd 的 PID</li>
+<li>获取 &#x2F;proc&#x2F;&lt;virtiofsdPID&gt;&#x2F;fd 目录下的文件数量，上报 kata_virtiofsd_fds 指标</li>
+<li>解析 &#x2F;proc&#x2F;&lt;virtiofsdPID&gt;&#x2F;stat 文件内容，上报 kata_virtiofsd_proc_stat 指标</li>
+<li>解析 &#x2F;proc&#x2F;&lt;hypervisorPID&gt;&#x2F;status 文件内容，上报 kata_virtiofsd_proc_status 指标</li>
+<li>解析 &#x2F;proc&#x2F;&lt;hypervisorPID&gt;&#x2F;io 文件内容，上报 kata_virtiofsd_io 指标</li>
+</ol>
+<h2 id="GetAgentMetrics"><a href="#GetAgentMetrics" class="headerlink" title="GetAgentMetrics"></a>GetAgentMetrics</h2><p><strong>获取 sandbox 的 agent 相关指标</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox_metrics.go#L221">source code</a></p>
+<ol>
+<li>调用 agent 的 <strong>getAgentMetrics</strong>，获取 agent 的指标信息</li>
+</ol>
+<h2 id="GetAgentURL"><a href="#GetAgentURL" class="headerlink" title="GetAgentURL"></a>GetAgentURL</h2><p><strong>获取 sandbox 的 agent URI 信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L2324">source code</a></p>
+<ol>
+<li>调用 agent 的 <strong>getAgentURl</strong>，获取 URI 信息</li>
+</ol>
+<h2 id="GuestVolumeStats"><a href="#GuestVolumeStats" class="headerlink" title="GuestVolumeStats"></a>GuestVolumeStats</h2><p><strong>获取 sandbox 中的指定挂载卷信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L2339">source code</a></p>
+<ol>
+<li>校验卷路径是否存在</li>
+<li>遍历所有容器的所有挂载点，获取挂载源为指定卷目录的 sandbox 内的挂载点</li>
+<li>调用 agent 的 <strong>getGuestVolumeStats</strong>，获取卷信息</li>
+</ol>
+<h2 id="ResizeGuestVolume"><a href="#ResizeGuestVolume" class="headerlink" title="ResizeGuestVolume"></a>ResizeGuestVolume</h2><p><strong>调整 sandbox 中的指定挂载卷大小</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L2348">source code</a></p>
+<ol>
+<li>校验卷路径是否存在</li>
+<li>遍历所有容器的所有挂载点，获取挂载源为指定卷目录的 sandbox 内的挂载点</li>
+<li>调用 agent 的 <strong>resizeGuestVolume</strong>，调整卷大小</li>
+</ol>
+<h2 id="GetIPTables"><a href="#GetIPTables" class="headerlink" title="GetIPTables"></a>GetIPTables</h2><p><strong>获取 sandbox 的 iptables 信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox_metrics.go#L2329">source code</a></p>
+<ol>
+<li>调用 agent 的 <strong>getIPTables</strong>，获取 iptables 信息</li>
+</ol>
+<h2 id="SetIPTables"><a href="#SetIPTables" class="headerlink" title="SetIPTables"></a>SetIPTables</h2><p><strong>设置 sandbox 的 iptables 信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox_metrics.go#L2334">source code</a></p>
+<ol>
+<li>调用 agent 的 <strong>setIPTables</strong>，设置 iptables 信息</li>
+</ol>
+<hr>
+<h1 id="VCContainer"><a href="#VCContainer" class="headerlink" title="VCContainer"></a>VCContainer</h1><p><em><u>src&#x2F;runtime&#x2F;virtcontainers&#x2F;interfaces.go</u></em></p>
+<p>virtcontainers 库中用于管理容器的模块。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Container <span class="keyword">struct</span> &#123;</span><br><span class="line">	ctx context.Context</span><br><span class="line"></span><br><span class="line">	config  *ContainerConfig</span><br><span class="line">	sandbox *Sandbox</span><br><span class="line"></span><br><span class="line">	id            <span class="type">string</span></span><br><span class="line">	sandboxID     <span class="type">string</span></span><br><span class="line">	containerPath <span class="type">string</span></span><br><span class="line">	rootfsSuffix  <span class="type">string</span></span><br><span class="line"></span><br><span class="line">	mounts []Mount</span><br><span class="line"></span><br><span class="line">	devices []ContainerDevice</span><br><span class="line"></span><br><span class="line">	state types.ContainerState</span><br><span class="line"></span><br><span class="line">	process Process</span><br><span class="line"></span><br><span class="line">	rootFs RootFs</span><br><span class="line"></span><br><span class="line">	systemMountsInfo SystemMountsInfo</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>工厂函数</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/container.go#L714">source code</a></p>
+<ol>
+<li>检验 containerConfig 配置是否合法（containerConfig 取自于 sandboxConfig 中的相关配置）</li>
+<li>校验 annotation 中 SWAP 资源声明是否合法（io.katacontainers.container.resource.swappiness 必须小于 200），并透传设置（区别于 CPU 和内存等资源，SWAP 无法通过 spec.Containers.Resources 的方式声明，而需要通过 annotation 声明）</li>
+<li>调用 store 的 <strong>FromDisk</strong>，获取 sandbox 和容器的状态信息。如果成功获取则表明不是新创建的容器，无需后续动作，仅用于状态更新维护，直接返回容器实例即可</li>
+<li>如果挂载点是块设备，则需要交由 device manager 维护<ol>
+<li>根据 hypervisor 配置项是否允许使用块设备，agent 是否具备使用块设备能力以及 hypervisor 是否允许块设备热插拔判断是否当前支持块设备</li>
+<li>遍历容器中的所有挂载信息，执行后续步骤<ol>
+<li>如果 mount.BlockDeviceID 已经存在，则表明已经有一个设备和挂载点相关联，因此不需要创建设备，跳过即可</li>
+<li>如果挂载类型不是 bind，跳过即可</li>
+<li>获取 &#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;direct-volumes&#x2F;&lt;base64 mount.Source&gt;&#x2F;mountInfo.json 文件，如果存在，表明当前挂载设备需要以直通卷的方式处理<br><em>mount.Source 格式为 &#x2F;var&#x2F;lib&#x2F;kubelet&#x2F;pods&#x2F;&lt;podUID&gt;&#x2F;volumes&#x2F;kubernetes.io~csi&#x2F;&lt;pvName&gt;&#x2F;mount<br>mountInfo.json 中 device 字段的格式为 &#x2F;dev&#x2F;sda（取决于 host 上的具体设备）</em></li>
+<li>创建 &#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;direct-volumes&#x2F;&lt;base64 mount.Source&gt;&#x2F;&lt;sandboxID&gt; 文件</li>
+<li>替换 mount.Source、mount.Type、mount.Options、mount.FSGroup 和 mount.FSGroupChangePolicy 为 mountInfo.json 的对应字段</li>
+</ol>
+</li>
+<li>针对挂载信息中的块设备类型（传统块设备和 PMEM 设备），调用 devManager 的  <strong>NewDevice</strong>，初始化设备，回写 mount.BlockDeviceID 字段信息</li>
+</ol>
+</li>
+<li>过滤容器中的 CDROM 和 floppy 类型的设备，回写至 container.devices 中</li>
+</ol>
+<p>VCContainer 中声明的 <strong>GetAnnotations</strong>、<strong>GetPid</strong>、<strong>GetToken</strong>、<strong>ID</strong>、<strong>Sandbox</strong> 以及 <strong>Process</strong> 均为参数获取与赋值，无复杂逻辑，不作详述。</p>
+<h2 id="start"><a href="#start" class="headerlink" title="start"></a>start</h2><p><strong>启动容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/container.go#L940">source code</a></p>
+<ol>
+<li>校验 sandbox 状态是否为 running</li>
+<li>校验容器状态是否为 ready 或 stopped</li>
+<li>调用 agent 的 <strong>startContainer</strong>，启动容器</li>
+<li>如果启动失败，则调用 <strong>stop</strong>，执行回滚操作；否则，设置容器状态为 running，并调用 store 的 <strong>ToDisk</strong>，保存 sandbox 和容器的状态数据到文件中</li>
+</ol>
+<h2 id="stop"><a href="#stop" class="headerlink" title="stop"></a>stop</h2><p><strong>关停容器，并清理相关资源</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/container.go#L966">source code</a></p>
+<ol>
+<li>如果容器状态已经为 stopped，则不做任何操作</li>
+<li>校验容器状态是否为 ready、running 或 paused</li>
+<li>调用 <strong>signalProcess</strong>，向 sandbox 中的容器进程发送 kill 信号</li>
+<li>调用 agent 的 <strong>waitProcess</strong>，确保容器进程已退出</li>
+<li>调用 agent 的 <strong>stopContainer</strong>，关停容器</li>
+<li>针对容器中每一个挂载信息，调用 fsShare 的 <strong>UnshareFile</strong>，移除 host 侧的 sandbox 共享文件</li>
+<li>调用 fsShare 的 <strong>UnshareRootFilesystem</strong>，移除 sandbox 中的容器 rootfs 共享挂载</li>
+<li>调用 devManager 的 <strong>DetachDevice</strong> 和 <strong>RemoveDevice</strong>，detach 并移除 sandbox 中的所有设备（含块设备）</li>
+<li>如果容器的 rootfs 是块设备，则调用 devManager 的 <strong>DetachDevice</strong> 和 <strong>RemoveDevice</strong>，detach 并移除容器的 rootfs 块设备</li>
+<li>设置容器状态为 stopped，并调用 store 的 <strong>ToDisk</strong>，保存 sandbox 和容器的状态数据到文件中</li>
+</ol>
+<h2 id="delete"><a href="#delete" class="headerlink" title="delete"></a>delete</h2><p><strong>删除容器信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/container.go#L896">source code</a></p>
+<ol>
+<li>校验容器状态是否为 ready 或 stopped</li>
+<li>删除维护在 sandbox 中的容器信息</li>
+<li>调用 store 的 <strong>ToDisk</strong>，保存 sandbox 和容器的状态数据到文件中</li>
+</ol>
+<h2 id="signalProcess"><a href="#signalProcess" class="headerlink" title="signalProcess"></a>signalProcess</h2><p><strong>向容器进程发送指定信号</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/container.go#L1074">source code</a></p>
+<ol>
+<li>校验 sandbox 状态是否为 ready 或者 running</li>
+<li>校验容器状态是否为 ready、running 或者 paused</li>
+<li>调用 agent 的 <strong>signalProcess</strong>，向 sandbox 中的指定容器进程发送信号（由于 Containerd 和 CRIO 并不会处理 <code>ESRCH: No such process</code> 错误，因此 Kata runtime 在这里做了特殊操作，针对此报错仅输出 warning 日志，不作返回）</li>
+</ol>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Kata Containers 」源码走读 — virtcontainers</p><p><a href="http://shenxianghong.github.io/2023/01/30/2023-01-30 Kata Containers 源码走读 - virtcontainers/">http://shenxianghong.github.io/2023/01/30/2023-01-30 Kata Containers 源码走读 - virtcontainers/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2023-01-30</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-05-04</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><hr style="height:1px;margin:1rem 0"><div class="level is-mobile is-flex"><div class="article-tags is-size-7 is-uppercase"><i class="fas fa-tags has-text-grey"></i> <a class="link-muted" rel="tag" href="/tags/Kata-Containers/">Kata Containers </a></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2023/03/05/2023-03-05%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20vircontainers%20storage/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Kata Containers 」源码走读 — virtcontainers storage</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2023/01/29/2023-01-29%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20kata-monitor/"><span class="level-item">「 Kata Containers 」源码走读 — kata-monitor</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">50</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">7</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">9</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/shenxianghong" target="_blank" rel="noopener">Follow</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Youtube" href="https://youtube.com"><i class="fab fa-youtube"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Bilibili" href="https://bilibili.com"><i class="fab fa-bilibili"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Reddit" href="https://reddit.com"><i class="fab fa-reddit"></i></a></div></div></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://google.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Google</span></span><span class="level-right"><span class="level-item tag">google.com</span></span></a></li><li><a class="level is-mobile" href="https://freegpt.one" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">ChatGPT</span></span><span class="level-right"><span class="level-item tag">freegpt.one</span></span></a></li></ul></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#VC"><span class="level-left"><span class="level-item">1</span><span class="level-item">VC</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#CreateSandbox"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">CreateSandbox</span></span></a></li><li><a class="level is-mobile" href="#CleanupContainer"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">CleanupContainer</span></span></a></li></ul></li><li><a class="level is-mobile" href="#VCSandbox"><span class="level-left"><span class="level-item">2</span><span class="level-item">VCSandbox</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#updateResources"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">updateResources</span></span></a></li><li><a class="level is-mobile" href="#Stats"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">Stats</span></span></a></li><li><a class="level is-mobile" href="#Start"><span class="level-left"><span class="level-item">2.3</span><span class="level-item">Start</span></span></a></li><li><a class="level is-mobile" href="#Stop"><span class="level-left"><span class="level-item">2.4</span><span class="level-item">Stop</span></span></a></li><li><a class="level is-mobile" href="#Delete"><span class="level-left"><span class="level-item">2.5</span><span class="level-item">Delete</span></span></a></li><li><a class="level is-mobile" href="#Status"><span class="level-left"><span class="level-item">2.6</span><span class="level-item">Status</span></span></a></li><li><a class="level is-mobile" href="#CreateContainer"><span class="level-left"><span class="level-item">2.7</span><span class="level-item">CreateContainer</span></span></a></li><li><a class="level is-mobile" href="#DeleteContainer"><span class="level-left"><span class="level-item">2.8</span><span class="level-item">DeleteContainer</span></span></a></li><li><a class="level is-mobile" href="#StartContainer"><span class="level-left"><span class="level-item">2.9</span><span class="level-item">StartContainer</span></span></a></li><li><a class="level is-mobile" href="#StopContainer"><span class="level-left"><span class="level-item">2.10</span><span class="level-item">StopContainer</span></span></a></li><li><a class="level is-mobile" href="#KillContainer"><span class="level-left"><span class="level-item">2.11</span><span class="level-item">KillContainer</span></span></a></li><li><a class="level is-mobile" href="#StatusContainer"><span class="level-left"><span class="level-item">2.12</span><span class="level-item">StatusContainer</span></span></a></li><li><a class="level is-mobile" href="#StatsContainer"><span class="level-left"><span class="level-item">2.13</span><span class="level-item">StatsContainer</span></span></a></li><li><a class="level is-mobile" href="#PauseContainer"><span class="level-left"><span class="level-item">2.14</span><span class="level-item">PauseContainer</span></span></a></li><li><a class="level is-mobile" href="#ResumeContainer"><span class="level-left"><span class="level-item">2.15</span><span class="level-item">ResumeContainer</span></span></a></li><li><a class="level is-mobile" href="#EnterContainer"><span class="level-left"><span class="level-item">2.16</span><span class="level-item">EnterContainer</span></span></a></li><li><a class="level is-mobile" href="#UpdateContainer"><span class="level-left"><span class="level-item">2.17</span><span class="level-item">UpdateContainer</span></span></a></li><li><a class="level is-mobile" href="#WaitProcess"><span class="level-left"><span class="level-item">2.18</span><span class="level-item">WaitProcess</span></span></a></li><li><a class="level is-mobile" href="#SignalProcess"><span class="level-left"><span class="level-item">2.19</span><span class="level-item">SignalProcess</span></span></a></li><li><a class="level is-mobile" href="#WinsizeProcess"><span class="level-left"><span class="level-item">2.20</span><span class="level-item">WinsizeProcess</span></span></a></li><li><a class="level is-mobile" href="#IOStream"><span class="level-left"><span class="level-item">2.21</span><span class="level-item">IOStream</span></span></a></li><li><a class="level is-mobile" href="#AddDevice"><span class="level-left"><span class="level-item">2.22</span><span class="level-item">AddDevice</span></span></a></li><li><a class="level is-mobile" href="#AddInterface"><span class="level-left"><span class="level-item">2.23</span><span class="level-item">AddInterface</span></span></a></li><li><a class="level is-mobile" href="#RemoveInterface"><span class="level-left"><span class="level-item">2.24</span><span class="level-item">RemoveInterface</span></span></a></li><li><a class="level is-mobile" href="#ListInterfaces"><span class="level-left"><span class="level-item">2.25</span><span class="level-item">ListInterfaces</span></span></a></li><li><a class="level is-mobile" href="#UpdateRoutes"><span class="level-left"><span class="level-item">2.26</span><span class="level-item">UpdateRoutes</span></span></a></li><li><a class="level is-mobile" href="#ListRoutes"><span class="level-left"><span class="level-item">2.27</span><span class="level-item">ListRoutes</span></span></a></li><li><a class="level is-mobile" href="#GetOOMEvent"><span class="level-left"><span class="level-item">2.28</span><span class="level-item">GetOOMEvent</span></span></a></li><li><a class="level is-mobile" href="#GetHypervisorPid"><span class="level-left"><span class="level-item">2.29</span><span class="level-item">GetHypervisorPid</span></span></a></li><li><a class="level is-mobile" href="#UpdateRuntimeMetrics"><span class="level-left"><span class="level-item">2.30</span><span class="level-item">UpdateRuntimeMetrics</span></span></a></li><li><a class="level is-mobile" href="#GetAgentMetrics"><span class="level-left"><span class="level-item">2.31</span><span class="level-item">GetAgentMetrics</span></span></a></li><li><a class="level is-mobile" href="#GetAgentURL"><span class="level-left"><span class="level-item">2.32</span><span class="level-item">GetAgentURL</span></span></a></li><li><a class="level is-mobile" href="#GuestVolumeStats"><span class="level-left"><span class="level-item">2.33</span><span class="level-item">GuestVolumeStats</span></span></a></li><li><a class="level is-mobile" href="#ResizeGuestVolume"><span class="level-left"><span class="level-item">2.34</span><span class="level-item">ResizeGuestVolume</span></span></a></li><li><a class="level is-mobile" href="#GetIPTables"><span class="level-left"><span class="level-item">2.35</span><span class="level-item">GetIPTables</span></span></a></li><li><a class="level is-mobile" href="#SetIPTables"><span class="level-left"><span class="level-item">2.36</span><span class="level-item">SetIPTables</span></span></a></li></ul></li><li><a class="level is-mobile" href="#VCContainer"><span class="level-left"><span class="level-item">3</span><span class="level-item">VCContainer</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#start"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">start</span></span></a></li><li><a class="level is-mobile" href="#stop"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">stop</span></span></a></li><li><a class="level is-mobile" href="#delete"><span class="level-left"><span class="level-item">3.3</span><span class="level-item">delete</span></span></a></li><li><a class="level is-mobile" href="#signalProcess"><span class="level-left"><span class="level-item">3.4</span><span class="level-item">signalProcess</span></span></a></li></ul></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Code-Walkthrough/"><span class="level-start"><span class="level-item">Code Walkthrough</span></span><span class="level-end"><span class="level-item tag">17</span></span></a></li><li><a class="level is-mobile" href="/categories/Getting-Started/"><span class="level-start"><span class="level-item">Getting Started</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Meetup/"><span class="level-start"><span class="level-item">Meetup</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Overview/"><span class="level-start"><span class="level-item">Overview</span></span><span class="level-end"><span class="level-item tag">13</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/"><span class="level-start"><span class="level-item">Programming</span></span><span class="level-end"><span class="level-item tag">7</span></span></a><ul><li><a class="level is-mobile" href="/categories/Programming/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/Quick-Start/"><span class="level-start"><span class="level-item">Quick Start</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7"><br/>And did you get what you wanted from this life, even so?</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><script src="/js/night.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

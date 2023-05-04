@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Istio 」流量管理 — Sidecar - 🐾Corgi</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="🐾Corgi"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="🐾Corgi"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Istio 中流量管理组件 Sidecar 对象介绍"><meta property="og:type" content="blog"><meta property="og:title" content="「 Istio 」流量管理 — Sidecar"><meta property="og:url" content="http://shenxianghong.github.io/2022/09/16/2022-09-16%20Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Sidecar/"><meta property="og:site_name" content="🐾Corgi"><meta property="og:description" content="Istio 中流量管理组件 Sidecar 对象介绍"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://picsum.photos/0?sig=20220916"><meta property="article:published_time" content="2022-09-15T16:00:00.000Z"><meta property="article:modified_time" content="2023-05-04T00:54:28.333Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Istio"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://picsum.photos/0?sig=20220916"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://shenxianghong.github.io/2022/09/16/2022-09-16%20Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Sidecar/"},"headline":"「 Istio 」流量管理 — Sidecar","image":[],"datePublished":"2022-09-15T16:00:00.000Z","dateModified":"2023-05-04T00:54:28.333Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"🐾Corgi","logo":{"@type":"ImageObject","url":"http://shenxianghong.github.io/img/logo.svg"}},"description":"Istio 中流量管理组件 Sidecar 对象介绍"}</script><link rel="canonical" href="http://shenxianghong.github.io/2022/09/16/2022-09-16%20Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20Sidecar/"><link rel="alternate" href="/atom.xml" title="🐾Corgi" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/xcode.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item night" id="night-nav" title="Night Mode" href="javascript:;"><i class="fas fa-moon" id="night-icon"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="https://picsum.photos/0?sig=20220916" alt="「 Istio 」流量管理 — Sidecar"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><i class="fa fa-calendar"></i> <time dateTime="${date_xml(page.date)}" title="${date_xml(page.date)}">2022-09-16</time></span><span class="level-item is-hidden-mobile"><i class="fa fa-calendar-check"></i> <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">2023-05-04</time></span><span class="level-item"><i class="far fa-folder-open"></i> <a class="link-muted" href="/categories/Overview/">Overview</a></span><span class="level-item"><i class="far fa-clock"></i> 22 minutes read (About 3348 words)</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Istio 」流量管理 — Sidecar</h1><div class="content"><div align=center><img width="120" style="border: 0px" src="https://www.vectorlogo.zone/logos/istioio/istioio-ar21.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v1.15.0</strong></p>
+</blockquote>
+<p>Sidecar 描述了 sidecar 代理的配置，该代理将入站和出站通信调解到它所连接的工作负载实例。默认情况下，Istio 将对网格中的所有代理进行编程，并使用必要的配置来访问网格中的每个工作负载实例，并接管与工作负载关联的所有端口上的流量。 Sidecar 配置提供了一种微调端口集的方法，代理在转发流量进出工作负载时将接受的协议。此外，可以限制代理在转发来自工作负载实例的出站流量时可以访问的服务集。</p>
+<p>网格中的服务和配置被划分成一个或多个命名空间（例如，Kubernetes 命名空间或 CF org&#x2F;space）。命名空间中的 Sidecar 配置将应用于同一命名空间中的一个或多个工作负载实例，使用 workloadSelector 字段选择。在没有 workloadSelector 的情况下，它将应用于同一命名空间中的所有工作负载实例。在确定要应用于工作负载实例的 Sidecar 配置时，将优先考虑具有选择此工作负载实例的 workloadSelector 的资源，而不是没有任何 workloadSelector 的 Sidecar 配置。</p>
+<p>注意点</p>
+<ul>
+<li>每个命名空间只能有一个没有 workloadSelector 的  Sidecar 配置，该配置为该命名空间中的所有 Pod 指定默认值。建议对命名空间范围的 sidecar 使用名称 default。如果给定命名空间中存在多个无选择器的 Sidecar 配置，则系统的行为是未定义的。如果具有 workloadSelector 的两个或多个 Sidecar 配置选择相同的工作负载实例，则系统的行为是未定义的</li>
+<li>默认情况下，MeshConfig 根命名空间中的 Sidecar 配置将应用于所有没有 Sidecar 配置的命名空间。这个全局默认 Sidecar 配置不应该有任何 workloadSelector</li>
+</ul>
+<p>下面的示例在名为 istio-config 的命名空间中声明了一个全局默认 Sidecar 配置，该配置将所有命名空间中的 Sidecar 配置为仅允许出口流量到同一命名空间中的其他工作负载以及 istio-system 命名空间中的服务：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Sidecar</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">default</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">istio-config</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">egress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;./*&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;istio-system/*&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>下面的示例在 prod-us1 命名空间中声明了一个 Sidecar 配置，它覆盖了上面定义的全局默认值，并在命名空间中配置了 Sidecar 以允许出口流量到 prod-us1、prod-apis 和 istio-system 中的命名空间。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Sidecar</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">default</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod-us1</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">egress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;prod-us1/*&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;prod-apis/*&quot;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;istio-system/*&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>以下示例在 prod-us1 命名空间中为所有带有标签 app: rating 的 Pod 声明了 Sidecar 配置，属于 rating.prod-us1 服务。工作负载在端口 9080 上接受入站 HTTP 流量。然后将流量转发到在 Unix 域套接字上侦听的附加工作负载实例。在出口方向，除了 istio-system 命名空间，Sidecar 仅代理 prod-us1 命名空间中服务的 9080 端口的 HTTP 流量。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Sidecar</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ratings</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod-us1</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">workloadSelector:</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">ratings</span></span><br><span class="line">  <span class="attr">ingress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">9080</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">HTTP</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">somename</span></span><br><span class="line">    <span class="attr">defaultEndpoint:</span> <span class="string">unix:///var/run/someuds.sock</span></span><br><span class="line">  <span class="attr">egress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">9080</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">HTTP</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">egresshttp</span></span><br><span class="line">    <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;prod-us1/*&quot;</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;istio-system/*&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果在没有基于 IPTables 的流量捕获的情况下部署工作负载，则 Sidecar 配置是连接到工作负载实例的代理上的端口的唯一方法。</p>
+<p>以下示例在 prod-us1 命名空间中为所有带有 app: productpage 标签的 Pod 声明了 Sidecar 配置，属于 productpage.prod-us1 服务。假设这些 Pod 部署时没有 IPtable 规则（即 istio-init 容器）并且代理中 metadata 的 ISTIO_META_INTERCEPTION_MODE 设置为 NONE，下面的规范允许这些 Pod 在端口 9080 上接收 HTTP 流量（包裹在 Istio 双向 TLS 中）和将其转发到监听 127.0.0.1:8080 的应用程序。它还允许应用程序与 127.0.0.1:3306 上的支持 MySQL 数据库通信，然后将其代理到 mysql.foo.com:3306 上的外部托管 MySQL 服务。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Sidecar</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="literal">no</span><span class="string">-ip-tables</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod-us1</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">workloadSelector:</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">productpage</span></span><br><span class="line">  <span class="attr">ingress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">9080</span> <span class="comment"># binds to proxy_instance_ip:9080 (0.0.0.0:9080, if no unicast IP is available for the instance)</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">HTTP</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">somename</span></span><br><span class="line">    <span class="attr">defaultEndpoint:</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span><span class="string">:8080</span></span><br><span class="line">    <span class="attr">captureMode:</span> <span class="string">NONE</span> <span class="comment"># not needed if metadata is set for entire proxy</span></span><br><span class="line">  <span class="attr">egress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">3306</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">MYSQL</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">egressmysql</span></span><br><span class="line">    <span class="attr">captureMode:</span> <span class="string">NONE</span> <span class="comment"># not needed if metadata is set for entire proxy</span></span><br><span class="line">    <span class="attr">bind:</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span></span><br><span class="line">    <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;*/mysql.foo.com&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>以及用于路由到 mysql.foo.com:3306 的关联 ServiceEntry：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceEntry</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">external-svc-mysql</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">ns1</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">mysql.foo.com</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">number:</span> <span class="number">3306</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">mysql</span></span><br><span class="line">    <span class="attr">protocol:</span> <span class="string">MYSQL</span></span><br><span class="line">  <span class="attr">location:</span> <span class="string">MESH_EXTERNAL</span></span><br><span class="line">  <span class="attr">resolution:</span> <span class="string">DNS</span></span><br></pre></td></tr></table></figure>
+
+<p>还可以在单个代理中混合和匹配流量捕获模式。例如，考虑内部服务位于 192.168.0.0&#x2F;16 子网上的设置。因此，在 VM 上设置 IP 表以捕获 192.168.0.0&#x2F;16 子网上的所有出站流量。假设 VM 在 172.16.0.0&#x2F;16 子网上有一个额外的网络接口用于入站流量。以下 Sidecar 配置允许 VM 在 172.16.1.32:80（VM 的 IP）上公开一个侦听器，以接收来自 172.16.0.0&#x2F;16 子网的流量。</p>
+<p>注意：VM 中代理上的 ISTIO_META_INTERCEPTION_MODE 元数据可选值有 REDIRECT 或 TPROXY，这意味着当前是基于 IP 表的流量捕获。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Sidecar</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">partial-ip-tables</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod-us1</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">workloadSelector:</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">productpage</span></span><br><span class="line">  <span class="attr">ingress:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">bind:</span> <span class="number">172.16</span><span class="number">.1</span><span class="number">.32</span></span><br><span class="line">    <span class="attr">port:</span></span><br><span class="line">      <span class="attr">number:</span> <span class="number">80</span> <span class="comment"># binds to 172.16.1.32:80</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">HTTP</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">somename</span></span><br><span class="line">    <span class="attr">defaultEndpoint:</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span><span class="string">:8080</span></span><br><span class="line">    <span class="attr">captureMode:</span> <span class="string">NONE</span></span><br><span class="line">  <span class="attr">egress:</span></span><br><span class="line">    <span class="comment"># use the system detected defaults</span></span><br><span class="line">    <span class="comment"># sets up configuration to handle outbound traffic to services</span></span><br><span class="line">    <span class="comment"># in 192.168.0.0/16 subnet, based on information provided by the</span></span><br><span class="line">    <span class="comment"># service registry</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">captureMode:</span> <span class="string">IPTABLES</span></span><br><span class="line">    <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;*/*&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>以下示例在 prod-us1 命名空间中为所有带有标签 app: rating 的 Pod 声明了 Sidecar 配置，属于 rating.prod-us1 服务。该服务在端口 8443 上接受入站 HTTPS 流量，并且 sidecar 代理使用给定的服务器证书以一种方式终止 TLS。然后将流量转发到在 Unix 域套接字上侦听的附加工作负载实例。预计将配置 PeerAuthentication 策略，以便在特定端口上将 mTLS 模式设置为“禁用”。在此示例中，在 PORT 80 上禁用了 mTLS 模式。此功能目前是实验性的。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">security.istio.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PeerAuthentication</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ratings-peer-auth</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">prod-us1</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">ratings</span></span><br><span class="line">  <span class="attr">mtls:</span></span><br><span class="line">    <span class="attr">mode:</span> <span class="string">STRICT</span></span><br><span class="line">  <span class="attr">portLevelMtls:</span></span><br><span class="line">    <span class="attr">80:</span></span><br><span class="line">      <span class="attr">mode:</span> <span class="string">DISABLE</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="Sidecar"><a href="#Sidecar" class="headerlink" title="Sidecar"></a>Sidecar</h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#WorkloadSelector">workloadSelector</a></td>
+<td>用于选择应用此 Sidecar 配置的特定 Pod&#x2F;VM 集的标准。如果省略，Sidecar 配置将应用于同一命名空间中的所有工作负载实例</td>
+</tr>
+<tr>
+<td><a href="#IstioIngressListener">ingress</a></td>
+<td>Ingress 指定 Sidecar 的配置，用于处理附加工作负载实例的入站流量。如果省略，Istio 将根据从编排平台获得的工作负载信息（例如，暴露的端口、服务等）自动配置 sidecar。如果指定，当且仅当工作负载实例与服务关联时，才会配置入站端口</td>
+</tr>
+<tr>
+<td><a href="#IstioEgressListener">egress</a></td>
+<td>Egress 指定 sidecar 的配置，用于处理从附加工作负载实例到网格中其他服务的出站流量。如果未指定，则从命名空间范围或全局默认 Sidecar 继承系统检测到的默认值</td>
+</tr>
+<tr>
+<td>outboundTrafficPolicy</td>
+<td>出方向流量策略的配置。如果应用程序使用一个或多个未知的外部服务，将策略设置为 ALLOW_ANY 将导致 sidecar 将来自应用程序的任何未知流量路由到其请求的目的地。如果未指定，则从命名空间范围或全局默认 Sidecar 继承系统检测到的默认值</td>
+</tr>
+</tbody></table>
+<h1 id="IstioIngressListener"><a href="#IstioIngressListener" class="headerlink" title="IstioIngressListener"></a><a name="IstioIngressListener">IstioIngressListener</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>port</td>
+<td>与 listener 关联的端口</td>
+</tr>
+<tr>
+<td>bind</td>
+<td>listener 应绑定到的 IP（IPv4 或 IPv6）。入口 listener 的绑定字段中不允许使用 Unix 域套接字地址。如果省略，Istio 将根据导入的服务和应用此配置的工作负载实例自动配置默认值</td>
+</tr>
+<tr>
+<td><a href="#CaptureMode">captureMode</a></td>
+<td>表示如何捕获（或不捕获）到 listener 的流量</td>
+</tr>
+<tr>
+<td>defaultEndpoint</td>
+<td>应将流量转发到的 IP 端点或 Unix 域套接字。此配置可用于将到达 sidecar 上的绑定 IP:Port 的流量重定向到应用程序工作负载实例正在侦听连接的 localhost:port 或 Unix 域套接字。不支持任意 IP。格式应该是 127.0.0.1:PORT、[::1]:PORT（转发到 localhost）、0.0.0.0:PORT、[::]:PORT（转发到实例 IP）或 unix:&#x2F;&#x2F;&#x2F; 之一path&#x2F;to&#x2F;socket（转发到 Unix 域套接字）</td>
+</tr>
+<tr>
+<td>tls</td>
+<td>一组 TLS 相关选项，将在 sidecar 上为来自网格外部的请求启用 TLS 终止。目前仅支持 SIMPLE 和 MUTUAL TLS 模式</td>
+</tr>
+</tbody></table>
+<h1 id="IstioEgressListener"><a href="#IstioEgressListener" class="headerlink" title="IstioEgressListener"></a><a name="IstioEgressListener">IstioEgressListener</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>port</td>
+<td>与 listener 关联的端口。如果使用 Unix 域套接字，请使用 0 作为端口号，并使用有效的协议。如果指定了端口，将用作与导入主机关联的默认目标端口。如果省略端口，Istio 将根据导入的主机推断 listener 端口。请注意，当指定多个出口 listener 时，其中一个或多个侦听器具有特定端口而其他 listener 没有端口，则在 listener 端口上暴露的主机将基于具有最特定端口的 listener</td>
+</tr>
+<tr>
+<td>bind</td>
+<td>listener 应绑定到的 IP（IPv4 或 IPv6）或 Unix 域套接字。如果 bind 不为空，则必须指定端口。格式：IPv4 或 IPv6 地址格式或 unix:&#x2F;&#x2F;&#x2F;path&#x2F;to&#x2F;uds 或 unix:&#x2F;&#x2F;@foobar（Linux 抽象命名空间）。如果省略，Istio 将根据导入的服务、应用此配置的工作负载实例和 captureMode 自动配置默认值。如果 captureMode 为 NONE，bind 将默认为 127.0.0.1</td>
+</tr>
+<tr>
+<td><a href="#CaptureMode">captureMode</a></td>
+<td>当绑定地址是 IP 时，captureMode 选项指示如何捕获（或不捕获）到 listener 的流量。对于 Unix 域套接字绑定，captureMode 必须为 DEFAULT 或 NONE</td>
+</tr>
+<tr>
+<td>hosts</td>
+<td>listener 以 namespace&#x2F;dnsName 格式暴露一个或多个服务主机。与 dnsName 匹配的指定命名空间中的服务将被暴露。相应的服务可以是服务注册表中的服务（例如，Kubernetes 或云服务）或使用 ServiceEntry 或 VirtualService 配置指定的服务。还将使用同一命名空间中的任何关联 DestinationRule。<br />应使用 FQDN 格式指定 dnsName，可选择在最左侧的组件中包含通配符（例如 prod&#x2F;*.example.com）。将 dnsName 设置为 * 以选择指定命名空间中的所有服务（例如 prod&#x2F;*）。<br />命名空间可以设置为 <em>、. 或 ~，分别表示任何命名空间、当前命名空间或无命名空间。例如，</em>&#x2F;foo.example.com 从任何可用的命名空间中选择服务，而 .&#x2F;foo.example.com 仅从 sidecar 的命名空间中选择服务。如果主机设置为 *&#x2F;<em>，Istio 将配置 sidecar 以便能够访问网格中导出到 sidecar 命名空间的每个服务。值 ~&#x2F;</em> 可用于完全修剪 Sidecar 的配置，这些 Sidecar 仅接收流量并响应，但不建立自己的出站连接。<br />只能引用导出到 sidecar 命名空间的服务和配置工件（例如，exportTo 的 * 值）。私有配置（例如，exportTo 设置为 .）</td>
+</tr>
+</tbody></table>
+<h1 id="WorkloadSelector"><a href="#WorkloadSelector" class="headerlink" title="WorkloadSelector"></a><a name="WorkloadSelector">WorkloadSelector</a></h1><p>WorkloadSelector 指定用于确定是否可以将 Gateway、Sidecar、EnvoyFilter、ServiceEntry 或 DestinationRule 配置应用于代理的标准。匹配条件包括与代理关联的元数据、工作负载实例信息（例如附加到 pod&#x2F;VM 的标签）或代理在初始握手期间提供给 Istio 的任何其他信息。如果指定了多个条件，则需要匹配所有条件才能选择工作负载实例。目前，仅支持基于标签的选择机制。</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>labels</td>
+<td>一个或多个标签，指示应用配置的一组特定 Pod&#x2F;VM。标签搜索的范围仅限于资源所在的配置命名空间</td>
+</tr>
+</tbody></table>
+<h1 id="OutboundTrafficPolicy"><a href="#OutboundTrafficPolicy" class="headerlink" title="OutboundTrafficPolicy"></a><a name="OutboundTrafficPolicy">OutboundTrafficPolicy</a></h1><table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="#OutboundTrafficPolicy.Mode">mode</a></td>
+<td>设置 sidecar 的默认行为以处理来自应用程序的出站流量。如果应用程序使用一个或多个先验未知的外部服务，将策略设置为 ALLOW_ANY 将导致边车将来自应用程序的任何未知流量路由到其请求的目的地。强烈建议用户使用 ServiceEntry 配置来显式声明任何外部依赖项，而不是使用 ALLOW_ANY，以便可以监控到这些服务的流量</td>
+</tr>
+</tbody></table>
+<h1 id="OutboundTrafficPolicy-Mode"><a href="#OutboundTrafficPolicy-Mode" class="headerlink" title="OutboundTrafficPolicy.Mode"></a><a name="OutboundTrafficPolicy.Mode">OutboundTrafficPolicy.Mode</a></h1><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>REGISTRY_ONLY</td>
+<td>出站流量将仅限于服务注册表中定义的服务以及通过 ServiceEntry 配置定义的服务</td>
+</tr>
+<tr>
+<td>ALLOW_ANY</td>
+<td>如果目标端口没有服务或 ServiceEntry 配置，则将允许到未知目标的出站流量</td>
+</tr>
+</tbody></table>
+<h1 id="CaptureMode"><a href="#CaptureMode" class="headerlink" title="CaptureMode"></a><a name="CaptureMode">CaptureMode</a></h1><table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DEFAULT</td>
+<td>环境定义的默认捕获模式</td>
+</tr>
+<tr>
+<td>IPTABLES</td>
+<td>使用 IPtables 重定向捕获流量</td>
+</tr>
+<tr>
+<td>NONE</td>
+<td>没有流量捕获。当在出口 listener 中使用时，应用程序应与 listener 端口或 Unix 域套接字显式通信。在入口 listener 中使用时，需要注意确保 listener 端口没有被主机上的其他进程使用</td>
+</tr>
+</tbody></table>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Istio 」流量管理 — Sidecar</p><p><a href="http://shenxianghong.github.io/2022/09/16/2022-09-16 Istio 流量管理 - Sidecar/">http://shenxianghong.github.io/2022/09/16/2022-09-16 Istio 流量管理 - Sidecar/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-09-16</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-05-04</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><hr style="height:1px;margin:1rem 0"><div class="level is-mobile is-flex"><div class="article-tags is-size-7 is-uppercase"><i class="fas fa-tags has-text-grey"></i> <a class="link-muted" rel="tag" href="/tags/Istio/">Istio </a></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/10/14/2022-10-14%20Kata%20Containers%20%E8%9A%82%E8%9A%81%E5%88%86%E4%BA%AB/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Kata Containers 」蚂蚁金服分享</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/09/15/2022-09-15%20Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20ProxyConfig/"><span class="level-item">「 Istio 」流量管理 — ProxyConfig</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">50</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">7</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">9</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/shenxianghong" target="_blank" rel="noopener">Follow</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Youtube" href="https://youtube.com"><i class="fab fa-youtube"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Bilibili" href="https://bilibili.com"><i class="fab fa-bilibili"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Reddit" href="https://reddit.com"><i class="fab fa-reddit"></i></a></div></div></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://google.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Google</span></span><span class="level-right"><span class="level-item tag">google.com</span></span></a></li><li><a class="level is-mobile" href="https://freegpt.one" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">ChatGPT</span></span><span class="level-right"><span class="level-item tag">freegpt.one</span></span></a></li></ul></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#Sidecar"><span class="level-left"><span class="level-item">1</span><span class="level-item">Sidecar</span></span></a></li><li><a class="level is-mobile" href="#IstioIngressListener"><span class="level-left"><span class="level-item">2</span><span class="level-item">IstioIngressListener</span></span></a></li><li><a class="level is-mobile" href="#IstioEgressListener"><span class="level-left"><span class="level-item">3</span><span class="level-item">IstioEgressListener</span></span></a></li><li><a class="level is-mobile" href="#WorkloadSelector"><span class="level-left"><span class="level-item">4</span><span class="level-item">WorkloadSelector</span></span></a></li><li><a class="level is-mobile" href="#OutboundTrafficPolicy"><span class="level-left"><span class="level-item">5</span><span class="level-item">OutboundTrafficPolicy</span></span></a></li><li><a class="level is-mobile" href="#OutboundTrafficPolicy-Mode"><span class="level-left"><span class="level-item">6</span><span class="level-item">OutboundTrafficPolicy.Mode</span></span></a></li><li><a class="level is-mobile" href="#CaptureMode"><span class="level-left"><span class="level-item">7</span><span class="level-item">CaptureMode</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Code-Walkthrough/"><span class="level-start"><span class="level-item">Code Walkthrough</span></span><span class="level-end"><span class="level-item tag">17</span></span></a></li><li><a class="level is-mobile" href="/categories/Getting-Started/"><span class="level-start"><span class="level-item">Getting Started</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Meetup/"><span class="level-start"><span class="level-item">Meetup</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Overview/"><span class="level-start"><span class="level-item">Overview</span></span><span class="level-end"><span class="level-item tag">13</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/"><span class="level-start"><span class="level-item">Programming</span></span><span class="level-end"><span class="level-item tag">7</span></span></a><ul><li><a class="level is-mobile" href="/categories/Programming/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/Quick-Start/"><span class="level-start"><span class="level-item">Quick Start</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7"><br/>And did you get what you wanted from this life, even so?</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><script src="/js/night.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

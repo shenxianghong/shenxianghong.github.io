@@ -11370,11 +11370,14 @@ figure.highlight.foldable div.level-left {
   color: $white-invert;
 }
 .widget .tags .tag:first-child {
-  background: #fcee09;
-  color: #121617;
+/* background: $primary */
+/* color: $primary-invert */
+  background: $light-grey;
+  color: #4a4a4a;
 }
 .widget .tags .tag:last-child {
-  background: $light-grey;
+/* background: $light-grey */
+  background: #e7e7e7;
   color: $white-invert;
 }
 .level.is-multiline {
@@ -11642,6 +11645,10 @@ figure.highlight.foldable div.level-left {
   background-color: #f5e703;
 }
 @media screen and (min-width: 1280px) {
+  .is-3-column .container {
+    max-width: 1216px;
+    width: 1216px;
+  }
   .is-1-column .container,
   .is-2-column .container {
     max-width: 960px;
@@ -11649,6 +11656,10 @@ figure.highlight.foldable div.level-left {
   }
 }
 @media screen and (min-width: 1472px) {
+  .is-3-column .container {
+    max-width: 1344px;
+    width: 1344px;
+  }
   .is-2-column .container {
     max-width: 1152px;
     width: 1152px;

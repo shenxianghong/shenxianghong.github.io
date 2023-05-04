@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Kata Containers 」源码走读 — containerd-shim-kata-v2 - 🐾Corgi</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="🐾Corgi"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="🐾Corgi"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="containerd-shim-kata-v2 组件中 Shim、ShimManagement 和 EventForwarder 模块源码走读"><meta property="og:type" content="blog"><meta property="og:title" content="「 Kata Containers 」源码走读 — containerd-shim-kata-v2"><meta property="og:url" content="http://shenxianghong.github.io/2023/01/21/2023-01-21%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20containerd-shim-kata-v2/"><meta property="og:site_name" content="🐾Corgi"><meta property="og:description" content="containerd-shim-kata-v2 组件中 Shim、ShimManagement 和 EventForwarder 模块源码走读"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://picsum.photos/0?sig=20230121"><meta property="article:published_time" content="2023-01-20T16:00:00.000Z"><meta property="article:modified_time" content="2023-05-04T00:54:28.335Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Kata Containers"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://picsum.photos/0?sig=20230121"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://shenxianghong.github.io/2023/01/21/2023-01-21%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20containerd-shim-kata-v2/"},"headline":"「 Kata Containers 」源码走读 — containerd-shim-kata-v2","image":[],"datePublished":"2023-01-20T16:00:00.000Z","dateModified":"2023-05-04T00:54:28.335Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"🐾Corgi","logo":{"@type":"ImageObject","url":"http://shenxianghong.github.io/img/logo.svg"}},"description":"containerd-shim-kata-v2 组件中 Shim、ShimManagement 和 EventForwarder 模块源码走读"}</script><link rel="canonical" href="http://shenxianghong.github.io/2023/01/21/2023-01-21%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20containerd-shim-kata-v2/"><link rel="alternate" href="/atom.xml" title="🐾Corgi" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/xcode.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item night" id="night-nav" title="Night Mode" href="javascript:;"><i class="fas fa-moon" id="night-icon"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="https://picsum.photos/0?sig=20230121" alt="「 Kata Containers 」源码走读 — containerd-shim-kata-v2"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><i class="fa fa-calendar"></i> <time dateTime="${date_xml(page.date)}" title="${date_xml(page.date)}">2023-01-21</time></span><span class="level-item is-hidden-mobile"><i class="fa fa-calendar-check"></i> <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">2023-05-04</time></span><span class="level-item"><i class="far fa-folder-open"></i> <a class="link-muted" href="/categories/Code-Walkthrough/">Code Walkthrough</a></span><span class="level-item"><i class="far fa-clock"></i> an hour read (About 7695 words)</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Kata Containers 」源码走读 — containerd-shim-kata-v2</h1><div class="content"><div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v3.0.0</strong></p>
+</blockquote>
+<p>本质上，Kata agent 负责 VM（也称 sandbox、guest 等）中的容器等进程的生命周期的管理。而 containerd-shim-kata-v2 作为 Kata agent 唯一的服务入口（本身是一个可执行程序，运行后即为 shim server），一部分实现了 Containerd shimv2 接口，暴露 shim API 用于与 Containerd 的 gRPC 通信，一部分暴露 HTTP endpoints 用于命令行工具和 Kata monitor 的服务请求处理，内部调用 virtcontainers 的诸多子模块，提供了用户和 Containerd 对 VM 以及容器进程的生命周期管理的能力。</p>
+<hr>
+<p><em><u>src&#x2F;runtime&#x2F;vendor&#x2F;github.com&#x2F;containerd&#x2F;containerd&#x2F;runtime&#x2F;v2&#x2F;task&#x2F;shim.pb.go</u></em></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// service is the shim implementation of a remote shim over GRPC</span></span><br><span class="line"><span class="keyword">type</span> service <span class="keyword">struct</span> &#123;</span><br><span class="line">	sandbox vc.VCSandbox</span><br><span class="line"></span><br><span class="line">	ctx      context.Context</span><br><span class="line">	rootCtx  context.Context <span class="comment">// root context for tracing</span></span><br><span class="line">	rootSpan otelTrace.Span</span><br><span class="line"></span><br><span class="line">	containers <span class="keyword">map</span>[<span class="type">string</span>]*container</span><br><span class="line"></span><br><span class="line">	config *oci.RuntimeConfig</span><br><span class="line"></span><br><span class="line">	monitor <span class="keyword">chan</span> <span class="type">error</span></span><br><span class="line">	ec      <span class="keyword">chan</span> exit</span><br><span class="line"></span><br><span class="line">	events <span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line">	cancel <span class="function"><span class="keyword">func</span><span class="params">()</span></span></span><br><span class="line"></span><br><span class="line">	id <span class="type">string</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// Namespace from upper container engine</span></span><br><span class="line">	namespace <span class="type">string</span></span><br><span class="line"></span><br><span class="line">	mu          sync.Mutex</span><br><span class="line">	eventSendMu sync.Mutex</span><br><span class="line"></span><br><span class="line">	<span class="comment">// hypervisor pid, Since this shimv2 cannot get the container processes pid from VM,</span></span><br><span class="line">	<span class="comment">// thus for the returned values needed pid, just return the hypervisor&#x27;s</span></span><br><span class="line">	<span class="comment">// pid directly.</span></span><br><span class="line">	hpid <span class="type">uint32</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// shim&#x27;s pid</span></span><br><span class="line">	pid <span class="type">uint32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>main 函数</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/containerd-shim-kata-v2/main.go#L24">source code</a></p>
+<ol>
+<li>如果指定的参数为 –version，则展示其版本、commit 等信息</li>
+<li>通过 shim API，初始化并启动 shim server，注册名称为 containerd-shim-kata-v2，其中 NoReaper 和 NoSubreaper 均为 true<ol>
+<li>初始化 containerd-kata-shim-v2 模块的 logger，如果没有开启 debug 日志级别，则默认设置为 warn 级别，以此 logger 为基准，设置 virtcontainers 与 katautils 模块的 logger</li>
+<li>校验启动时是否指定了 –namespce 参数（在 Kubernetes 集群中为 k8s.io，Docker 中为 moby，默认为 default）</li>
+<li>启动 goroutine，持续处理 service 中的 exit channel，构建 TaskExit 事件发送至 events channel 中</li>
+<li>初始化 eventForwarder，并启动 goroutine 调用 eventForwarder 的 <strong>forward</strong> 持续上报事件</li>
+<li>返回 service，交给 Containerd 负责针对每个容器启动 shim server</li>
+</ol>
+</li>
+</ol>
+<hr>
+<h1 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h1><p>shim server 对外暴露的 gRPC 服务。</p>
+<h2 id="State"><a href="#State" class="headerlink" title="State"></a>State</h2><p><strong>获取进程的运行时状态</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L628">source code</a></p>
+<ol>
+<li><p>请求体和返回体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> StateRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span>   </span><br><span class="line">	ExecID               <span class="type">string</span>      </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> StateResponse <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span>      </span><br><span class="line">	Bundle               <span class="type">string</span>      </span><br><span class="line">	Pid                  <span class="type">uint32</span>      </span><br><span class="line">	Status               task.Status </span><br><span class="line">	Stdin                <span class="type">string</span>      </span><br><span class="line">	Stdout               <span class="type">string</span>     </span><br><span class="line">	Stderr               <span class="type">string</span>      </span><br><span class="line">	Terminal             <span class="type">bool</span>       </span><br><span class="line">	ExitStatus           <span class="type">uint32</span>      </span><br><span class="line">	ExitedAt             time.Time   </span><br><span class="line">	ExecID               <span class="type">string</span>           </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>根据容器中的属性构建返回消息，如果 r.ExecID 不为空，则通过 r.ExecID 获取维护在 container.execs 中的 exec 中的属性为准</p>
+</li>
+</ol>
+<h2 id="Create"><a href="#Create" class="headerlink" title="Create"></a>Create</h2><p><strong>使用底层 OCI 运行时创建一个新的容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L381">source code</a></p>
+<ol>
+<li><p>请求体和返回体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> CreateTaskRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span>         </span><br><span class="line">	Bundle               <span class="type">string</span>         </span><br><span class="line">	Rootfs               []*types.Mount </span><br><span class="line">	Terminal             <span class="type">bool</span></span><br><span class="line">	Stdin                <span class="type">string</span></span><br><span class="line">	Stdout               <span class="type">string</span></span><br><span class="line">	Stderr               <span class="type">string</span></span><br><span class="line">	Checkpoint           <span class="type">string</span></span><br><span class="line">	ParentCheckpoint     <span class="type">string</span></span><br><span class="line">	Options              *types1.Any    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> CreateTaskResponse <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// shimv2 无法从 VM 获取容器进程 PID，因此后续对于需要 PID 的返回值，直接返回 hypervisor 的 PID 即可</span></span><br><span class="line">	Pid                  <span class="type">uint32</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>校验 r.ID 是否不为空，且正则匹配满足 ^[a-zA-Z0-9][a-zA-Z0-9_.-]+$</p>
+</li>
+<li><p>调用 <strong>create</strong>，创建容器，将返回的容器状态设为 created，并维护在 service.containers 中</p>
+</li>
+<li><p>发送 TaskCreate 事件至 service.events 中</p>
+</li>
+</ol>
+<h3 id="create"><a href="#create" class="headerlink" title="create"></a>create</h3><p><strong>基于 service 实例和请求消息创建容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/create.go#L51">source code</a></p>
+<ol>
+<li><p>初始化空的 rootfs 对象，如果请求中 r.Rootfs 已经提供了一个，则以此为准，丰富 rootfs 对象</p>
+</li>
+<li><p>将 r.Bundle 下的 config.json 文件（例如 &#x2F;run&#x2F;containerd&#x2F;io.containerd.runtime.v2.task&#x2F;k8s.io&#x2F;&lt;containerID&gt;&#x2F;config.json，该文件即为 <a target="_blank" rel="noopener" href="https://github.com/opencontainers/runtime-spec/blob/main/config.md">OCI spec</a>，由 container manager 事先创建），解析为 OCI spec 结构</p>
+<ol>
+<li>校验 r.ID 与 r.Bundle 是否不为空，并且 r.Bundle 存在且为目录结构，获取 r.Bundle 符号链接（如果是）指向的路径名</li>
+<li>获取 r.Bundle 目录下的 config.json，读取其内容，解构成 compatOCISpec 结构（为了兼容 v1.0.0-rc4 和 v1.0.0-rc5，参考：<a target="_blank" rel="noopener" href="https://github.com/opencontainers/runtime-spec/commit/37391fb%EF%BC%89">https://github.com/opencontainers/runtime-spec/commit/37391fb）</a></li>
+<li>不同版本下 spec.Process.Capabilities 字段属性不同，通过类型断言，将其以及 compatOCISpec 转换成对应的 OCI spec（实际上，容器运行后，spec 信息可以通过 crictl inspect xxx 或者 ctr c info xxx 查看到，也可以查看 config.json 文件），并返回</li>
+</ol>
+</li>
+<li><p>根据 spec 中的 annotation 信息判断其容器类型，并转换成 virtcontainers 中定义的容器类型</p>
+<ol>
+<li>判断 spec.Annotations 中是否包含 io.kubernetes.cri.container-type、io.kubernetes.cri-o.ContainerType 和 io.kubernetes.docker.type 的 key（分别代表 Containerd、CRI-O 和 Dockershim 三种 CRI）</li>
+<li>获得 key 对应的 value（value 即为容器的类型），分为两类，分别是 sandbox 和 container，区别于 CRI 的不同，具体的名称有所区别（Containerd 和 CRI-O 中称为 sandbox 和 container，而 Dockershim 中称为 podsandbox 和 container）</li>
+<li>根据容器类型，映射出 virtcontainers 中的容器类别，例如 pod_sandbox 和 pod_container，当 spec.Annotations 中未识别到上述三种 key，则视为 single_container，即非 Pod 容器（如通过 ctr，podman 启动运行）</li>
+<li>此外，匹配到 key，但是 value 不符合 sandbox 和 container 的，均视为 unknown_container_type</li>
+</ol>
+</li>
+<li><p>构建 runtimeConfig（runtimeConfig 聚合了运行时所有的设置信息，后续的操作中不再解析配置文件），优先级依次从 spec.Annotations、shimv2 请求传参和环境变量中获取</p>
+<ol>
+<li>获取 spec.Annotations 中 key 为 io.katacontainers.config_path 的 value 作为 configPath（也就是 Kata Containers 的静态配置文件）</li>
+<li>当 configPath 为空时，尝试从 r.Options 中获取（其中在类型断言时，优先使用 github.com&#x2F;containerd&#x2F;containerd&#x2F;pkg&#x2F;runtimeoptions&#x2F;v1 中的 Options 类型，为了兼容 1.4.3、1.4.4 版本的 Containerd，退而使用 github.com&#x2F;containerd&#x2F;cri-containerd&#x2F;pkg&#x2F;api&#x2F;runtimeoptions&#x2F;v1 中的 Options 类型）</li>
+<li>如果此时 configPath 仍为空，则从环境变量 KATA_CONF_FILE 中获取</li>
+<li>如果 configPath 为空，则按序优先读取 &#x2F;etc&#x2F;kata-containers&#x2F;configuration.toml 和 &#x2F;usr&#x2F;share&#x2F;defaults&#x2F;kata-containers&#x2F;configuration.toml 配置文件内容，构建 runtimeConfig</li>
+</ol>
+</li>
+<li><p>校验部分配置项</p>
+<ol>
+<li>[runtime].experimental 特性是否支持</li>
+<li>[runtime].sandbox_bind_mounts 挂载点是否嵌套（即挂载点的 base 目录存在重复）</li>
+<li>当 [runtime].disable_new_netns 启用时，[runtime].internetworking_model 是否设置为 none</li>
+<li>[hypervisor].default_memory 是否不为 0。当 guest 镜像采用 initrd 格式时，[hypervisor].default_memory 必须大于镜像大小（因为 initrd 会完全读到内存中）；当 guest 镜像采用 image 格式时，镜像大小大于 [hypervisor].default_memory 时，会输出警告信息（虽然 image 不会完全读到内存中，但是此情况并非正常现象）</li>
+<li>当 [factory].enable_template 启用时，guest 镜像类型必须为 initrd 格式；当 [factory].vm_cache_number 大于 0 时，hypervisor 类型必须为 QEMU</li>
+</ol>
+</li>
+<li><p>根据不同的容器类型，基于配置文件内容创建容器</p>
+<p><em><strong>pod_sandbox 或 single_container</strong>（以下统称为 pod_sandbox）</em></p>
+<ol>
+<li><p>当 service.sandbox 不为空时，意味着当前容器环境已经存在一个 sandbox（只有在完成创建容器后才会回写该字段），是无法嵌套创建 sandbox 的</p>
+</li>
+<li><p>基于 [runtime].jaeger_endpoint、[runtime].jaeger_user 和 [runtime].jaeger_password 创建 jaeger tracer</p>
+</li>
+<li><p>如果容器类型为 pod_sandbox，则基于 spec.Annotations 中的 io.kubernetes.cri.sandbox-memory、io.kubernetes.cri.sandbox-cpu-period 和 io.kubernetes.cri.sandbox-cpu-quota，计算 VM 的资源大小；如果容器类型为 single_container，则基于 spec.Linux.Resources 中的 Memory.Limit、CPU.Quota 和 CPU.Period，计算 VM 的资源大小。两者公式一致：</p>
+<blockquote>
+<p>CPU &#x3D; (cpu-quota * 1000 &#x2F; cpu-period + 999) &#x2F; 1000</p>
+<p>MEM &#x3D; memory &#x2F; 1024 &#x2F;1024</p>
+</blockquote>
+</li>
+<li><p>检查容器的 rootfs 目录是否需要挂载</p>
+<ol>
+<li>如果请求中 r.Rootfs 指定了一个，则判断其是否为块设备，并且 [hypervisor].disable_block_device_use 为 false（disable_block_device_use 禁止块设备用于容器的 rootfs。 在像 devicemapper 这样的存储驱动程序中，容器的 rootfs 由块设备支持，出于性能原因，块设备直接传递给 hypervisor。 这个标志阻止块设备被传递给 hypervisor，而使用 virtio-fs 传递 rootfs）；或者，rootfs 的类型为 fuse.nydus-overlayfs。满足条件之一，即不需要挂载，而是走后续的热插流程</li>
+<li>创建 rootfs 目录（如果不存在），遍历 r.Rootfs，挂载至 rootfs 目录下（即 &#x2F;run&#x2F;containerd&#x2F;io.containerd.runtime.v2.task&#x2F;k8s.io&#x2F;&lt;containerID&gt;&#x2F;rootfs）</li>
+</ol>
+</li>
+<li><p>基于 factory 配置项，尝试获取现有 VM factory，如果获取失败且未启用 VM cache 特性时，会初始化新的 VM factory，并调用 vircontainers 的 <strong>SetFactory</strong>，透传 VM factory</p>
+</li>
+<li><p>基于 [hypervisor].rootless 设置 rootless（默认情况下，QEMU VMM 以 root 身份运行。 当设置为 true 时，QEMU VMM 进程将以非 root 的随机用户运行），如果启用 rootless，则额外执行以下流程</p>
+<ol>
+<li>创建一个用于运行 Kata Containers 的随机用户</li>
+<li>根据用户名获取并设置 UID 和 GID</li>
+<li>创建用户目录，并设置环境变量 XDG_RUNTIME_DIR</li>
+<li>将 KVM GID 添加到 hypervisor 配置项中的补充组中，使 hypervisor 进程可以访问 &#x2F;dev&#x2F;kvm 设备</li>
+</ol>
+</li>
+<li><p>基于上述构建的 OCI spec、runtimeConfig、rootfs、bundle、containerID 等信息创建 sandbox</p>
+<ol>
+<li>将 OCI spec 和 runtimeConfig 转为 virtcontainers 所需的配置结构（即 sandboxConfig）<br>额外注明：获取目标挂载点为 &#x2F;dev&#x2F;shim 的大小，一般为 65536k，如果挂载类型为 bind 时，则根据 s.Bsize * s.Blocks 重新计算。此外，设置 &lt;XDG_RUNTIME_DIR&gt;&#x2F;run&#x2F;kata-containers&#x2F;shared&#x2F;sandboxes&#x2F;&lt;containerID&gt;&#x2F;shared 作为 virtiofs 或 virtio9p 下的 guest 与 host 的共享目录；rootfs 目录作为 sandbox 的 rootfs</li>
+<li>当 host 启用 FIPS 时（即 &#x2F;proc&#x2F;sys&#x2F;crypto&#x2F;fips_enabled 为 1），sandboxConfig 中额外追加 kernel 参数</li>
+<li>启动容器前优先创建网络命名空间。当 [runtime].disable_new_netns 启用时，则直接跳过创建。networkID（spec.Linux.Namespace 中 type 为 network 的 path）为空时，则根据具体是否为 rootless，执行对应的创建网络命名空间流程。最后，判断创建出来的网络命名空间（格式为 &#x2F;proc&#x2F;pid&#x2F;ns&#x2F;net 或者 &#x2F;proc&#x2F;&lt;pid&gt;&#x2F;task&#x2F;&lt;tid&gt;&#x2F;ns&#x2F;net）是否与当前进程网络命名空间一致（当前进程可以代表 host 网络，而 Kata Containers 是不支持采用 host 网络作为容器网络的）</li>
+<li>执行 spec.Hooks.Prestart（Prestart 是在执行容器进程之前要运行的 hook 列表，现已废弃） 中定义的动作</li>
+<li>执行 spec.Hooks.CreateRuntime（CreateRuntime 是在创建容器之后但在调用 pivot_root 或任何等效操作之前要运行的 hook 列表） 中定义的动作</li>
+<li>调用 VC 的 <strong>CreateSandbox</strong>，根据 sandboxConfig 信息创建 sandbox，并启动 pod_sandbox 容器</li>
+<li>调用 VCSandbox 的 <strong>GetAllContainers</strong>，校验 sandbox 中的容器总数量是否为 1，返回 sandbox</li>
+</ol>
+</li>
+<li><p>设置 service.sandbox 为上面返回的 sandbox，调用 VCSandbox 的 <strong>GetHypervisorPid</strong>，获取 hypervisor 的 PID，设置至 service.hpid 中</p>
+</li>
+<li><p>启动监听 &#x2F;run&#x2F;vc&#x2F;sbs&#x2F;&lt;sandboxID&gt;&#x2F;shim-monitor.sock 地址的 shim server，注册服务有 &#x2F;metrics、&#x2F;agent-url、&#x2F;direct-volume&#x2F;stats、&#x2F;direct-volume&#x2F;resize、&#x2F;iptables、&#x2F;ip6tables 以及 Pprof，注册上报至 Prometheus 的 shim 相关指标以及 sandbox 相关指标</p>
+</li>
+</ol>
+<p><em><strong>pod_container</strong></em></p>
+<ol>
+<li>校验 service.sandbox 是否不为空（因为 pod_container 的运行是要依托于 pod_sandbox）</li>
+<li>检查容器的 rootfs 目录是否需要挂载<ol>
+<li>如果请求中 r.Rootfs 指定了一个，则判断其是否为块设备，并且 [hypervisor].disable_block_device_use 为 false（disable_block_device_use 禁止块设备用于容器的 rootfs。 在像 devicemapper 这样的存储驱动程序中，容器的 rootfs 由块设备支持，出于性能原因，块设备直接传递给 hypervisor。 这个标志阻止块设备被传递给 hypervisor，而使用 virtio-fs 传递 rootfs）；或者，rootfs 的类型为 fuse.nydus-overlayfs。满足条件之一，即不需要挂载，而是走后续的热插流程</li>
+<li>创建 rootfs 目录（如果不存在），遍历 r.Rootfs，挂载 rootfs 目录</li>
+</ol>
+</li>
+<li>基于上述构建的 OCI spec、runtimeConfig、rootfs、bundle、containerID 等信息创建 container 类型容器<ol>
+<li>遍历 spec.Mounts，如果挂载源路径由 K8s 临时存储（即路径中有 kubernetes.io~empty-dir 标识，且文件类型为 tmpfs），则将 spec.Mounts 中对应挂载点的类型设置为 ephemeral；如果挂载源路径由 K8s emptydir（即路径中有 kubernetes.io~empty-dir 标识，且文件类型不为 tmpfs） 且 runtimeConfig 没有禁用 disable_guest_empty_dir（如果启用，将不会在 guest 的文件系统中创建 emptydir 挂载，而是在 host 上创建，由 virtiofs 共享，性能较差，但是可以实现 host 和 guest 共享文件），则将 spec.Mounts 中对应挂载点的类型设置为 local （对于给定的 Pod，临时卷仅在 VM 内由 tmpfs 支持时创建一次。 对于同一 Pod 的连续容器，将重复使用已经存在的卷）</li>
+<li>将 OCI spec 和 runtimeConfig 转为 virtcontainers 所需的配置结构（即 containerConfig）</li>
+<li>根据 spec.Annotations 中的 io.kubernetes.cri.sandbox-id、io.kubernetes.cri-SandboxID 和 io.kubernetes.sandbox.id 的 key（分别代表 Containerd、CRI-O 和 Dockershim 三种 CRI），获取到 value（value 即为 sandboxID）</li>
+<li>调用 VCSandbox 的 <strong>CreateContainer</strong>，创建容器</li>
+<li>进入到 sandbox 的网络命名空间中（如果有），执行 spec.Hooks.Prestart（Prestart 是在执行容器进程之前要运行的 hook 列表，现已废弃） 中定义的动作</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>构建并返回容器</p>
+</li>
+</ol>
+<h2 id="Start"><a href="#Start" class="headerlink" title="Start"></a>Start</h2><p><strong>启动容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L440">source code</a></p>
+<ol>
+<li><p>请求体和返回体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> StartRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span></span><br><span class="line">	ExecID               <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> StartResponse <span class="keyword">struct</span> &#123;</span><br><span class="line">	Pid                  <span class="type">uint32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>如果 r.ExecID 为空，则调用 <strong>startContainer</strong>，启动容器，并发送 TaskStart 事件至 service.events 中；否则，调用 <strong>startExec</strong>，启动 exec 进程，并发送 TaskExecStart 事件至 service.events 中</p>
+</li>
+</ol>
+<h3 id="startContainer"><a href="#startContainer" class="headerlink" title="startContainer"></a>startContainer</h3><p><strong>处理启动容器请求</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/start.go#L18">source code</a></p>
+<ol>
+<li>如果容器类型为 pod_sandbox<ol>
+<li>调用 VCSandbox 的 <strong>Start</strong>，启动 sandbox</li>
+<li>调用 VCSandbox 的 <strong>Monitor</strong>，启动 monitor，并设置在 service.monitor 中</li>
+<li>启动 goroutine，监听 service.monitor 中的错误和退出信号。如果监听到（视为异常），则调用 VCSandbox 的 <strong>Stop</strong> 和 <strong>Delete</strong>，关停与销毁 sandbox 并清理相关资源</li>
+<li>移除 rootfs 挂载点（注意：此处清理的为 &#x2F;run&#x2F;containerd&#x2F;io.containerd.runtime.v2.task&#x2F;k8s.io&#x2F;&lt;containerID&gt;&#x2F;rootfs，而共享目录下的 rootfs 在上述步骤 3 中已经清理）</li>
+<li>启动 goroutine，调用 VCSandbox 的 <strong>GetOOMEvent</strong>（如果是由于 Kata agent 关停，返回类似 ttrpc: closed 或者 Dead agent 的错误时，则不再监听；其他异常情况，仍重新尝试调用接口），监听 OOM 事件。当收到 OOM 事件后，如果 container manager 为 CRI-O 时，则在例如 &#x2F;run&#x2F;containerd&#x2F;io.containerd.runtime.v2.task&#x2F;k8s.io&#x2F;&lt;containerID&gt; 目录下，创建名为 oom 的文件，用于通知 CRI-O；如果 container manager 为 Containerd 时，则发送 TaskOOM 事件至 service.events 中</li>
+</ol>
+</li>
+<li>如果容器的类型不为 pod_sandbox，则调用 VCSandbox 的 <strong>StartContainer</strong>，启动容器</li>
+<li>进入到 sandbox 的网络命名空间中（如果有），执行 spec.Hooks.Poststart（Poststart 是在容器进程启动后要运行的 hook 列表） 中定义的动作</li>
+<li>设置容器状态为 running</li>
+<li>调用 VCSandbox 的 <strong>IOStream</strong>，启动 goroutine，实时处理容器中的标准输出等 IO 流</li>
+<li>启动 goroutine，处理容器中的退出队列 ，即先等到容器 IO 退出事件后，再调用 VCSandbox 的 <strong>WaitProcess</strong>，进一步等待进程返回退出码后执行后续清理流程：如果容器类型为 pod_sandbox，则关停 monitor，调用 VCSandbox 的 <strong>Stop</strong> 和 <strong>Delete</strong>，关停与销毁 sandbox，并清理相关资源；否则，调用 VCSandbox 的 <strong>StopContainer</strong>，关停容器。设置容器状态为 stopped，记录退出时间，状态码等<br><em>例如，当 Pod 启动之后，pod_sandbox 容器会退出，此时可以收到 pod_sandbox 容器的 IO 退出事件，但是在 WaitProcess 时，不会有返回，因此不会执行 sandbox 的关停与销毁流程；而当 Pod 删除时，pod_sandbox 的 WaitProcess 收到结果，伴随着其余的业务容器一起关停并删除</em></li>
+<li>启动 goroutine，发送退出消息至 service.ec 中</li>
+</ol>
+<h3 id="startExec"><a href="#startExec" class="headerlink" title="startExec"></a>startExec</h3><p><strong>处理进入容器请求</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/start.go#L100">source code</a></p>
+<ol>
+<li>通过 r.ID 获取维护在 service.containers 中的容器</li>
+<li>通过 r.ExecID 获取维护在 container.execs 中的 exec</li>
+<li>调用 VCSandbox 的 <strong>EnterContainer</strong>，进入容器内部</li>
+<li>设置 exec 状态为 running</li>
+<li>调用 VCSandbox 的 <strong>WinsizeProcess</strong>，调整 tty 大小</li>
+<li>调用 VCSandbox 的 <strong>IOStream</strong>，启动 goroutine，实时处理容器中的标准输出等 IO 流</li>
+<li>启动 goroutine，处理 exec 中的退出队列 ，即先等到容器 IO 退出事件后，再调用 VCSandbox 的 <strong>WaitProcess</strong>，进一步等待进程返回退出码后执行后续流程。设置 exec 状态为 stopped，记录退出时间，状态码等</li>
+<li>启动 goroutine，发送退出消息至 service.ec 中</li>
+</ol>
+<h2 id="Delete"><a href="#Delete" class="headerlink" title="Delete"></a>Delete</h2><p><strong>删除容器或者 exec 进程</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L493">source code</a></p>
+<ol>
+<li><p>请求体和返回体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> DeleteRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span></span><br><span class="line">	ExecID               <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> DeleteResponse <span class="keyword">struct</span> &#123;</span><br><span class="line">	Pid                  <span class="type">uint32</span></span><br><span class="line">	ExitStatus           <span class="type">uint32</span></span><br><span class="line">	ExitedAt             time.Time </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>如果 r.ExecID 为空，则调用 <strong>deleteContainer</strong>，删除容器，并发送 TaskDelete 事件至 service.events 中；否则，直接删除 container.execs 中 key 为 r.ExecID 的 exec</p>
+</li>
+</ol>
+<h3 id="deleteContainer"><a href="#deleteContainer" class="headerlink" title="deleteContainer"></a>deleteContainer</h3><p><strong>删除指定容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/delete.go#L17">source code</a></p>
+<ol>
+<li>如果容器的类型不是 pod_sandbox，则先调用 VCSandbox 的 <strong>StopContainer</strong>，关停容器（如果容器状态不为 stopped），并调用 VCSandbox 的 <strong>DeleteContainer</strong>，删除容器</li>
+<li>执行 spec.Hooks.Poststop（Poststop 是在容器进程退出后要运行的 hook 列表）中定义的动作</li>
+<li>如果容器文件系统已经挂载完成，则移除 rootfs 挂载点（例如 &#x2F;run&#x2F;containerd&#x2F;io.containerd.runtime.v2.task&#x2F;k8s.io&#x2F;&lt;containerID&gt;&#x2F;rootfs，其在 host 上以 overlay 挂载点形式存在）</li>
+<li>删除 s.containers 中的 key 为 r.ID 的容器</li>
+</ol>
+<h2 id="Pids"><a href="#Pids" class="headerlink" title="Pids"></a>Pids</h2><p><strong>返回容器内的所有进程 ID，对于 Kata Containers 而言，无法从 VM 获取进程 PID，因此只返回 hypervisor 的 PID</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L829">source code</a></p>
+<ol>
+<li><p>请求体和返回体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> PidsRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> PidsResponse <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// task.ProcessInfo&#123;</span></span><br><span class="line">	<span class="comment">//   Pid: s.hpid,</span></span><br><span class="line">	<span class="comment">// &#125;</span></span><br><span class="line">	Processes            []*task.ProcessInfo</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Pause"><a href="#Pause" class="headerlink" title="Pause"></a>Pause</h2><p><strong>暂停容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L684">source code</a></p>
+<ol>
+<li><p>请求体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> PauseRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>设置容器状态为 pausing</p>
+</li>
+<li><p>调用 VCSandbox 的 <strong>PauseContainer</strong>，暂停容器</p>
+</li>
+<li><p>如果暂停成功，则设置容器状态为 paused，并发送 TaskPaused 事件至 service.events 中；否则，调用 VCSandbox 的 <strong>StatusContainer</strong>，查询容器状态（分为 ready、running、paused 和 stopped），如果查询失败，则实际状态视为 unknown，设置容器状态为查询到的实际结果</p>
+</li>
+</ol>
+<h2 id="Resume"><a href="#Resume" class="headerlink" title="Resume"></a>Resume</h2><p><strong>恢复容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L725">source code</a></p>
+<ol>
+<li><p>请求体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ResumeRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>调用 VCSandbox 的 <strong>ResumeContainer</strong>，恢复容器</p>
+</li>
+<li><p>如果恢复成功，则设置容器状态为 running，并发送 TaskResumed 事件至 service.events 中；否则，调用 VCSandbox 的 <strong>StatusContainer</strong>，查询容器状态（分为 ready、running、paused 和 stopped），如果查询失败，则实际状态视为 unknown，设置容器状态为查询到的实际结果</p>
+</li>
+</ol>
+<h2 id="Checkpoint"><a href="#Checkpoint" class="headerlink" title="Checkpoint"></a>Checkpoint</h2><p><strong>创建容器检查点</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L897">source code</a></p>
+<ol>
+<li><p>请求体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> CheckpointTaskRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span>      </span><br><span class="line">	Path                 <span class="type">string</span>      </span><br><span class="line">	Options              *types1.Any</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>截至 Kata 3.0，尚未实现该接口</p>
+</li>
+</ol>
+<h2 id="Kill"><a href="#Kill" class="headerlink" title="Kill"></a>Kill</h2><p><strong>根据指定信号杀死进程</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L764">source code</a></p>
+<ol>
+<li><p>请求体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> KillRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span>   </span><br><span class="line">	ExecID               <span class="type">string</span>  </span><br><span class="line">	Signal               <span class="type">uint32</span>  </span><br><span class="line">	All                  <span class="type">bool</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>以容器状态与 ID 作为待杀死进程的信息，如果 r.ExecID 不为空，则以通过 r.ExecID 获取维护在 container.execs 中的 exec 属性为准</p>
+</li>
+<li><p>如果信号为 SIGKILL 或者 SIGTERM，并且进程状态已经为 stopped，则不做处理，直接返回即可（根据 CRI 规范，Kubelet 在调用 RemovePodSandbox 之前至少会调用一次 StopPodSandbox ，此调用是幂等的，并且如果所有相关资源都已被回收则不得返回错误。 在调用中它会先发送一个 SIGKILL 信号来尝试停止容器，因此一旦容器终止，应该忽略这个信号并直接返回）；否则，调用 VCSandbox 的 <strong>SignalProcess</strong>，杀死进程</p>
+</li>
+</ol>
+<h2 id="Exec"><a href="#Exec" class="headerlink" title="Exec"></a>Exec</h2><p><strong>在容器中追加一个额外的进程</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L547">source code</a></p>
+<ol>
+<li><p>请求体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ExecProcessRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span>  </span><br><span class="line">	ExecID               <span class="type">string</span> </span><br><span class="line">	Terminal             <span class="type">bool</span>        </span><br><span class="line">	Stdin                <span class="type">string</span>      </span><br><span class="line">	Stdout               <span class="type">string</span>      </span><br><span class="line">	Stderr               <span class="type">string</span>   </span><br><span class="line">	Spec                 *types1.Any</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>校验 r.ExecID 是否在 container.execs 不存在</p>
+</li>
+<li><p>基于 r.Stdin、r.Stdout、r.Stderr、r.Terminal 和 r.Spec 构建 exec，维护在 container.execs 中，并发送 TaskExecAdded 事件至 service.events 中</p>
+</li>
+</ol>
+<h2 id="ResizePty"><a href="#ResizePty" class="headerlink" title="ResizePty"></a>ResizePty</h2><p><strong>调整进程的 pty 大小</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L587">source code</a></p>
+<ol>
+<li><p>请求体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ResizePtyRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span> </span><br><span class="line">	ExecID               <span class="type">string</span> </span><br><span class="line">	Width                <span class="type">uint32</span>  </span><br><span class="line">	Height               <span class="type">uint32</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>以 container.ID 作为待处理进程的 ID，如果 r.ExecID 不为空，则通过 r.ExecID 获取维护在 container.execs 中的 exec.ID 为准，并更新 r.Width 和 r.Height 至 exec 中</p>
+</li>
+<li><p>调用 VCSandbox 的 <strong>WinsizeProcess</strong>，调整待处理进程的 pty 大小</p>
+</li>
+</ol>
+<h2 id="CloseIO"><a href="#CloseIO" class="headerlink" title="CloseIO"></a>CloseIO</h2><p><strong>关闭进程的 IO 流</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L854">source code</a></p>
+<ol>
+<li><p>请求体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> CloseIORequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span></span><br><span class="line">	ExecID               <span class="type">string</span>   </span><br><span class="line">	Stdin                <span class="type">bool</span>    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>以 container.stdinPipe 和 container.stdinCloser 作为待处理进程 IO 的信息，如果 r.ExecID 不为空，则以通过 r.ExecID 获取维护在 container.execs 中的 exec 信息为准</p>
+</li>
+<li><p>直至 stdinCloser channel 不再阻塞，调用 stdinPipe 的 Close 方法关闭 IO 流</p>
+</li>
+</ol>
+<h2 id="Update"><a href="#Update" class="headerlink" title="Update"></a>Update</h2><p><strong>更新容器</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L1012">source code</a></p>
+<ol>
+<li><p>请求体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> UpdateTaskRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span>            </span><br><span class="line">	Resources            *types1.Any      </span><br><span class="line">	Annotations          <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span> </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>调用 VCSandbox 的 <strong>UpdateContainer</strong>，更新容器的资源规格</p>
+</li>
+</ol>
+<h2 id="Wait"><a href="#Wait" class="headerlink" title="Wait"></a>Wait</h2><p><strong>等待进程退出</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L1046">source code</a></p>
+<ol>
+<li><p>请求体和返回体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> WaitRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span></span><br><span class="line">	ExecID               <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> WaitResponse <span class="keyword">struct</span> &#123;</span><br><span class="line">	ExitStatus           <span class="type">uint32</span>   </span><br><span class="line">	ExitedAt             time.Time</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>从 container.exitCh 中获取退出状态码，并重新回填至 container.exitCh（用容器进程的退出代码重新填充 exitCh，以防此进程有其他等待），如果 r.ExecID 不为空，则以通过 r.ExecID 获取维护在 container.execs 中的 exec.exitCh 为准</p>
+</li>
+</ol>
+<h2 id="Stats"><a href="#Stats" class="headerlink" title="Stats"></a>Stats</h2><p><strong>获取容器的统计信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L981">source code</a></p>
+<ol>
+<li><p>请求体和返回体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> StatsRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span> </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> StatsResponse <span class="keyword">struct</span> &#123;</span><br><span class="line">	Stats                *types1.Any</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过 r.ID 获取维护在 service.containers 中的容器</p>
+</li>
+<li><p>调用 VCSandbox 的 <strong>StatsContainer</strong>，获取容器的 Hugetlb、Pids、CPU、Memory、Blkio 和 Network 统计信息</p>
+</li>
+</ol>
+<h2 id="Connect"><a href="#Connect" class="headerlink" title="Connect"></a>Connect</h2><p><strong>返回 shim 相关信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L913">source code</a></p>
+<ol>
+<li><p>请求体和返回体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ConnectRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ConnectResponse <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// 即 service.pid</span></span><br><span class="line">	ShimPid              <span class="type">uint32</span></span><br><span class="line">	<span class="comment">// 即 service.hpid</span></span><br><span class="line">	TaskPid              <span class="type">uint32</span>   </span><br><span class="line">	Version              <span class="type">string</span>  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="Shutdown"><a href="#Shutdown" class="headerlink" title="Shutdown"></a>Shutdown</h2><p><strong>关闭 shim server</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L935">source code</a></p>
+<ol>
+<li><p>请求体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> ShutdownRequest <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID                   <span class="type">string</span></span><br><span class="line">	Now                  <span class="type">bool</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>如果 service.containers 中仍有元素，代表 shim server 仍然管理容器中，因此仅关闭 tracing，不作其他处理，直接返回</p>
+</li>
+<li><p>调用 service.cancel 退出 shim server（cancel 由 Containerd 服务注册声明）</p>
+</li>
+<li><p>向 service.hpid 发送 SIGKILL 信号（由于只是在执行 stopSandbox 时向 QEMU 发送了一个 shutdown qmp 命令，并没有等到 QEMU 进程退出，这里最好确保它在 shim server 终止时已经退出。 因此，这里要对 hypervisor 进行最后的清理）</p>
+</li>
+<li><p>调用 os.Exit(0)，退出程序</p>
+</li>
+</ol>
+<h2 id="Cleanup"><a href="#Cleanup" class="headerlink" title="Cleanup"></a>Cleanup</h2><p><strong>清理容器相关资源</strong></p>
+<p><em>Cleanup 并未用于实现 shimv2 API，而是 Service 的功能扩展，用于在执行 containerd-shim-kata-v2 delete 操作时触发容器清理流程</em></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/service.go#L323">source code</a></p>
+<ol>
+<li><p>返回体结构如下</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> DeleteResponse <span class="keyword">struct</span> &#123;</span><br><span class="line">	Pid                  <span class="type">uint32</span></span><br><span class="line">	ExitStatus           <span class="type">uint32</span></span><br><span class="line">	ExitedAt             time.Time</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>设置日志输出至 stderr 中（因此，日志信息并不会出现在 Kata 服务中）</p>
+</li>
+<li><p>获取当前目录下（例如 &#x2F;run&#x2F;containerd&#x2F;io.containerd.runtime.v2.task&#x2F;k8s.io&#x2F;&lt;containerID&gt; 目录，流程需要在此路径下执行 ）的 config.json 文件，解析成 OCI spec 格式，判断其容器类型</p>
+</li>
+<li><p>如果容器类型是 pod_container，则通过 spec.Annotation 中获取到 sandboxID；如果容器类型是 pod_sandbox 或者 single_container，sandboxID 即为 service.id</p>
+</li>
+<li><p>调用 VC 的 <strong>CleanupContainer</strong>，清理容器</p>
+</li>
+<li><p>移除 rootfs 挂载点（例如 &#x2F;run&#x2F;containerd&#x2F;io.containerd.runtime.v2.task&#x2F;k8s.io&#x2F;&lt;containerID&gt;&#x2F;rootfs）</p>
+</li>
+</ol>
+<hr>
+<h1 id="ShimManagement"><a href="#ShimManagement" class="headerlink" title="ShimManagement"></a>ShimManagement</h1><p>shim server 对外暴露的 HTTP 服务。</p>
+<h2 id="agentURL"><a href="#agentURL" class="headerlink" title="agentURL"></a>agentURL</h2><p><strong>处理 &#x2F;agent-url 请求，返回 agent 的地址</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/shim_management.go#L56">source code</a></p>
+<ol>
+<li>调用 VCSandbox 的 <strong>GetAgentURL</strong>，获取 agent 地址并返回</li>
+</ol>
+<h2 id="serveMetrics"><a href="#serveMetrics" class="headerlink" title="serveMetrics"></a>serveMetrics</h2><p><strong>处理 &#x2F;metrics 请求，返回 guest、shim 和 agent 相关的指标</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/shim_management.go#L68">source code</a></p>
+<ol>
+<li>调用 VCSandbox 的 <strong>UpdateRuntimeMetrics</strong>，更新 guest 指标（更新就是重新获取指标，重新设置在 Prometheus 中）</li>
+<li>更新当前进程（即 shimPID）的指标<ol>
+<li>获取 &#x2F;proc&#x2F;&lt;shimPID&gt;&#x2F;fd 目录下的文件数量，上报 kata_shim_fds 指标</li>
+<li>解析 &#x2F;proc&#x2F;&lt;shimPID&gt;&#x2F;stat 文件内容，上报 kata_shim_proc_stat 指标</li>
+<li>解析 &#x2F;proc&#x2F;&lt;shimPID&gt;&#x2F;status 文件内容，上报 kata_shim_proc_status 指标</li>
+<li>解析 &#x2F;proc&#x2F;&lt;shimPID&gt;&#x2F;io 文件内容，上报 kata_shim_io 指标</li>
+</ol>
+</li>
+<li>如果使用旧版本的 agent（现阶段均为新版本），则不支持获取 agent 指标，直接返回 VM 和 shim 指标即可</li>
+<li>调用 VCSandbox 的 <strong>GetAgentMetrics</strong>，获取 agent 指标（在这里，如果获取不到，则视为当前使用旧版本的 agent，后续则由步骤 3 直接返回）</li>
+<li>启动 goroutine，上报 pod_overhead_cpu 和 pod_overhead_memory_in_bytes 至 Prometheus（收集 Pod overhead 指标需要 sleep 来获取 cpu&#x2F;memory 资源使用的变化，所以这里只触发 collect 操作，下次从 Prometheus server 收集请求时收集数据）<ol>
+<li>调用 VCSandbox 的 <strong>Stats</strong>，获取 sandbox 的 cgroup 相关信息；调用 VCSandbox 的 <strong>GetAllContainers</strong>，获取所有容器，并逐一调用 VCSandbox 的 <strong>StatsContainer</strong>，获取容器的 cgroup 相关信息</li>
+<li>间隔 1 秒钟，重复步骤 1，再次获取 sandbox 和容器的 cgroup 相关信息</li>
+<li>根据两次数据信息以及总耗时，计算 overhead 指标</li>
+</ol>
+</li>
+</ol>
+<h2 id="serveVolumeStats"><a href="#serveVolumeStats" class="headerlink" title="serveVolumeStats"></a>serveVolumeStats</h2><p><strong>处理 &#x2F;direct-volume&#x2F;stats 请求，返回 guest 中指定卷的信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/shim_management.go#L147">source code</a></p>
+<ol>
+<li>校验请求中 path 参数是否不为空</li>
+<li>调用 VCSandbox 的 <strong>GuestVolumeStats</strong>，获取 guest 中指定卷的信息并返回</li>
+</ol>
+<h2 id="serveVolumeResize"><a href="#serveVolumeResize" class="headerlink" title="serveVolumeResize"></a>serveVolumeResize</h2><p><strong>处理 &#x2F;direct-volume&#x2F;resize 请求，扩容 guest 中指定卷的大小</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/shim_management.go#L175">source code</a></p>
+<ol>
+<li>读取请求体，并解构成 VCSandbox 所需的格式</li>
+<li>调用 VCSandbox 的 <strong>ResizeGuestVolume</strong>，扩容 guest 中指定卷的大小</li>
+</ol>
+<h2 id="ipTablesHandler、ip6TablesHandler"><a href="#ipTablesHandler、ip6TablesHandler" class="headerlink" title="ipTablesHandler、ip6TablesHandler"></a>ipTablesHandler、ip6TablesHandler</h2><p><strong>处理 &#x2F;iptables 和 &#x2F;ip6tables请求，操作 guest 中的 iptables 信息</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/shim_management.go#L206">source code (ipTablesHandler)</a><br><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/shim_management.go#L202">source code (ip6TablesHandler)</a></p>
+<ol>
+<li>两者本质相似，区别在于 ip6TablesHandler 的 isIPv6 参数为 true，后续调用接口时，会传递该参数</li>
+<li>判断请求方法，目前仅支持 PUT 和 GET 两种，其余返回状态码 501。如果为 PUT 请求，则读取请求体，调用 VCSandbox 的 <strong>SetIPTables</strong>，设置 guest 中的 iptables 信息；如果为 GET 请求，调用 VCSandbox 的 <strong>GetIPTables</strong>，获取 guest 中的 iptables 信息</li>
+</ol>
+<hr>
+<h1 id="EventForwarder"><a href="#EventForwarder" class="headerlink" title="EventForwarder"></a>EventForwarder</h1><p><em><u>src&#x2F;runtime&#x2F;pkg&#x2F;containerd-shim-v2&#x2F;event_forwarder.go</u></em></p>
+<p>EventForwarder 为事件上报模块，其中事件源自于 forwarder 中的 service.events。forwarder 包括两类：log 与 containerd，取决于事件最终上报的地点。每一个事件默认上报超时时间为 5 秒钟，超出会被取消上报。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> logForwarder <span class="keyword">struct</span> &#123;</span><br><span class="line">	s *service</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> containerdForwarder <span class="keyword">struct</span> &#123;</span><br><span class="line">	s         *service</span><br><span class="line">	ctx       context.Context</span><br><span class="line">	publisher events.Publisher</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中，publisher 由 Containerd 调用时提供。</p>
+<p><strong>工厂函数</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/event_forwarder.go#L71">source code</a></p>
+<ol>
+<li>如果环境变量中声明了 TTRPC_ADDRESS，则初始化 containerdForwarder，否则初始化 logForwarder</li>
+</ol>
+<h2 id="forward"><a href="#forward" class="headerlink" title="forward"></a>forward</h2><p><strong>处理事件上报</strong></p>
+<h3 id="logForwarder"><a href="#logForwarder" class="headerlink" title="logForwarder"></a>logForwarder</h3><p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/event_forwarder.go#L40">source code</a></p>
+<ol>
+<li>监听 service.events 中的事件，断言其的类型，获得事件的 topic</li>
+<li>在 containerd-kata-shim-v2 模块的日志中输出事件内容</li>
+</ol>
+<h3 id="containerdForwarder"><a href="#containerdForwarder" class="headerlink" title="containerdForwarder"></a>containerdForwarder</h3><p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/event_forwarder.go#L56">source code</a></p>
+<ol>
+<li>监听 service.events 中的事件，断言其的类型，获得事件的 topic</li>
+<li>调用 Containerd 的 publisher 模块的 Publish（Containerd 负责实现），上报事件至 Containerd</li>
+</ol>
+<h2 id="forwarderType"><a href="#forwarderType" class="headerlink" title="forwarderType"></a>forwarderType</h2><p><strong>forwarder 的具体类型</strong></p>
+<h3 id="logForwarder-1"><a href="#logForwarder-1" class="headerlink" title="logForwarder"></a>logForwarder</h3><p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/event_forwarder.go#L46">source code</a></p>
+<ol>
+<li>类型为 log</li>
+</ol>
+<h3 id="containerdForwarder-1"><a href="#containerdForwarder-1" class="headerlink" title="containerdForwarder"></a>containerdForwarder</h3><p><a target="_blank" rel="noopener" href="https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/containerd-shim-v2/event_forwarder.go#L67">source code</a></p>
+<ol>
+<li>类型为 containerd</li>
+</ol>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Kata Containers 」源码走读 — containerd-shim-kata-v2</p><p><a href="http://shenxianghong.github.io/2023/01/21/2023-01-21 Kata Containers 源码走读 - containerd-shim-kata-v2/">http://shenxianghong.github.io/2023/01/21/2023-01-21 Kata Containers 源码走读 - containerd-shim-kata-v2/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2023-01-21</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-05-04</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><hr style="height:1px;margin:1rem 0"><div class="level is-mobile is-flex"><div class="article-tags is-size-7 is-uppercase"><i class="fas fa-tags has-text-grey"></i> <a class="link-muted" rel="tag" href="/tags/Kata-Containers/">Kata Containers </a></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2023/01/29/2023-01-29%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20kata-monitor/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Kata Containers 」源码走读 — kata-monitor</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/11/26/2022-11-26%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20kata-runtime/"><span class="level-item">「 Kata Containers 」源码走读 — kata-runtime</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">50</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">7</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">9</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/shenxianghong" target="_blank" rel="noopener">Follow</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Youtube" href="https://youtube.com"><i class="fab fa-youtube"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Bilibili" href="https://bilibili.com"><i class="fab fa-bilibili"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Reddit" href="https://reddit.com"><i class="fab fa-reddit"></i></a></div></div></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://google.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Google</span></span><span class="level-right"><span class="level-item tag">google.com</span></span></a></li><li><a class="level is-mobile" href="https://freegpt.one" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">ChatGPT</span></span><span class="level-right"><span class="level-item tag">freegpt.one</span></span></a></li></ul></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#Service"><span class="level-left"><span class="level-item">1</span><span class="level-item">Service</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#State"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">State</span></span></a></li><li><a class="level is-mobile" href="#Create"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">Create</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#create"><span class="level-left"><span class="level-item">1.2.1</span><span class="level-item">create</span></span></a></li></ul></li><li><a class="level is-mobile" href="#Start"><span class="level-left"><span class="level-item">1.3</span><span class="level-item">Start</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#startContainer"><span class="level-left"><span class="level-item">1.3.1</span><span class="level-item">startContainer</span></span></a></li><li><a class="level is-mobile" href="#startExec"><span class="level-left"><span class="level-item">1.3.2</span><span class="level-item">startExec</span></span></a></li></ul></li><li><a class="level is-mobile" href="#Delete"><span class="level-left"><span class="level-item">1.4</span><span class="level-item">Delete</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#deleteContainer"><span class="level-left"><span class="level-item">1.4.1</span><span class="level-item">deleteContainer</span></span></a></li></ul></li><li><a class="level is-mobile" href="#Pids"><span class="level-left"><span class="level-item">1.5</span><span class="level-item">Pids</span></span></a></li><li><a class="level is-mobile" href="#Pause"><span class="level-left"><span class="level-item">1.6</span><span class="level-item">Pause</span></span></a></li><li><a class="level is-mobile" href="#Resume"><span class="level-left"><span class="level-item">1.7</span><span class="level-item">Resume</span></span></a></li><li><a class="level is-mobile" href="#Checkpoint"><span class="level-left"><span class="level-item">1.8</span><span class="level-item">Checkpoint</span></span></a></li><li><a class="level is-mobile" href="#Kill"><span class="level-left"><span class="level-item">1.9</span><span class="level-item">Kill</span></span></a></li><li><a class="level is-mobile" href="#Exec"><span class="level-left"><span class="level-item">1.10</span><span class="level-item">Exec</span></span></a></li><li><a class="level is-mobile" href="#ResizePty"><span class="level-left"><span class="level-item">1.11</span><span class="level-item">ResizePty</span></span></a></li><li><a class="level is-mobile" href="#CloseIO"><span class="level-left"><span class="level-item">1.12</span><span class="level-item">CloseIO</span></span></a></li><li><a class="level is-mobile" href="#Update"><span class="level-left"><span class="level-item">1.13</span><span class="level-item">Update</span></span></a></li><li><a class="level is-mobile" href="#Wait"><span class="level-left"><span class="level-item">1.14</span><span class="level-item">Wait</span></span></a></li><li><a class="level is-mobile" href="#Stats"><span class="level-left"><span class="level-item">1.15</span><span class="level-item">Stats</span></span></a></li><li><a class="level is-mobile" href="#Connect"><span class="level-left"><span class="level-item">1.16</span><span class="level-item">Connect</span></span></a></li><li><a class="level is-mobile" href="#Shutdown"><span class="level-left"><span class="level-item">1.17</span><span class="level-item">Shutdown</span></span></a></li><li><a class="level is-mobile" href="#Cleanup"><span class="level-left"><span class="level-item">1.18</span><span class="level-item">Cleanup</span></span></a></li></ul></li><li><a class="level is-mobile" href="#ShimManagement"><span class="level-left"><span class="level-item">2</span><span class="level-item">ShimManagement</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#agentURL"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">agentURL</span></span></a></li><li><a class="level is-mobile" href="#serveMetrics"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">serveMetrics</span></span></a></li><li><a class="level is-mobile" href="#serveVolumeStats"><span class="level-left"><span class="level-item">2.3</span><span class="level-item">serveVolumeStats</span></span></a></li><li><a class="level is-mobile" href="#serveVolumeResize"><span class="level-left"><span class="level-item">2.4</span><span class="level-item">serveVolumeResize</span></span></a></li><li><a class="level is-mobile" href="#ipTablesHandler、ip6TablesHandler"><span class="level-left"><span class="level-item">2.5</span><span class="level-item">ipTablesHandler、ip6TablesHandler</span></span></a></li></ul></li><li><a class="level is-mobile" href="#EventForwarder"><span class="level-left"><span class="level-item">3</span><span class="level-item">EventForwarder</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#forward"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">forward</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#logForwarder"><span class="level-left"><span class="level-item">3.1.1</span><span class="level-item">logForwarder</span></span></a></li><li><a class="level is-mobile" href="#containerdForwarder"><span class="level-left"><span class="level-item">3.1.2</span><span class="level-item">containerdForwarder</span></span></a></li></ul></li><li><a class="level is-mobile" href="#forwarderType"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">forwarderType</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#logForwarder-1"><span class="level-left"><span class="level-item">3.2.1</span><span class="level-item">logForwarder</span></span></a></li><li><a class="level is-mobile" href="#containerdForwarder-1"><span class="level-left"><span class="level-item">3.2.2</span><span class="level-item">containerdForwarder</span></span></a></li></ul></li></ul></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Code-Walkthrough/"><span class="level-start"><span class="level-item">Code Walkthrough</span></span><span class="level-end"><span class="level-item tag">17</span></span></a></li><li><a class="level is-mobile" href="/categories/Getting-Started/"><span class="level-start"><span class="level-item">Getting Started</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Meetup/"><span class="level-start"><span class="level-item">Meetup</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Overview/"><span class="level-start"><span class="level-item">Overview</span></span><span class="level-end"><span class="level-item tag">13</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/"><span class="level-start"><span class="level-item">Programming</span></span><span class="level-end"><span class="level-item tag">7</span></span></a><ul><li><a class="level is-mobile" href="/categories/Programming/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/Quick-Start/"><span class="level-start"><span class="level-item">Quick Start</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7"><br/>And did you get what you wanted from this life, even so?</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><script src="/js/night.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>

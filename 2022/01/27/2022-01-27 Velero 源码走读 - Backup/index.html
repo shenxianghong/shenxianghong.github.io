@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Velero 」源码走读 — Backup - 🐾Corgi</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="🐾Corgi"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="🐾Corgi"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Velero 中与 Backup 相关的源码走读"><meta property="og:type" content="blog"><meta property="og:title" content="「 Velero 」源码走读 — Backup"><meta property="og:url" content="http://shenxianghong.github.io/2022/01/27/2022-01-27%20Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Backup/"><meta property="og:site_name" content="🐾Corgi"><meta property="og:description" content="Velero 中与 Backup 相关的源码走读"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://picsum.photos/0?sig=20220127"><meta property="article:published_time" content="2022-01-26T16:00:00.000Z"><meta property="article:modified_time" content="2023-05-04T00:54:28.328Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Velero"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://picsum.photos/0?sig=20220127"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://shenxianghong.github.io/2022/01/27/2022-01-27%20Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Backup/"},"headline":"「 Velero 」源码走读 — Backup","image":[],"datePublished":"2022-01-26T16:00:00.000Z","dateModified":"2023-05-04T00:54:28.328Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"🐾Corgi","logo":{"@type":"ImageObject","url":"http://shenxianghong.github.io/img/logo.svg"}},"description":"Velero 中与 Backup 相关的源码走读"}</script><link rel="canonical" href="http://shenxianghong.github.io/2022/01/27/2022-01-27%20Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Backup/"><link rel="alternate" href="/atom.xml" title="🐾Corgi" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/xcode.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item night" id="night-nav" title="Night Mode" href="javascript:;"><i class="fas fa-moon" id="night-icon"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="https://picsum.photos/0?sig=20220127" alt="「 Velero 」源码走读 — Backup"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><i class="fa fa-calendar"></i> <time dateTime="${date_xml(page.date)}" title="${date_xml(page.date)}">2022-01-27</time></span><span class="level-item is-hidden-mobile"><i class="fa fa-calendar-check"></i> <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">2023-05-04</time></span><span class="level-item"><i class="far fa-folder-open"></i> <a class="link-muted" href="/categories/Code-Walkthrough/">Code Walkthrough</a></span><span class="level-item"><i class="far fa-clock"></i> an hour read (About 7611 words)</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Velero 」源码走读 — Backup</h1><div class="content"><div align=center><img width="170" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+
+<hr>
+<blockquote>
+<p>Based on <strong>v1.6.3</strong></p>
+</blockquote>
+<h1 id="Backup"><a href="#Backup" class="headerlink" title="Backup"></a>Backup</h1><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/release-1.6/pkg/apis/velero/v1/backup.go">API</a></p>
+<h2 id="backup"><a href="#backup" class="headerlink" title="backup"></a>backup</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup&#x2F;backup.go</u></em></p>
+<p>velero backup 包括 6 个子命令：create、delete、describe、download、get 和 logs。</p>
+<h2 id="create"><a href="#create" class="headerlink" title="create"></a>create</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup&#x2F;create.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>必须指定 Backup 名称，除非指定了 –from-schedule 参数</li>
+<li>在指定 –storage-location 参数时，其在集群中必须存在</li>
+<li>在指定 –volume-snapshot-locations 参数时，其在集群中必须存在</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>根据命令行参数，构建 Backup 对象，下发至集群中创建，后续由 Backup Controller 负责维护</li>
+<li>如果开启了 –wait，则启动 informer 监听 Backup 对象状态，阻塞直至状态不再是 New 或者 InProgress</li>
+</ol>
+<p><em>如果 Backup 是基于定时任务（Schedule）创建的，则忽略其他所有的 filter 信息，以 Schedule 规格为准，除此之外，Backup 的名称也可以不指定，默认格式为 schedule-timestamp。</em></p>
+<h2 id="delete"><a href="#delete" class="headerlink" title="delete"></a>delete</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup&#x2F;delete.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>name、–all 和 –selector 参数有且仅能有一个</li>
+<li>要删除的 Backup 在集群中必须存在</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>根据命令行参数，构建 DeleteBackupRequest 对象，下发至集群中创建，后续由 BackupDeletion Controller 负责维护</li>
+</ol>
+<h2 id="describe"><a href="#describe" class="headerlink" title="describe"></a>describe</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup&#x2F;describe.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>要获取的 Backup 在集群中必须存在</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>获取到 Backup 的删除事件</li>
+<li>获取到卷备份的信息和 CSI 快照信息（如果 Velero 服务开启了 CSI 特性）</li>
+<li>将以上信息和 Backup 的元信息、规格、状态等汇总作为描述信息格式化输出<br><em>在开启 –details 时，会构建 DownloadRequest 对象获取  BackupResourceList 的信息</em></li>
+</ol>
+<h2 id="download"><a href="#download" class="headerlink" title="download"></a>download</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup&#x2F;download.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>要获取的 Backup 在集群中必须存在</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>根据命令行参数，构建 DownloadRequest 对象，下发至集群中创建，后续由 DownloadRequest Controller 负责维护，获取 BackupContents 的信息 </li>
+<li>阻塞直至 DownloadRequest 的 DownloadURL 被设置，将内容写入 –output 指定的位置</li>
+</ol>
+<h2 id="get"><a href="#get" class="headerlink" title="get"></a>get</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup&#x2F;get.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>要获取的 Backup 在集群中必须存在</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>获取到 Backup 资源，根据 –output 指定的样式格式化输出</li>
+</ol>
+<h2 id="logs"><a href="#logs" class="headerlink" title="logs"></a>logs</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;backup&#x2F;logs.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>要获取的 Backup 在集群中必须存在</li>
+<li>Backup 的状态必须为 Completed、PartiallyFailed 或者 Failed</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>根据命令行参数，构建 DownloadRequest 对象，下发至集群中创建，后续由 DownloadRequest Controller 负责维护，获取 BackupLog 的信息 </li>
+<li>阻塞直至 DownloadRequest 的 DownloadURL 被设置，将内容写入 stdout 中</li>
+</ol>
+<h1 id="PodVolumeBackup"><a href="#PodVolumeBackup" class="headerlink" title="PodVolumeBackup"></a>PodVolumeBackup</h1><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/release-1.6/pkg/apis/velero/v1/pod_volume_backup.go">API</a></p>
+<p>对象不支持手动创建，而是在备份流程中，由 Backup Controller 调用 <strong>backupPodVolumes</strong>，针对每一个 Pod 卷，创建一个该对象。</p>
+<h1 id="Schedule"><a href="#Schedule" class="headerlink" title="Schedule"></a>Schedule</h1><p><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/vmware-tanzu/velero/release-1.6/pkg/apis/velero/v1/schedule.go">API</a></p>
+<h2 id="schedule"><a href="#schedule" class="headerlink" title="schedule"></a>schedule</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;schedule&#x2F;schedule.go</u></em></p>
+<p>velero schedule 包括 4 个子命令：create、delete、describe 和 get。</p>
+<h2 id="create-1"><a href="#create-1" class="headerlink" title="create"></a>create</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;schedule&#x2F;create.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>–schedule 为必需参数</li>
+<li>在指定 –storage-location 参数时，其在集群中必须存在</li>
+<li>在指定 –volume-snapshot-locations 参数时，其在集群中必须存在</li>
+</ul>
+<p><em>创建定时备份任务时并不会校验 schedule 表达式的合法性，而是交给 Schedule Controller 作后续处理。</em></p>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>根据命令行参数，构建 Schedule 对象，下发至集群中创建，后续由 Scheduler Controller 负责维护</li>
+</ol>
+<h2 id="delete-1"><a href="#delete-1" class="headerlink" title="delete"></a>delete</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;schedule&#x2F;delete.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>name、–all 和 –selector 参数有且仅能有一个</li>
+<li>要删除的 Schedule 在集群中必须存在</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>根据命令行参数，获取集群中的 Schedule 资源并删除</li>
+</ol>
+<h2 id="describe-1"><a href="#describe-1" class="headerlink" title="describe"></a>describe</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;schedule&#x2F;describe.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>要获取的 Schedule 在集群中必须存在</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>获取到 Schedule 资源，格式化输出</li>
+</ol>
+<h2 id="get-1"><a href="#get-1" class="headerlink" title="get"></a>get</h2><p><em><u>pkg&#x2F;cmd&#x2F;cli&#x2F;schedule&#x2F;get.go</u></em></p>
+<p><strong>校验规则</strong></p>
+<ul>
+<li>要获取的 Schedule 在集群中必须存在</li>
+</ul>
+<p><strong>主体流程</strong></p>
+<ol>
+<li>获取到 Schedule 资源，根据 –output 指定的样式格式化输出</li>
+</ol>
+<h1 id="Backup-Controller"><a href="#Backup-Controller" class="headerlink" title="Backup Controller"></a>Backup Controller</h1><p><em><u>pkg&#x2F;controller&#x2F;backup_controller.go</u></em><br><em><u>pkg&#x2F;backup&#x2F;backup.go</u></em></p>
+<h2 id="NewBackupController"><a href="#NewBackupController" class="headerlink" title="NewBackupController"></a>NewBackupController</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_controller.go#L89">NewBackupController 源码</a></p>
+<p>工厂函数</p>
+<ol>
+<li>注册 Generic Controller 中的 syncHandler 和 resyncFunc</li>
+<li>监听 Backup 资源的 Add 事件，将状态是空或者 New 的 Backup 以 key（namespace&#x2F;name）的形式加入 Generic Controller 的 queue 中</li>
+</ol>
+<h2 id="processBackup"><a href="#processBackup" class="headerlink" title="processBackup"></a>processBackup</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_controller.go#L207">processBackup 源码</a></p>
+<p>注册在 Generic Controller 中 syncHandler 的实现</p>
+<ol>
+<li>函数入参就是 Generic Controller 的 queue 中待处理的 Backup key，通过解析获取的 namespace 和 name 查询到集群中的 Backup 对象</li>
+<li>仅处理状态是空或者 New 的 Backup 对象</li>
+<li>调用 <strong>prepareBackupRequest</strong> 做一些校验准备工作，并根据校验的结果设置 Backup 的状态为 FailedValidation 或者 InProgress</li>
+<li>过滤掉校验失败的 Backup，调用 <strong>runBackup</strong>，执行备份和上传备份信息的流程，执行结果决定了备份是否顺利完成，如果有错误返回，则记录 Backup 状态为 Failed</li>
+</ol>
+<h2 id="prepareBackupRequest"><a href="#prepareBackupRequest" class="headerlink" title="prepareBackupRequest"></a>prepareBackupRequest</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_controller.go#L328">prepareBackupRequest 源码</a></p>
+<p>在不破坏集群中原 Backup 对象（以下称为 original）的情况下，构建了一个 BackupRequest 对象（以下称为 request），这个对象包含了 original 的详细规格（即 original 的深拷贝），并且包含一些丰富处理流程的中间态信息，并且在整个备份流程中的操作都是基于 request，在备份完成后，会将 request 信息同步更新至集群中的 Backup 对象。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Request is a request for a backup, with all references to other objects</span></span><br><span class="line"><span class="comment">// materialized (e.g. backup/snapshot locations, includes/excludes, etc.)</span></span><br><span class="line"><span class="keyword">type</span> Request <span class="keyword">struct</span> &#123;</span><br><span class="line">	*velerov1api.Backup</span><br><span class="line"></span><br><span class="line">	StorageLocation           *velerov1api.BackupStorageLocation</span><br><span class="line">	SnapshotLocations         []*velerov1api.VolumeSnapshotLocation</span><br><span class="line">	NamespaceIncludesExcludes *collections.IncludesExcludes</span><br><span class="line">	ResourceIncludesExcludes  *collections.IncludesExcludes</span><br><span class="line">	ResourceHooks             []hook.ResourceHook</span><br><span class="line">	ResolvedActions           []resolvedAction</span><br><span class="line"></span><br><span class="line">	VolumeSnapshots  []*volume.Snapshot</span><br><span class="line">	PodVolumeBackups []*velerov1api.PodVolumeBackup</span><br><span class="line">	BackedUpItems    <span class="keyword">map</span>[itemKey]<span class="keyword">struct</span>&#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对 request 赋值和校验的操作</p>
+<ol>
+<li>将 original 深拷贝至 request 中的 Backup 中，并设置 request  版本、过期时间、是否将卷数据备份至 Restic、StorageLocation 等信息</li>
+<li>校验 BackupStorageLocation 的合法性，以及 access mode 是否为预期的 ReadWrite</li>
+<li>检验 volume snapshot location 的合法性<br><em>backup.Spec.VolumeSnapshotLocation 为 []string 类型，支持多个 location，但是要求 location 和 VolumeSnapshotter 必须是一对一的关系（也就是说不允许多个 location 对应同一个 VolumeSnapshotter）。默认情况下，–snapshotvolume 为 true，所以只要存在一个合法的 default vsl，则最终的 backup.Spec.VolumeSnapshotLocation 均会包含这个 default vsl，详细逻辑参考 <a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_controller_test.go#L861">TestValidateAndGetSnapshotLocations</a></em></li>
+<li>设置 request 的注解和 resources &amp; namespaces 的 included &amp; excluded 检验信息</li>
+</ol>
+<h2 id="runBackup"><a href="#runBackup" class="headerlink" title="runBackup"></a>runBackup</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_controller.go#L533">runBackup 源码</a></p>
+<p>备份的整体流程</p>
+<ol>
+<li><p>基于临时文件句柄生成 gzip writer ，并指定 stdout 和 gzip writer 为 logger 输出，初始化用于统计日志级别数量的 counter<br><em>因此，日志不仅会输出在 Velero Pod 中，并且会生成 BackupLog，后续会上传至 BackupStorageLocation 中</em></p>
+</li>
+<li><p>生成一个用于存放 Backup 版本和内容的临时文件<br><em>后续在调用 <strong>Backup</strong> 时会传入该临时文件</em></p>
+</li>
+<li><p>获取注册的 BackupItemAction 插件<br><em>后续在调用 <strong>Backup</strong> 时会传入该 action 信息</em></p>
+</li>
+<li><p>通过 StorageProvider 的 BackupExists 接口判断远端存储中是否有同名备份</p>
+<ul>
+<li>如果存在，则设置 Backup 状态为 Failed，本次备份失败</li>
+<li>如果不存在，则调用 <strong>Backup</strong> 进行准备与备份</li>
+</ul>
+</li>
+<li><p>如果 Velero 开启了 CSI 特性，则获取集群中与该 Backup 相关的 VolumeSnapshots 和 VolumeSnapshotContents 信息<br><em>后续会上传至 BackupStorageLocation 中</em></p>
+</li>
+<li><p>设置 request 的卷快照总量与成功量、完成时间戳、Warnings 和 Errors 的个数以及备份的状态等等，关闭日志文件，本次备份任务日志记录完毕<br><em>备份的状态（Failed、PartiallyFailed 或者 Completed）是根据日志输出级别的统计决定的，fatalErrs 记录了调用 backupper.Backup 产生的错误日志信息，不仅如此，在后续上传备份文件的时候，如果发生异常，也会记录，所以 request 的状态是否为 Failed 是 fatalErrs 决定的，而状态是否为 Completed 和 PartiallyFailed 是根据日志中 Error 级别的输出数量决定的，<strong>该日志也包括调用 StorageProvider 中产生的日志级别信息</strong></em></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">backup.Status.Warnings = logCounter.GetCount(logrus.WarnLevel)</span><br><span class="line">backup.Status.Errors = logCounter.GetCount(logrus.ErrorLevel)</span><br><span class="line"></span><br><span class="line"><span class="comment">// Assign finalize phase as close to end as possible so that any errors</span></span><br><span class="line"><span class="comment">// logged to backupLog are captured. This is done before uploading the</span></span><br><span class="line"><span class="comment">// artifacts to object storage so that the JSON representation of the</span></span><br><span class="line"><span class="comment">// backup in object storage has the terminal phase set.</span></span><br><span class="line"><span class="keyword">switch</span> &#123;</span><br><span class="line"><span class="keyword">case</span> <span class="built_in">len</span>(fatalErrs) &gt; <span class="number">0</span>:</span><br><span class="line">	backup.Status.Phase = velerov1api.BackupPhaseFailed</span><br><span class="line"><span class="keyword">case</span> logCounter.GetCount(logrus.ErrorLevel) &gt; <span class="number">0</span>:</span><br><span class="line">	backup.Status.Phase = velerov1api.BackupPhasePartiallyFailed</span><br><span class="line"><span class="keyword">default</span>:</span><br><span class="line">	backup.Status.Phase = velerov1api.BackupPhaseCompleted</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>重新获取 StorageProvider，避免长时间备份中认证信息变动， 调用 StorageProvider 的 PutBackup 接口将备份信息上传至 BackupStorageLocation 中，具体文件的对应关系如下：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>BackupStorageLocation 中的文件</th>
+<th>数据源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Metadata</td>
+<td>velero-backup.json</td>
+<td>backup.Backup 对象</td>
+</tr>
+<tr>
+<td>Content</td>
+<td>&lt;backup&gt;.tar.gz</td>
+<td>步骤 2 中的临时文件内容</td>
+</tr>
+<tr>
+<td>Log</td>
+<td>&lt;backup&gt;-logs.gz</td>
+<td>步骤 6 中最终生成的 log 文件</td>
+</tr>
+<tr>
+<td>PodVolumeBackups</td>
+<td>&lt;backup&gt;-podvolumebackups.json</td>
+<td>backup.PodVolumeBackups</td>
+</tr>
+<tr>
+<td>VolumeSnapshots</td>
+<td>&lt;backup&gt;-volumesnapshots.json.gz</td>
+<td>backup.VolumeSnapshots</td>
+</tr>
+<tr>
+<td>BackupResourceList</td>
+<td>&lt;backup&gt;-resource-list.json.gz</td>
+<td>backup.BackedUpItems</td>
+</tr>
+<tr>
+<td>CSIVolumeSnapshots</td>
+<td>&lt;backup&gt;-csi-volumesnapshots.json.gz</td>
+<td>步骤 5 中 volume snapshots</td>
+</tr>
+<tr>
+<td>CSIVolumeSnapshotContents</td>
+<td>&lt;backup&gt;-csi-volumesnapshotcontents.json.gz</td>
+<td>步骤 5 中 volume snapshot contents</td>
+</tr>
+</tbody></table>
+<p>这里需要区分 PodVolumeBackups 和 VolumeSnapshots</p>
+<ul>
+<li>PodVolumeBackups 是描述了备份的 Pod 中的卷数据信息，与之关联的是 Restic 相关概念，数据最终会写入 ResticRepository 中</li>
+<li>VolumeSnapshots 是相比于 CSI 而言属于 Velero 原生的卷快照，用于描述一个 PV 快照的信息，本身作为 Backup 的一部分，数据最终会由对应的 SnapshotProvider 处理</li>
+<li>即使两者最终的数据均不会存放在 BackupStorageLocation 中，但是仍然会在 BackupStorageLocation 中记录其基础信息</li>
+</ul>
+</li>
+</ol>
+<h2 id="Backup-1"><a href="#Backup-1" class="headerlink" title="Backup"></a>Backup</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/backup/backup.go#L205">Backup 源码</a></p>
+<p>备份动作本身的流程</p>
+<ol>
+<li>基于传入的临时文件，生成 gzip writer，最终会以 <em>backup</em>.tar.gz 格式存放在 BackupStorageLocation 中作为 Content，该 tar.gz 包括两个主要内容：metadata 和 resources，前者用于存放版本，后者用于存放被备份资源的详细规格信息<br><em>区别于记录 Backup 本身的 Metadata，此处的 metdata 仅为一个目录层级；在后续 <strong>backupItem</strong> 流程中，会将资源信息写入 resources 文件中</em></li>
+<li>在 metadata 目录下写入版本信息 version，固定值为 1.1.0</li>
+<li>设置 request 的 resource &amp; namespace 的 included &amp; excluded、resources hook 以及 resolve action（BackupItemAction）<ul>
+<li>namespace 和 resource 的处理方式并不一样，是因为 namespace 只要做匹配即可，存在与不存在很容易定性，但是 resource 有很多种表示方式，例如 pv 和 persistentvolumes，对于复杂的资源来讲，还有 ApiGroup 的概念，因此，需要 RESTmapping 的 ResourceFor 匹配出最合适且规范的一个 GVR，这也就是为什么使用时可以在合理范围任意指定资源名称均会匹配正确的原因</li>
+<li>BackupItemAction 有两个接口，一个是 AppliesTo，一个是 Execute，前者用于返回 labelSelector，用于备份阶段的过滤筛选，后者用于执行 BackupItemAction 中定义的额外动作</li>
+</ul>
+</li>
+<li>生成临时空文件，供后续 itemCollector 使用，itemCollector 根据 Backup 规格信息通过 K8s API 收集待备份的资源详细信息并写入空文件中<br><em>该空文件用于 <strong>getAllItems</strong> 时，作为每一个 item 的解构文件的根目录</em></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/backup/item_collector.go#L57">getAllItems</a> 通过 discovery 获取到所有的 API group（例如 batch&#x2F;v1beta1，networking.k8s.io&#x2F;v1beta1 等等），然后根据每个 group 获取到 resource（例如 cronjobs，networkpolicies 等等），根据 namespace 和 resource 的 include 和 exclude 以及标签选择器规则进行过滤资源，过滤后的结果就是待备份的对象（item）<br><em>item 的内容（unstructured.Unstructured 对象）已经写入了步骤 4 的临时目录里，同时，这个文件的路径会记录在 item 的 path 中，后续在 <strong>backupItem</strong> 时，会解析作为解构状态的 item 传入</em></li>
+<li>更新 Backup 的待备份资源的总量信息</li>
+<li>生成 update 队列，用于记录 Backup 状态信息，同时启动一个 Goroutine 监听队列，每秒钟获取一次 update 队列中的进度并更新至 Backup 中</li>
+<li>遍历每一个待备份的 item，调用 <strong>backupItem</strong> 函数，进行备份，并将进度信息写入 update 队列中，完成进度上报</li>
+<li>如果备份规格中指定了备份集群级别资源（IncludeClusterResources），则额外备份 CRD 资源<br><em>这里的 CRD 资源其实是有限制条件的，就是仅处理已经备份了与 CRD 相关的 CR 资源时，才会备份对应的 CRD</em></li>
+<li>更新集群中 Backup 对象的备份进度信息至 100%</li>
+</ol>
+<h2 id="backupItem"><a href="#backupItem" class="headerlink" title="backupItem"></a>backupItem</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/backup/backup.go#L424">backupItem 源码</a></p>
+<p>单个 item 资源的备份流程</p>
+<ol>
+<li>传入的 item 是解构状态的资源信息（runtime.Unstructured），解构数据来源于 item 的 path 字段，需要重新构建成 metav1.Object，提取信息</li>
+<li>对于以下情况跳过备份，并且返回 false 标识，表示资源未参与备份<br><em>未参与备份的资源，即使在指定了备份集群级别资源时也不会备份相关的 CRD</em><ul>
+<li>标签中有 velero.io&#x2F;exclude-from-backup 字段的资源</li>
+<li>资源属于 Backup 规格中指定的 namespace 和 groupResource 的</li>
+<li>非 namespace 的资源即是集群级别的，但是备份规格中的 IncludeClusterResources 为 false</li>
+<li>资源处于删除状态</li>
+</ul>
+</li>
+<li>对于已经备份的资源，自然也会跳过备份，但是返回 true 标识，表示资源已经备份</li>
+<li>执行 pre hook 动作（只有类型是 Pod 的 资源才会真正的处理 pre hook），hook 作用的对象需要满足 BackupItemAction 中定义的 applyTo 接口的标签选择，hook command 的执行（即 execute 接口）是通过 K8s rest API exec 实现</li>
+<li>针对类型是 Pod 的资源，在 spec.Volumes 中获取需要借助 Restic 备份的卷<br><em>由于 PV 和 PVC 是 1 对 1，PVC 和 Pod 是 1 对 n 的关系，所以在这里通过跟踪 PVC 的备份情况即可判断卷是否被备份过，备份过的卷，会在相关的 tracker 中以 PVC 为 key 作记录</em></li>
+<li>调用 BackupItemAction 的 execute 接口，进行额外的操作，如更新资源等，此后的流程基于接口返回的对象继续操作，执行失败时，会执行 post hook 动作</li>
+<li>针对类型是 PV 的资源，调用 takePVSnapshot，忽略已经被 Restic 备份的 PV，初始化 SnapshotProvider，通过一系列的接口，完成卷快照的操作，并将快照信息记录在 request 的 VolumeSnapshots 中<br><em>在 Velero 开启 CSI 特性时，需要额外加载一个 plugin（<a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero-plugin-for-csi%EF%BC%89%EF%BC%8C%E8%AF%A5">https://github.com/vmware-tanzu/velero-plugin-for-csi），该</a> plugin 就是 SnapshotProvider 类型。因此在这步时，便会对 PV 做快照操作</em></li>
+<li>针对类型是 Pod 的资源，调用 <strong>BackupPodVolumes</strong>，借助 Restic 能力实现对 Pod 卷数据的备份</li>
+<li>执行 post hook 动作</li>
+<li>在 resources 目录下写入备份的资源信息，资源会根据 kind、 namepace 等信息归类，文件内容为 item 的 runtime.Unstructured 形式，以 json 格式存储<br><em>文件是上层调用传入的 Content 文件</em></li>
+<li>至此，针对单一的 item 备份流程结束，其中包含了存储在 kube-apiserver 中的结构化元信息和卷数据的备份</li>
+</ol>
+<h2 id="BackupPodVolumes"><a href="#BackupPodVolumes" class="headerlink" title="BackupPodVolumes"></a>BackupPodVolumes</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/restic/backupper.go#L99">backupPodVolumes 源码</a></p>
+<p>借助 Restic 能力备份卷数据的流程</p>
+<ol>
+<li>每一个 Pod 卷所属的 namespace 必须有且仅有一个对应的 ResticRepository 对象，如果不存在，则会创建一个，由 ResticRepository Controller 会负责维护状态，而 Backup Controller  会阻塞直至 ResticRepository 超时或者 ready<br><em>创建对象时会指定基于的 BackupStorageLocation，并将 BackupStorageLocation 转换成 RepoIdentifier 信息，也就是 Restic 原生命令中的 -r 参数</em></li>
+<li>过滤掉 hostPath 类型的卷，对其余的合法卷会创建对应的 PodVolumeBackup 对象，其中 PodVolumeBackup 中会设置 velero.io&#x2F;backup-name 标签以及 PVC 的 UID 信息<br><em>此时，该对象的 spec.RepoIdentifier 已被设置，例如 s3:<a target="_blank" rel="noopener" href="http://minio.velero.svc:9000/velero/restic/velero%E3%80%82%E6%AD%A4%E5%A4%96%EF%BC%8C%E7%94%B1%E4%BA%8E%E5%9C%A8">http://minio.velero.svc:9000/velero/restic/velero。此外，由于在</a> velero 1.6.3 中不会判断 Pod 的状态，因此依旧会对 pending 状态的 Pod 创建 PodVolumeBackup 对象，但是此 PodVolumeBackup 对象没有 nodeName 属性，导致 Restic 不作处理，从而阻塞 Velero 直至超时。除此之外，restic 状态异常也会导致类似问题，参考：<a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/issues/4874">https://github.com/vmware-tanzu/velero/issues/4874</a></em></li>
+<li>PodVolumeBackup Controller 会负责卷的备份，而 Backup Controller 会阻塞直至卷备份返回完成或者失败</li>
+</ol>
+<h2 id="resync"><a href="#resync" class="headerlink" title="resync"></a>resync</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_controller.go#L166">resync 源码</a></p>
+<p>注册在 Generic Controller 中 resyncFunc 的实现，周期为 1 分钟</p>
+<ol>
+<li>获取集群中所有的 Backup 对象，更新 backup_total 指标，value 为集群中所有 Backup 总数</li>
+<li>针对每一个状态已经完成且归属于某一个 Schedule 的 Backup，设置 backup_last_successful_timestamp 指标，key 为 Schedule 名称，value 为最近的一次备份时间戳</li>
+</ol>
+<h1 id="PodVolumeBackup-Controller"><a href="#PodVolumeBackup-Controller" class="headerlink" title="PodVolumeBackup Controller"></a>PodVolumeBackup Controller</h1><p><em><u>pkg&#x2F;controller&#x2F;pod_volume_backup_controller.go</u></em><br><em><u>pkg&#x2F;restic&#x2F;exec_commands.go</u></em></p>
+<h2 id="NewPodVolumeBackupController"><a href="#NewPodVolumeBackupController" class="headerlink" title="NewPodVolumeBackupController"></a>NewPodVolumeBackupController</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/pod_volume_backup_controller.go#L72">NewPodVolumeBackupController 源码</a></p>
+<p>工厂函数</p>
+<ol>
+<li>注册 Generic Controller 中的 syncHandler，并将 PodVolumeBackup、Pod 和 PVC 添加到 cacheSyncWaiters，等待同步完成</li>
+<li>监听 PodVolumeBackup 资源的 Add 和 Update 事件，将状态是空或者 New 并且位于当前节点的 PodVolumeBackup 资源以 key （namespace&#x2F;name） 的形式加入 Generic Controller 的 queue 中<br><em>PodVolumeBackup Controller 运行在 DaemonSet 形式的 Restic 服务中，挂载所在节点的 Pod 卷，因此 PodVolumeBackup 具有节点属性，PodVolumeBackup Controller 仅处理当前节点的 PodVolumeBackup 对象</em></li>
+</ol>
+<h2 id="processQueueItem"><a href="#processQueueItem" class="headerlink" title="processQueueItem"></a>processQueueItem</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/pod_volume_backup_controller.go#L140">processQueueItem 源码</a></p>
+<p>注册在 Generic Controller 中 syncHandler 的实现</p>
+<ol>
+<li>函数入参就是 Generic Controller 的 queue 中待处理的 PodVolumeBackup key，通过解析获取的 namespace 和 name 查询到集群中的 PodVolumeBackup 对象</li>
+<li>仅处理状态为空或者 New 的 PodVolumeBackup 对象，调用 <strong>processBackup</strong>，执行卷数据的备份</li>
+</ol>
+<h2 id="ProcessBackup"><a href="#ProcessBackup" class="headerlink" title="ProcessBackup"></a>ProcessBackup</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/pod_volume_backup_controller.go#L188">ProcessBackup 源码</a></p>
+<p>卷数据备份的整体流程</p>
+<ol>
+<li>更新 PodVolumeBackup 状态为 InProgress</li>
+<li>校验 PodVolumeBackup 对象规格中声明的卷源 Pod 是否存在，获取到 Pod 卷在 host 上子目录信息<br><em>例如  &#x2F;host_pods&#x2F;e4ccf918-76d7-4972-a54a-39b39f15b53b&#x2F;volumes&#x2F;kubernetes.io~empty-dir&#x2F;plugins，&#x2F;host_pods 为 Restic Pod 中的目录，挂载了 host 的 &#x2F;var&#x2F;lib&#x2F;kubelet&#x2F;pods&#x2F;， 详细逻辑参考 <a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/util/kube/utils_test.go#L159">TestGetVolumeDirectorySuccess</a></em></li>
+<li>生成用于连接 Restic Repo 所需要的临时密码文件，文件固定为 &#x2F;tmp&#x2F;credentials&#x2F;velero&#x2F;velero-restic-credentials-repository-password，内容为 static-passw0rd，用于 restic 原生命令中的 –password 参数<br><em>密码会以 Secret 的形式存储在集群中，名为 velero-restic-credentials，位于 velero 命名空间内</em></li>
+<li>构建 restic backup 命令</li>
+<li>如果 BackupStorageLocation 有 caCert 证书信息，会将其临时写入到磁盘中，供 Restic 认证使用，并设置在 restic backup 命令中<br><em>因为本质上，Restic 的 repo 和 Velero 的 BackupStorageLocation 为同一个</em></li>
+<li>给 restic backup 命令设置 Restic 原生所需的环境变量信息</li>
+<li>在备份流程中生成 PodVolumeBackup 对象时，如果 Pod 卷源于 PVC，则会对 PodVolumeBackup 加一个 velero.io&#x2F;pvc-uid 的 label，值为 PVC 的 uid。因此，在这里会通过这个 label 判断卷是否源于 PVC，如果是，则会获取集群中所有带有此 label、状态已经完成并且 BackupStorageLocation 相同的 PodVolumeBackup 对象，如果存在则表示这个卷已经备份过，后续的备份会基于最近的一次备份点进行增量备份，反之则全量备份，这里的增量备份借助了 Restic 原生功能（–parent）<br><em>详细逻辑参考 <a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/pod_volume_backup_controller.go#L338">getParentSnapshot</a></em></li>
+<li>调用 <strong>RunBackup</strong>，执行 Restic 原生的卷数据备份流程</li>
+<li>更新 PodVolumeBackup 对象的状态、完成时间、快照 ID 和卷数据路径等信息</li>
+</ol>
+<h2 id="RunBackup"><a href="#RunBackup" class="headerlink" title="RunBackup"></a>RunBackup</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/restic/exec_commands.go#L73">RunBackup 源码</a></p>
+<p>调用 Restic 原生备份命令 restic backup</p>
+<ol>
+<li>将入参的 Command 对象构建成可执行命令并执行</li>
+<li>启动一个 Goroutine，每 10 秒钟解析一次 restic backup 命令的标准输出，更新 PodVolumeBackup 的备份进度信息（待备份总文件大小和当前备份文件大小）</li>
+<li>通过解析标准输出判断如果 Restic 备份成功，则更新 PodVolumeBackup 进度至 100%</li>
+</ol>
+<h1 id="Schedule-Controller"><a href="#Schedule-Controller" class="headerlink" title="Schedule Controller"></a>Schedule Controller</h1><p><em><u>pkg&#x2F;controller&#x2F;schedule_controller.go</u></em></p>
+<h2 id="NewScheduleController"><a href="#NewScheduleController" class="headerlink" title="NewScheduleController"></a>NewScheduleController</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/schedule_controller.go#L60">NewScheduleController 源码</a></p>
+<p>工厂函数</p>
+<ol>
+<li>注册 Generic Controller 中的 syncHandler 和 resyncFunc</li>
+<li>监听 Schedule 资源的 Add 事件，将状态是空、New 或者 Enabled 的 Schedule 以 key（namespace&#x2F;name）的形式加入 Generic Controller 的 queue 中</li>
+</ol>
+<h2 id="processSchedule"><a href="#processSchedule" class="headerlink" title="processSchedule"></a>processSchedule</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/schedule_controller.go#L136">processSchedule 源码</a></p>
+<p>注册在 Generic Controller 中 syncHandler 的实现</p>
+<ol>
+<li>函数入参就是 Generic Controller 的 queue 中待处理的 Schedule key，通过解析获取的 namespace 和 name 查询到集群中的 Schedule 对象</li>
+<li>仅处理状态为空、New 或者 Enabled 的 Schedule 对象</li>
+<li>检验 cron 表达式的合法性，根据校验结果更新 Schedule 的状态为 FailedValidation 或者 Enabled</li>
+<li>判断是否到达定时任务的下次执行时间，如果达到则立即创建一个备份。另外，如果定时任务从未执行，也会立即创建一个备份任务</li>
+</ol>
+<h2 id="enqueueAllEnabledSchedules"><a href="#enqueueAllEnabledSchedules" class="headerlink" title="enqueueAllEnabledSchedules"></a>enqueueAllEnabledSchedules</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/schedule_controller.go#L115">enqueueAllEnabledSchedules 源码</a></p>
+<p>注册在 Generic Controller 中 resyncFunc 的实现，周期为 1 分钟</p>
+<ol>
+<li>获取集群中所有的 Schedule 对象</li>
+<li>将状态是 Enabled 的 Schedule 对象加入到 Generic Controller 的 queue 中</li>
+</ol>
+<h1 id="BackupDeletion-Controller"><a href="#BackupDeletion-Controller" class="headerlink" title="BackupDeletion Controller"></a>BackupDeletion Controller</h1><p><em><u>pkg&#x2F;controller&#x2F;backup_deletion_controller.go</u></em><br><em><u>internal&#x2F;delete&#x2F;delete_item_action_handler.go</u></em></p>
+<p>删除 Backup 时，与 Backup 相关联的各种资源基本上都是通过 velero.io&#x2F;backup-name 标签获取到。因此，在备份的时候，创建的相关资源也都会打上该标签。</p>
+<h2 id="NewBackupDeletionController"><a href="#NewBackupDeletionController" class="headerlink" title="NewBackupDeletionController"></a>NewBackupDeletionController</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_deletion_controller.go#L86">NewBackupDeletionController 源码</a></p>
+<p>工厂函数</p>
+<ol>
+<li>注册 Generic Controller 中的 syncHandler 和 resyncFunc</li>
+<li>监听 DeleteBackupRequest 资源的 Add 事件，将 DeleteBackupRequest 以 key（namespace&#x2F;name）的形式加入 Generic Controller 的 queue 中</li>
+</ol>
+<h2 id="processQueueItem-1"><a href="#processQueueItem-1" class="headerlink" title="processQueueItem"></a>processQueueItem</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_deletion_controller.go#L146">processQueueItem 源码</a></p>
+<p>注册在 Generic Controller 中 syncHandler 的实现</p>
+<ol>
+<li>函数入参就是 Generic Controller 的 queue 中待处理的 DeleteBackupRequest key，通过解析获取的 namespace 和 name 查询到集群中的 DeleteBackupRequest 对象</li>
+<li>仅处理状态不为 Processed 的 DeleteBackupRequest 对象，调用 <strong>processRequest</strong>，执行 Backup 的删除</li>
+</ol>
+<h2 id="processRequest"><a href="#processRequest" class="headerlink" title="processRequest"></a>processRequest</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_deletion_controller.go#L176">processRequest 源码</a></p>
+<p>备份删除的整体流程</p>
+<ol>
+<li>如果 DeleteBackupRequest 对象所属的 Backup 信息不存在，则认为 DeleteBackupRequest 处理完成，即将其状态设为 Processed，并设置错误信息</li>
+<li>删除集群中针对该 Backup 的其余 DeleteBackupRequest 对象，仅处理当前的</li>
+<li>如果要删除的 Backup 处于 InProgress 状态或者不存在，则将 DeleteBackupRequest 状态设为 Processed，并设置错误信息</li>
+<li>如果 Backup 所属的 BackupStorageLocation 不存在或者模式为 ReadOnly 时，则将 DeleteBackupRequest 状态设为 Processed，并设置错误信息</li>
+<li>至此，校验工作已经完成，将 DeleteBackupRequest 状态设置为 InProgress，并设置 velero.io&#x2F;backup-name 和 velero.io&#x2F;backup-uid 标签</li>
+<li>设置 Backup 的状态为 Deleting</li>
+<li>获取注册的 DeleteItemAction 插件，如果获取到了，则下载 BackupStorageLocation 中的 Content 文件，构建运行 DeleteItemAction 所需要环境变量信息，调用 <strong>InvokeDeleteActions</strong> 处理 DeleteItemAction 中定义的逻辑</li>
+<li>调用 StorageProvider 的 GetBackupVolumeSnapshots 方法获取 BackupVolumeSnapshotsKey（也就是 backup-volumesnapshots.json.gz） 的内容，调用 SnapshotProvider 的 DeleteSnapshot 接口删除 PV 快照信息</li>
+<li>获取到与 Backup 相关联的 PodVolumeBackup 信息，进而获取到 Restic 的 snapshots，执行 restic forget 删除快照<br><em>创建备份的时候，会根据 Pod 卷创建 PodVolumeBackup 对象，并会设置 velero.io&#x2F;backup-name 标签</em></li>
+<li>调用 StorageProvider 的 DeleteBackup 接口删除 BackupStorageLocation 中 Backup 所在的目录</li>
+<li>如果 Velero 开启了 CSI 特性，那么也会删除与 Backup 相关联的 VolumeSnapshot 和 VolumeSnapshotContent 对象<br><em>删除之前会将 VolumeSnapshotContent 回收策略置为 Delete</em></li>
+<li>调用 StorageProvider 的 DeleteRestore 方法，删除 BackupStorageLocation 上基于该 Backup 创建的 Restore 文件，删除基于该 Backup 创建的 Restore 对象</li>
+<li>如果以上步骤均无错误返回，则删除集群中相关的 Backup 对象</li>
+<li>更新 DeleteBackupRequest 状态设为 Processed，并设置错误信息</li>
+<li>如果以上步骤均无报错返回，则删除与该 Backup 相关的所有 DeleteBackupRequest 对象</li>
+</ol>
+<h2 id="InvokeDeleteActions"><a href="#InvokeDeleteActions" class="headerlink" title="InvokeDeleteActions"></a>InvokeDeleteActions</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/internal/delete/delete_item_action_handler.go#L48">InvokeDeleteActions 源码</a></p>
+<p>执行 DeleteItemAction 中的动作</p>
+<ol>
+<li>如果未定义 action 信息，则直接返回，继续处理删除流程</li>
+<li>将传入的 BackupStorageLocation 中的 Content 文件解压至临时文件下，通过 discovery API 将文件内容转换成 GroupResource</li>
+<li>遍历 GroupResource 中的所有资源，执行 DeleteItemAction 中声明的动作</li>
+</ol>
+<h2 id="deleteExpiredRequests"><a href="#deleteExpiredRequests" class="headerlink" title="deleteExpiredRequests"></a>deleteExpiredRequests</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_deletion_controller.go#L595">deleteExpiredRequests 源码</a></p>
+<p>注册在 Generic Controller 中 resyncFunc 的实现，周期为 1 小时</p>
+<ol>
+<li>获取集群中所有的 DeleteBackupRequest 对象，将状态已经处于 Processed，并且 age 超过 24 小时的 DeleteBackupRequest 对象删除<br><em>因为并非所有的 DeleteBackupRequest 对象在走完 syncHandler 流程后均会被删除</em></li>
+</ol>
+<h1 id="BackupSync-Controller"><a href="#BackupSync-Controller" class="headerlink" title="BackupSync Controller"></a>BackupSync Controller</h1><p><em><u>pkg&#x2F;controller&#x2F;backup_sync_controller.go</u></em></p>
+<h2 id="NewBackupSyncController"><a href="#NewBackupSyncController" class="headerlink" title="NewBackupSyncController"></a>NewBackupSyncController</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_sync_controller.go#L60">NewBackupSyncController 源码</a></p>
+<p>工厂函数</p>
+<ol>
+<li>注册 Generic Controller 中的 resyncFunc</li>
+</ol>
+<h2 id="run"><a href="#run" class="headerlink" title="run"></a>run</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/backup_sync_controller.go#L124">run 源码</a></p>
+<p>注册在 Generic Controller 中 resyncFunc 的实现，周期为 30 秒</p>
+<ol>
+<li>获取集群中所有的 BackupStorageLocation 对象，构建一个默认的 BackupStorageLocation 位于第一位的列表</li>
+<li>遍历步骤 1 中的 BackupStorageLocation 列表，如果同步周期等于 0 代表该 BackupStorageLocation 不作同步操作，直接跳过即可，否则判断其是否到达下次同步时间</li>
+<li>调用 StorageProvider 的 ListBackups 方法获取所有的 Backup；同时获取集群中所有的 Backup</li>
+<li>获取在 BackupStorageLocation 中但是不在集群中的 Backup，这些就是待同步的 Backup</li>
+<li>针对每一个待同步的 Backup，调用 StorageProvider 的 GetBackupMetadata 方法，获取 Metadata 文件（即 velero-backup.json），解析内容得到 Backup 对象</li>
+<li>设置 Backup 的 namespace、resourceVersion、storageLocation 和 label 等信息，并在集群中创建<br><em>既然已经存在于 BackupStorage Location，状态必然为完成状态（即不是空或者 New），因此不会被 Backup Controller 重复处理</em></li>
+<li>调用 StorageProvider 的 GetPodVolumeBackups 方法获取与该 Backup 相关的 PodVolumeBackup</li>
+<li>设置 PodVolumeBackup 的 namespace、resourceVersion、ownerReferences 和 label 等信息，并在集群中创建<br><em>同理，不会被 PodVolumeBackup Controller 重复处理</em></li>
+<li>如果 Velero 开启了 CSI 特性，通过 StorageProvider 的 GetCSIVolumeSnapshotContents 方法获取与该 Backup 相关的 VolumeSnapshotContents</li>
+<li>设置 VolumeSnapshotContent 的 resourceVersion 等信息，并在集群中创建</li>
+<li>删除孤儿 Backup，也就是在集群中存在，状态为 Completed，但是在 BackupStorageLocation 中不存在的 Backup</li>
+<li>更新集群中该 BackupStorageLocation 的上次同步时间<br><em>实际上步骤 4 获取 BackupStorageLocation 的 Backup 时可以作为同步操作</em></li>
+</ol>
+<h1 id="GC-Controller"><a href="#GC-Controller" class="headerlink" title="GC Controller"></a>GC Controller</h1><p><em><u>pkg&#x2F;controller&#x2F;gc_controller.go</u></em></p>
+<h2 id="NewGCController"><a href="#NewGCController" class="headerlink" title="NewGCController"></a>NewGCController</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/gc_controller.go#L58">NewGCController 源码</a></p>
+<p>工厂函数</p>
+<ol>
+<li>注册 Generic Controller 中的 syncHandler 和 resyncFunc</li>
+<li>监听 Backup 资源的 Add 和 Update 事件，将 Backup 以 key（namespace&#x2F;name）的形式加入 Generic Controller 的 queue 中</li>
+</ol>
+<h2 id="processQueueItem-2"><a href="#processQueueItem-2" class="headerlink" title="processQueueItem"></a>processQueueItem</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/gc_controller.go#L104">processQueueItem 源码</a></p>
+<p>注册在 Generic Controller 中 syncHandler 的实现</p>
+<ol>
+<li>函数入参就是 Generic Controller 的 queue 中待处理的 Backup key，通过解析获取的 namespace 和 name 查询到集群中的 Backup 对象</li>
+<li>仅处理已经过期的 Backup 对象</li>
+<li>获取 Backup 所属的 BackupStorageLocation，判断其模式是否为 ReadWrite</li>
+<li>获取集群中和该 Backup 相关的 DeleteBackupRequest 对象，如果其中存在状态为空、New 和 InProgress 的，则认为正在删除，本次不做处理；否则，构建一个 DeleteBackupRequest 对象，下发至集群中创建，后续由 BackupDeletion Controller 负责维护</li>
+</ol>
+<h2 id="enqueueAllBackups"><a href="#enqueueAllBackups" class="headerlink" title="enqueueAllBackups"></a>enqueueAllBackups</h2><p><a target="_blank" rel="noopener" href="https://github.com/vmware-tanzu/velero/blob/5fe3a50bfddc2becb4c0bd5e2d3d4053a23e95d2/pkg/controller/gc_controller.go#L90">enqueueAllBackups 源码</a></p>
+<p>注册在 Generic Controller 中 resyncFunc 的实现，周期为 1 小时</p>
+<ol>
+<li>获取集群中所有的 Backup 对象，全量加入到 Generic Controller 的 queue 中</li>
+</ol>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Velero 」源码走读 — Backup</p><p><a href="http://shenxianghong.github.io/2022/01/27/2022-01-27 Velero 源码走读 - Backup/">http://shenxianghong.github.io/2022/01/27/2022-01-27 Velero 源码走读 - Backup/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-01-27</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-05-04</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><hr style="height:1px;margin:1rem 0"><div class="level is-mobile is-flex"><div class="article-tags is-size-7 is-uppercase"><i class="fas fa-tags has-text-grey"></i> <a class="link-muted" rel="tag" href="/tags/Velero/">Velero </a></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/02/04/2022-02-04%20Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Restore/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Velero 」源码走读 — Restore</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/01/17/2022-01-17%20Velero%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20Location/"><span class="level-item">「 Velero 」源码走读 — Location</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">50</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">7</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">9</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/shenxianghong" target="_blank" rel="noopener">Follow</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Youtube" href="https://youtube.com"><i class="fab fa-youtube"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Bilibili" href="https://bilibili.com"><i class="fab fa-bilibili"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Reddit" href="https://reddit.com"><i class="fab fa-reddit"></i></a></div></div></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://google.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Google</span></span><span class="level-right"><span class="level-item tag">google.com</span></span></a></li><li><a class="level is-mobile" href="https://freegpt.one" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">ChatGPT</span></span><span class="level-right"><span class="level-item tag">freegpt.one</span></span></a></li></ul></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#Backup"><span class="level-left"><span class="level-item">1</span><span class="level-item">Backup</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#backup"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">backup</span></span></a></li><li><a class="level is-mobile" href="#create"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">create</span></span></a></li><li><a class="level is-mobile" href="#delete"><span class="level-left"><span class="level-item">1.3</span><span class="level-item">delete</span></span></a></li><li><a class="level is-mobile" href="#describe"><span class="level-left"><span class="level-item">1.4</span><span class="level-item">describe</span></span></a></li><li><a class="level is-mobile" href="#download"><span class="level-left"><span class="level-item">1.5</span><span class="level-item">download</span></span></a></li><li><a class="level is-mobile" href="#get"><span class="level-left"><span class="level-item">1.6</span><span class="level-item">get</span></span></a></li><li><a class="level is-mobile" href="#logs"><span class="level-left"><span class="level-item">1.7</span><span class="level-item">logs</span></span></a></li></ul></li><li><a class="level is-mobile" href="#PodVolumeBackup"><span class="level-left"><span class="level-item">2</span><span class="level-item">PodVolumeBackup</span></span></a></li><li><a class="level is-mobile" href="#Schedule"><span class="level-left"><span class="level-item">3</span><span class="level-item">Schedule</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#schedule"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">schedule</span></span></a></li><li><a class="level is-mobile" href="#create-1"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">create</span></span></a></li><li><a class="level is-mobile" href="#delete-1"><span class="level-left"><span class="level-item">3.3</span><span class="level-item">delete</span></span></a></li><li><a class="level is-mobile" href="#describe-1"><span class="level-left"><span class="level-item">3.4</span><span class="level-item">describe</span></span></a></li><li><a class="level is-mobile" href="#get-1"><span class="level-left"><span class="level-item">3.5</span><span class="level-item">get</span></span></a></li></ul></li><li><a class="level is-mobile" href="#Backup-Controller"><span class="level-left"><span class="level-item">4</span><span class="level-item">Backup Controller</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#NewBackupController"><span class="level-left"><span class="level-item">4.1</span><span class="level-item">NewBackupController</span></span></a></li><li><a class="level is-mobile" href="#processBackup"><span class="level-left"><span class="level-item">4.2</span><span class="level-item">processBackup</span></span></a></li><li><a class="level is-mobile" href="#prepareBackupRequest"><span class="level-left"><span class="level-item">4.3</span><span class="level-item">prepareBackupRequest</span></span></a></li><li><a class="level is-mobile" href="#runBackup"><span class="level-left"><span class="level-item">4.4</span><span class="level-item">runBackup</span></span></a></li><li><a class="level is-mobile" href="#Backup-1"><span class="level-left"><span class="level-item">4.5</span><span class="level-item">Backup</span></span></a></li><li><a class="level is-mobile" href="#backupItem"><span class="level-left"><span class="level-item">4.6</span><span class="level-item">backupItem</span></span></a></li><li><a class="level is-mobile" href="#BackupPodVolumes"><span class="level-left"><span class="level-item">4.7</span><span class="level-item">BackupPodVolumes</span></span></a></li><li><a class="level is-mobile" href="#resync"><span class="level-left"><span class="level-item">4.8</span><span class="level-item">resync</span></span></a></li></ul></li><li><a class="level is-mobile" href="#PodVolumeBackup-Controller"><span class="level-left"><span class="level-item">5</span><span class="level-item">PodVolumeBackup Controller</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#NewPodVolumeBackupController"><span class="level-left"><span class="level-item">5.1</span><span class="level-item">NewPodVolumeBackupController</span></span></a></li><li><a class="level is-mobile" href="#processQueueItem"><span class="level-left"><span class="level-item">5.2</span><span class="level-item">processQueueItem</span></span></a></li><li><a class="level is-mobile" href="#ProcessBackup"><span class="level-left"><span class="level-item">5.3</span><span class="level-item">ProcessBackup</span></span></a></li><li><a class="level is-mobile" href="#RunBackup"><span class="level-left"><span class="level-item">5.4</span><span class="level-item">RunBackup</span></span></a></li></ul></li><li><a class="level is-mobile" href="#Schedule-Controller"><span class="level-left"><span class="level-item">6</span><span class="level-item">Schedule Controller</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#NewScheduleController"><span class="level-left"><span class="level-item">6.1</span><span class="level-item">NewScheduleController</span></span></a></li><li><a class="level is-mobile" href="#processSchedule"><span class="level-left"><span class="level-item">6.2</span><span class="level-item">processSchedule</span></span></a></li><li><a class="level is-mobile" href="#enqueueAllEnabledSchedules"><span class="level-left"><span class="level-item">6.3</span><span class="level-item">enqueueAllEnabledSchedules</span></span></a></li></ul></li><li><a class="level is-mobile" href="#BackupDeletion-Controller"><span class="level-left"><span class="level-item">7</span><span class="level-item">BackupDeletion Controller</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#NewBackupDeletionController"><span class="level-left"><span class="level-item">7.1</span><span class="level-item">NewBackupDeletionController</span></span></a></li><li><a class="level is-mobile" href="#processQueueItem-1"><span class="level-left"><span class="level-item">7.2</span><span class="level-item">processQueueItem</span></span></a></li><li><a class="level is-mobile" href="#processRequest"><span class="level-left"><span class="level-item">7.3</span><span class="level-item">processRequest</span></span></a></li><li><a class="level is-mobile" href="#InvokeDeleteActions"><span class="level-left"><span class="level-item">7.4</span><span class="level-item">InvokeDeleteActions</span></span></a></li><li><a class="level is-mobile" href="#deleteExpiredRequests"><span class="level-left"><span class="level-item">7.5</span><span class="level-item">deleteExpiredRequests</span></span></a></li></ul></li><li><a class="level is-mobile" href="#BackupSync-Controller"><span class="level-left"><span class="level-item">8</span><span class="level-item">BackupSync Controller</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#NewBackupSyncController"><span class="level-left"><span class="level-item">8.1</span><span class="level-item">NewBackupSyncController</span></span></a></li><li><a class="level is-mobile" href="#run"><span class="level-left"><span class="level-item">8.2</span><span class="level-item">run</span></span></a></li></ul></li><li><a class="level is-mobile" href="#GC-Controller"><span class="level-left"><span class="level-item">9</span><span class="level-item">GC Controller</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#NewGCController"><span class="level-left"><span class="level-item">9.1</span><span class="level-item">NewGCController</span></span></a></li><li><a class="level is-mobile" href="#processQueueItem-2"><span class="level-left"><span class="level-item">9.2</span><span class="level-item">processQueueItem</span></span></a></li><li><a class="level is-mobile" href="#enqueueAllBackups"><span class="level-left"><span class="level-item">9.3</span><span class="level-item">enqueueAllBackups</span></span></a></li></ul></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Code-Walkthrough/"><span class="level-start"><span class="level-item">Code Walkthrough</span></span><span class="level-end"><span class="level-item tag">17</span></span></a></li><li><a class="level is-mobile" href="/categories/Getting-Started/"><span class="level-start"><span class="level-item">Getting Started</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Meetup/"><span class="level-start"><span class="level-item">Meetup</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Overview/"><span class="level-start"><span class="level-item">Overview</span></span><span class="level-end"><span class="level-item tag">13</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/"><span class="level-start"><span class="level-item">Programming</span></span><span class="level-end"><span class="level-item tag">7</span></span></a><ul><li><a class="level is-mobile" href="/categories/Programming/Elegant-Coding/"><span class="level-start"><span class="level-item">Elegant Coding</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/Quick-Start/"><span class="level-start"><span class="level-item">Quick Start</span></span><span class="level-end"><span class="level-item tag">5</span></span></a></li></ul></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7"><br/>And did you get what you wanted from this life, even so?</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><script src="/js/night.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>
