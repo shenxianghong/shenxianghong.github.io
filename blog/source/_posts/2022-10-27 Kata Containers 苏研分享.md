@@ -15,4 +15,4 @@ tag:
 
 ------
 
-> [Kata Containers Performance Exploration and Practice](/file/kata-containers-chinamobile.pdf)
+> [Kata Containers Performance Exploration and Practice](/reference/kata-containers-chinamobile.pdf)

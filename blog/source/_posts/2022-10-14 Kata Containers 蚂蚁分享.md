@@ -15,4 +15,4 @@ tag:
 
 ------
 
-> [Kata Containers Best Practices  at Ant Group](/file/kata-containers-antgroup.pdf)
+> [Kata Containers Best Practices  at Ant Group](/reference/kata-containers-antgroup.pdf)
