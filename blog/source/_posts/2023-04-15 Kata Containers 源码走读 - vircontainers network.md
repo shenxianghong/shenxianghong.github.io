@@ -215,7 +215,7 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 ## xConnectVMNetwork
 
-**根据不同的网络模型，将容器和 VM 之间网络打通**
+**根据不同的网络模型，打通容器和 VM 之间的网络**
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L518)
 
@@ -257,6 +257,8 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
      综上所述，tcfilter 网络模式下，仅仅是在 veth 和 tap 设备之间配置 tc 规则，实现容器网络流量和 VM 网络流量的互通。
 
 ## xDisconnectVMNetwork
+
+**根据不同的网络模型，断开容器和 VM 之间的网络**
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L552)
 
