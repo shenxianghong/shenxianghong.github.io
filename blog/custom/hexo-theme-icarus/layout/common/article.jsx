@@ -58,7 +58,8 @@ module.exports = class extends Component {
                             {/*{shouldShowUpdated && <span class="level-item" dangerouslySetInnerHTML={{*/}
                             {/*    __html: _p('article.updated_at', `<time dateTime="${date_xml(page.updated)}" title="${new Date(page.updated).toLocaleString()}">${date(page.updated)}</time>`)*/}
                             {/*}}></span>}*/}
-                            {!index && page.updated && <span class="level-item is-hidden-mobile">
+                            {/*{!index && page.updated && <span class="level-item is-hidden-mobile">*/}
+                            {!index && page.updated && <span class="level-item">
                                 <i class="fa fa-calendar-check"></i>&nbsp;
                                 <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">{date(page.updated)}</time>
                              </span>}
