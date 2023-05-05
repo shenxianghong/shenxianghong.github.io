@@ -211,44 +211,66 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 # Network
 
+实际操作均借助 `github.com/vishvananda/netlink` 实现，该库提供了等价于 ip addr、ip link、tc qdisc、tc filter 命令行的功能。
+
 ## xConnectVMNetwork
 
 **根据不同的网络模型，将容器和 VM 之间网络打通**
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L518)
 
-1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象，进一步获取其属性信息以及网络模型（即[runtime].internetworking_model，默认为 tcfilter）
+1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象的网络模型（即[runtime].internetworking_model，默认为 tcfilter）
+
 2. 调用 hypervisor 的 **Capabilities**，判断 hypervisor 是否支持多队列特性。如果支持，则队列数设为 [hypervisor].default_vcpus；否则为 0
+
+3. 根据网络模型，创建对应的 tap 设备，连通容器和 VM 之间的网络
+
+   *无论哪种网络模式，VM 中的 eth0 都是 hypervisor 基于 tap 设备虚拟化出来，并 attach 到 VM 中建立两者的关联关系。区别在于 tap 设备和 veth 设备（即 CNI 为容器内分配的 eth0）的网络打通方式*
 
    - 如果网络模型为 macvtap
 
-     1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象
-
-     2. 创建 macvtap 设备（类比调用 ip link add \<netlink\>），其中名为 tap0_kata（示例名称，其中 0 为递增生成的索引）、txQLen 属性继承自 veth 设备且 parentIndex 指向容器 eth0 设备（下称 veth 设备）<br>*目前 macvtap 场景下需要 workaround 处理索引（索引后续用作命名 /dev/tap\<idx\>）：Linux 内核中存在一个限制，会导致 macvtap/macvlan link 在网络名称空间中创建时无法获得正确的 link 索引
+     1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象，并进一步获取 veth 设备
+     2. 创建 macvtap 设备，其中名称为 tap0_kata（示例名称，其中 0 为递增生成的索引）、txQLen 属性继承自 veth 设备且 parentIndex 指向容器 eth0 设备（下称 veth 设备）<br>*目前 macvtap 场景下需要特殊处理索引（该索引后续用作命名 /dev/tap\<idx\>），是由于 Linux 内核中存在一个限制，会导致 macvtap/macvlan link 在网络 namespace 中创建时无法获得正确的 link 索引
         https://github.com/clearcontainers/runtime/issues/708
-        在修复该错误之前，需要随机一个非冲突索引（即 8192 + 随机一个数字）并尝试创建一个 link。 如果失败，则继续重试，上限为 128 次。
-        所有内核都不会检查链接 ID 是否与主机上的 link ID 冲突，因此需要偏移 link ID 以防止与主机索引发生任何重叠，内核将确保没有竞争条件*
-
-     3. 设置 netPair 的 TAPIface.HardAddr 为 veth 设备的 mac 地址
-
-     4. 设置 macvtap 设备的 mtu 值为 veth 设备的 mtu 值（类比调用 ip link set \<netlink\> mtu \<mtu\>）
-
-     5. 设置 veth 设备的 mac 地址为随机生成的 mac 地址（类比调用 ip link set \<netlink\> address \<hwaddr\>），并设置 macvtap 设备的 mac 地址为 veth 设备的 mac 地址<br>*以上操作的核心目的是将 CNI 分配给 veth 设备的 mtc、mac 地址等信息设置给 tap 设备，后续用于调用 hypervisor 传递，创建 VM 的 eth0 设备，因此 VM 中的 eth0 和 tap 本质上为同一个设备。其中初始化 tap 设备时，随机生成了一个 mac 地址，用于设置给 veth 设备（也就是 veth 设备和 tap 设备的 mac 地址互换），结合 tap 设备的 parentIndex 指向 veth 设备，实现容器网络流量和 VM 网络流量的互通*
-
-     6. 启用 macvtap 设备（类比调用 ip link set \<netlink\> up）
-
-     7. 获取 veth 设备的全部 IP 地址（类比调用 ip addr show），设置至 netPair.VirtIface.Addrs，并从 veth 设备中移除该 IP 地址（类比调用 ip addr del \<addr\> dev \<netlink\>）<br>*清理掉 veth 设备中由 CNI 分配的 IP 地址，避免 ARP 冲突*
-
-     8. 根据步骤 2 中生成随机索引，创建 /dev/tap\<idx\>，构建 fds（[]*os.File，元素为队列长度数量的 /dev/tap\<idx\> 文件句柄），回写到 netPair 的 VMFds 中
-
-     9. 如果 [hypervisor].disable_vhost_net 未开启，则创建 /dev/vhost-net，构建 fds（[]*os.File，元素为队列长度数量的 /dev/vhost-net 文件句柄），回写到 netPair 的 VhostFds 中
+        在修复该错误之前，需要随机一个非冲突索引（即 8192 + 随机一个数字）并尝试创建一个 link。 如果失败，则继续重试，上限为 128 次。所有内核都不会检查链接 ID 是否与主机上的 link ID 冲突，因此需要偏移 link ID 以防止与主机索引发生任何重叠，内核将确保没有竞争条件*
+     3. 设置 netPair.TAPIface.HardAddr 为 veth 设备的 MAC 地址<br>*将 veth MAC 地址保存到 tap 中，以便稍后用于构建 hypervisor 命令行。 此 MAC 地址必须是 VM 内部的地址，以避免任何防火墙问题。 host 上的网络插件预期流量源自这个 MAC 地址*
+     4. 设置 macvtap 设备的 mtu 值为 veth 设备的 mtu 值
+     5. 设置 veth 设备的 MAC 地址为随机生成的 MAC 地址（即 netPair.VirtIface.HardAddr，该字段初始化时为随机生成的 MAC  地址），并设置 macvtap 设备的 MAC 地址为 veth 设备的 MAC 地址
+     6. 启用 macvtap 设备
+     7. 获取 veth 设备的全部 IP 地址，保存至 netPair.VirtIface.Addrs，并从 veth 设备中移除这些 IP 地址<br>*清理掉 veth 设备中由 CNI 分配的 IP 地址，避免 ARP 冲突*
+     8. 根据步骤 2 中生成随机索引，创建 /dev/tap\<idx\>，构建 fds（[]*os.File，元素为队列长度数量的 /dev/tap\<idx\> 文件句柄），回写到 netPair.VMFds 中
+     9. 如果 [hypervisor].disable_vhost_net 未开启，则创建 /dev/vhost-net，构建 fds（[]*os.File，元素为队列长度数量的 /dev/vhost-net 文件句柄），回写到 netPair.VhostFds 中
+     
+     综上所述，macvtap 网络模式下，是将 veth 设备和 macvtap 设备的 mac 地址等信息互换，并将 veth 设备的网络信息转移到 VM 中 eth0 设备（实质上是清理 veth 设备网络信息，同时借助 VM dhcp 获取 CNI 分配的 IP 地址），结合 macvtap 设备的 parentIndex 指向 veth 设备，实现容器网络流量和 VM 网络流量的互通。
+     
    - 如果网络模型为 tcfilter
-   
-     1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象
-     2. 创建名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的 tuntap 设备（类比调用 ip link add \<netlink\>），并返回空的 fds，回写到 netPair 的 VMFds 中
-     3. 如果 [hypervisor].disable_vhost_net 未开启，则创建 /dev/vhost-net，构建 fds（[]*os.File，元素为队列长度数量的 /dev/vhost-net 文件句柄），回写到 netPair 的 VhostFds 中
-     4. 设置 netPair 的 TAPIface.HardAddr 为 veth 设备的 mac 地址
-     5. 设置 tuntap 设备的 mtu 值为 veth 设备的 mtu 值（类比调用 ip link set \<netlink\> mtu \<mtu\>）
-     6. 启用 tuntap 设备（类比调用 ip link set \<netlink\> up）
-     7. 在 ingress 上为 tuntap 设备和 veth 设备创建一个新的 qdisc（类比调用 tc qdisc add dev \<dev\> ingress）
-     8. 为 tuntap 和 veth 设备各添加一个 tcfilter 分别指向对方，使得所有流量在两者之间可以被重定向<br>*使用 tc rules 将 veth 的 ingress 和 egress 队列分别对接 tap 的 egress 和 ingress 队列实现 veth 和 tap 的直连*
+
+     1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象，并进一步获取 veth 设备
+     2. 创建名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的 tuntap 设备，并返回空的 fds，回写到 netPair.VMFds 中
+     3. 如果 [hypervisor].disable_vhost_net 未开启，则创建 /dev/vhost-net，构建 fds（[]*os.File，元素为队列长度数量的 /dev/vhost-net 文件句柄），回写到 netPair.VhostFds 中
+     4. 设置 netPair.TAPIface.HardAddr 为 veth 设备的 MAC 地址<br>*将 veth MAC 地址保存到 tap 中，以便稍后用于构建 hypervisor 命令行。 此 MAC 地址必须是 VM 内部的地址，以避免任何防火墙问题。 host 上的网络插件预期流量源自这个 MAC 地址*
+     5. 设置 tuntap 设备的 mtu 值为 veth 设备的 mtu 值
+     6. 启用 tuntap 设备
+     7. 为 tuntap 设备和 veth 设备创建 ingress 类型的 qdisc
+     8. 为 tuntap 设备和 veth 设备创建 ingress 类型的 tc 规则分别指向对方，使得所有流量在两者之间可以被重定向
+     
+     综上所述，tcfilter 网络模式下，仅仅是在 veth 和 tap 设备之间配置 tc 规则，实现容器网络流量和 VM 网络流量的互通。
+
+## xDisconnectVMNetwork
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L552)
+
+1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象的网络模型（即[runtime].internetworking_model，默认为 tcfilter）
+2. 根据网络模型，移除对应的 tap 设备
+   - 如果网络模型为 macvtap
+     1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象，并进一步获取 macvtap 设备与 veth 设备
+     2. 移除 macvtap 设备
+     3. 将 veth 设备的 MAC 地址设置为 **xConnextVMNetwork** 流程中保存在 netPair.TAPIface.HardAddr 中的信息
+     4. 关停 veth 设备
+     5. 将 veth 设备的 IP 地址设置为 **xConnextVMNetwork** 流程中保存在 netPair.VirtIface.Addrs 中的信息
+   - 如果网络模型为 tcfilter
+     1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象，并进一步获取 tuntap 设备与 veth 设备
+     2. 关停 tuntap 设备，并移除
+     3. 获取 veth 设备所有的 ingress 类型的 tc 规则，并移除
+     4. 获取 veth 设备所有的 ingress 类型的 qdisc，并移除
+     5. 关停 veth 设备，并移除
