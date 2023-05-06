@@ -2,7 +2,7 @@
 title: "「 Virtual Kubelet 」Virtual Kubelet 概述"
 excerpt: "Virtual Kubelet 的架构概述、Provider 实现以及实践操作"
 cover: https://picsum.photos/0?sig=20221122
-thumbnail: https://avatars.githubusercontent.com/u/34250142?s=200&v=4
+thumbnail: https://landscape.cncf.io/logos/virtual-kubelet.svg
 date: 2022-11-22
 toc: true
 categories:

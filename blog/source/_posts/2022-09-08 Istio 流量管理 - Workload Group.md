@@ -2,7 +2,7 @@
 title: "「 Istio 」流量管理 — WorkloadGroup"
 excerpt: "Istio 中流量管理组件 WorkloadGroup 对象介绍"
 cover: https://picsum.photos/0?sig=20220908
-thumbnail: https://istio.io/v1.8/img/istio-bluelogo-whitebackground-framed.svg
+thumbnail: /gallery/istio/istio-thumbnail.png
 date: 2022-09-08
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Istio
 ---
 
-<div align=center><img width="120" style="border: 0px" src="https://www.vectorlogo.zone/logos/istioio/istioio-ar21.svg"></div>
+<div align=center><img width="120" style="border: 0px" src="https://landscape.cncf.io/logos/istio.svg"></div>
 
 ------
 

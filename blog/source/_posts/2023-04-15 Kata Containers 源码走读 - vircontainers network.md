@@ -205,6 +205,8 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 ## Detach
 
+
+
 ## HotAttach
 
 ## HotDetach

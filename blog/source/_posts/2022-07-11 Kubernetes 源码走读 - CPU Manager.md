@@ -2,7 +2,7 @@
 title: "「 Kubernetes」源码走读 - CPU Manager"
 excerpt: "Kubelet CM 模块中与 CPU Manager 相关的源码走读"
 cover: https://picsum.photos/0?sig=20220711
-thumbnail: https://github.com/kubernetes/kubernetes/raw/master/logo/logo.png
+thumbnail: https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/logo_with_border.svg
 date: 2022-07-11
 toc: true
 categories:

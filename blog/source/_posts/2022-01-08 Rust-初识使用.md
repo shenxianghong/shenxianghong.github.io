@@ -12,7 +12,7 @@ tag:
 - Rust
 ---
 
-<div align=center><img width="150" style="border: 0px" src="https://www.rust-lang.org/static/images/rust-social-wide.jpg"></div>
+<div align=center><img width="150" style="border: 0px" src="/gallery/rust/rust-logo.png"></div>
 
 ------
 
