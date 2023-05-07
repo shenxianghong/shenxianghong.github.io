@@ -196,20 +196,64 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 ## Attach
 
-### VethEndpoint
+### VethEndpoint、IPVlanEndpoint、MacvlanEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L99)
 
 1. 调用 Network 的 **xConnectVMNetwork**，配置网络信息
-1. 调用 hypervisor 的 **AddDevice**，添加 VethEndpoint 设备到 VM 中
+1. 调用 hypervisor 的 **AddDevice**，添加 endpoint 中相关设备到 VM 中
+
+### MacvtapEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/macvtap_endpoint.go#L68)
+
+1. 
 
 ## Detach
 
+### VethEndpoint、IPVlanEndpoint、MacvlanEndpoint
 
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L114)
+
+1. 如果 netns 不是由 Kata Containers 创建的，则直接跳过后续<br>*根据创建 pod_sandbox 或者 single_container 时，spec.Linux.Namespace 中的 network 是否指定判断，如果未指定，表示需要由 Kata Containers 创建，反之表示 netns 已经提前创建好*
+1. 进入到该 netns 中，调用 **xDisconnectVMNetwork**，移除网络信息
+
+### MacvtapEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/macvtap_endpoint.go#L92)
+
+1. 无任何操作，直接返回
 
 ## HotAttach
 
+### VethEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L130)
+
+1. 调用 Network 的 **xConnectVMNetwork**，配置网络信息
+2. 调用 hypervisor 的 **HotplugAddDevice**，热添加 endpoint 中相关设备到 VM 中
+
+### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/ipvlan_endpoint.go#L130)
+
+1. 暂不支持热添加此类设备，返回错误
+
 ## HotDetach
+
+### VethEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L147)
+
+1. 如果 netns 不是由 Kata Containers 创建的，则直接跳过后续<br>*根据创建 pod_sandbox 或者 single_container 时，spec.Linux.Namespace 中的 network 是否指定判断，如果未指定，表示需要由 Kata Containers 创建，反之表示 netns 已经提前创建好*
+1. 进入到该 netns 中，调用 **xDisconnectVMNetwork**，移除网络信息
+1. 调用 hypervisor 的 **HotplugRemoveDevice**，热移除 endpoint 中 VM 的相关设备
+
+### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/ipvlan_endpoint.go#L135)
+
+1. 暂不支持热移除此类设备，返回错误
 
 # Network
 
@@ -260,7 +304,7 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 ## xDisconnectVMNetwork
 
-**根据不同的网络模型，断开容器和 VM 之间的网络**
+**根据不同的网络模型，移除容器和 VM 之间的网络配置**
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L552)
 

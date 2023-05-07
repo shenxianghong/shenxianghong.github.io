@@ -201,7 +201,7 @@ shim server 对外暴露的 gRPC 服务。
       1. 将 OCI spec 和 runtimeConfig 转为 virtcontainers 所需的配置结构（即 sandboxConfig）
          额外注明：获取目标挂载点为 /dev/shim 的大小，一般为 65536k，如果挂载类型为 bind 时，则根据 s.Bsize * s.Blocks 重新计算。此外，设置 \<XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/\<containerID\>/shared 作为 virtiofs 或 virtio9p 下的 guest 与 host 的共享目录；rootfs 目录作为 sandbox 的 rootfs
       2. 当 host 启用 FIPS 时（即 /proc/sys/crypto/fips_enabled 为 1），sandboxConfig 中额外追加 kernel 参数
-      3. 启动容器前优先创建网络命名空间。当 [runtime].disable_new_netns 启用时，则直接跳过创建。networkID（spec.Linux.Namespace 中 type 为 network 的 path）为空时，则根据具体是否为 rootless，执行对应的创建网络命名空间流程。最后，判断创建出来的网络命名空间（格式为 /proc/pid/ns/net 或者 /proc/\<pid\>/task/\<tid\>/ns/net）是否与当前进程网络命名空间一致（当前进程可以代表 host 网络，而 Kata Containers 是不支持采用 host 网络作为容器网络的）
+      3. 启动容器前优先创建 netns。当 [runtime].disable_new_netns 启用时（表示 shim 和 hypervisor 会运行在 host netns 中，而非创建新的），则直接跳过后续创建；否则，当 networkID（spec.Linux.Namespace 中 type 为 network 的 path）为空时（表示 netns 并非由 CNI 提前创建好，而是需要由 Kata Containers 创建，比如脱离 K8s 运行 Kata 的场景中），则根据具体是否为 rootless，执行对应的创建网络命名空间流程。如果为提前创建好的 netns，需要判断其是否与当前进程的 netns 不一致（当前进程可以代表 host 网络，而 Kata Containers 是不支持采用 host 网络作为容器网络的）
       4. 执行 spec.Hooks.Prestart（Prestart 是在执行容器进程之前要运行的 hook 列表，现已废弃） 中定义的动作
       5. 执行 spec.Hooks.CreateRuntime（CreateRuntime 是在创建容器之后但在调用 pivot_root 或任何等效操作之前要运行的 hook 列表） 中定义的动作
       6. 调用 VC 的 **CreateSandbox**，根据 sandboxConfig 信息创建 sandbox，并启动 pod_sandbox 容器
