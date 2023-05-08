@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v3.0.0**
+> based on **3.0.0**
 
 virtcontainers 本质上不是一个独立组建，而是一个用于构建硬件虚拟化容器运行时的 Golang 库。
 

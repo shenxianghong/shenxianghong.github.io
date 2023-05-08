@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v1.6.3**
+> based on **v1.6.3**
 
 可以将 CSI 快照支持集成到 Velero 中，使 Velero 能够使用 Kubernetes CSI 快照 API 备份和恢复 CSI 支持的卷。通过 CSI 快照 API，Velero 可以支持任何具有 CSI 快照的卷，而无需特定的 Velero 插件。
 

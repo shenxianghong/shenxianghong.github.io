@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v1.15.0**
+> based on **1.15.0**
 
 ProxyConfig 暴露代理级别的配置选项。 ProxyConfig 可以基于每个工作负载、每个命名空间或网格范围进行配置。 ProxyConfig 不是必需的资源。
 

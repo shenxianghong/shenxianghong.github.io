@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v3.0.0**
+> based on **3.0.0**
 
 Kata monitor 是一个守护进程，能够收集和暴露在同一 host 上运行的所有 Kata 容器工作负载相关的指标。一旦启动，它会检测 containerd-shim-kata-v2 系统中所有正在运行的 Kata Containers 运行时，并暴露一些 HTTP endpoints。主要 endpoint 是 /metrics（用于聚合来自所有 Kata 工作负载的指标）。
 

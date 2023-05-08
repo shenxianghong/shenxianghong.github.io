@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v1.15.0**
+> based on **1.15.0**
 
 ServiceEntry 允许将外部的服务添加到 Istio 的内部服务注册表中，以便网格中的服务可以访问/路由到这些手动指定的服务。ServiceEntry 描述了服务的属性（DNS 名称、VIP、端口、协议、端点）。这些服务可能在网格外部（例如，Web API）或网格内部服务，它们不属于平台的服务注册表（例如，一组与 Kubernetes 中的服务通信的 VM）。此外，还可以使用 workloadSelector 字段动态选择 ServiceEntry  的 endpoint。这些 endpoint 可以是使用 WorkloadEntry 对象或 Kubernetes Pod 声明的 VM 工作负载。在单个服务下同时选择 Pod 和 VM 的能力允许将服务从 VM 迁移到 Kubernetes，而无需更改与服务关联的现有 DNS 名称。
 

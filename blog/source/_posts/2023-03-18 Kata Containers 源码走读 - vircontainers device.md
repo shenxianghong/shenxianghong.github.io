@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v3.0.0**
+> based on **3.0.0**
 
 DeviceReceiver 是一组相对而言较底层实现方式，其直接调用 hypervisor，执行设备热插拔等操作；而 Device 是一组设备实现的方式，内部会调用 DeviceReceiver 的接口实现各自的热插拔的能力；对外暴露设备管理入口的则是 DeviceManager，其内部屏蔽了设备的具体类型，而是直接调用 Device 的接口管理设备。
 

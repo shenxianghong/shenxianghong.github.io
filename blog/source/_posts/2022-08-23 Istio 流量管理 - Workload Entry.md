@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v1.15.0**
+> based on **1.15.0**
 
 WorkloadEntry 描述单个非 Kubernetes 工作负载的属性，例如 VM 或裸机服务器，因为它被载入到网格中。 WorkloadEntry 必须伴随着 Istio ServiceEntry，它通过适当的标签选择工作负载并为 MESH_INTERNAL 服务（主机名、端口属性等）提供服务定义。 ServiceEntry 对象可以根据服务条目中指定的标签选择器选择多个工作负载条目以及 Kubernetes pod。
 

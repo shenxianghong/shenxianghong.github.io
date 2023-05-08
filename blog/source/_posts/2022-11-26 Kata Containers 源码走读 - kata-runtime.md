@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v3.0.0**
+> based on **3.0.0**
 
 kata-runtime 是一个可执行程序，用于运行基于 OCI（Open Container Initiative）构建打包的应用。
 

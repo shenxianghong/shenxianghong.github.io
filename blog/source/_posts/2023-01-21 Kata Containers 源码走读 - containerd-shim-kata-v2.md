@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v3.0.0**
+> based on **3.0.0**
 
 本质上，Kata agent 负责 VM（也称 sandbox、guest 等）中的容器等进程的生命周期的管理。而 containerd-shim-kata-v2 作为 Kata agent 唯一的服务入口（本身是一个可执行程序，运行后即为 shim server），一部分实现了 Containerd shimv2 接口，暴露 shim API 用于与 Containerd 的 gRPC 通信，一部分暴露 HTTP endpoints 用于命令行工具和 Kata monitor 的服务请求处理，内部调用 virtcontainers 的诸多子模块，提供了用户和 Containerd 对 VM 以及容器进程的生命周期管理的能力。
 

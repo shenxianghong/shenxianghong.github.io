@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v1.6.3**
+> based on **v1.6.3**
 
 # Backup
 

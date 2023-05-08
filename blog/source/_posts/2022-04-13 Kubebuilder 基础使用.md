@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v3.3.0**
+> based on **v3.3.0**
 
 # Overview
 

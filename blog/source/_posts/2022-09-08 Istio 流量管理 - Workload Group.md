@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> Based on **v1.15.0**
+> based on **1.15.0**
 
 WorkloadGroup 描述工作负载实例的集合。提供了工作负载实例可用于引导其代理的规范，包括元数据和标识。它仅适用于虚拟机等非 Kubernetes 工作负载，旨在模仿用于 Kubernetes 工作负载的现有 Sidecar 注入和部署规范模型以引导 Istio 代理。
 
