@@ -1,19 +1,12 @@
 ---
-title: "「 Serverless 」Serverless 概述"
+title: "Serverless 概述"
 excerpt: "初识无服务架构 - Serverless"
 cover: https://picsum.photos/0?sig=20220611
-thumbnail: https://app.serverless.com/static/media/icon-text-serverless-framework.d6f82898.svg
 date: 2022-06-11
 toc: true
 categories:
 - Serverless
-tag:
-- Serverless
 ---
-
-<div align=center><img width="200" style="border: 0px" src="https://landscape.cncf.io/logos/serverless.svg"></div>
-
-------
 
 # 背景
 
@@ -55,14 +48,16 @@ PaaS 是对软件的一个更高的抽象层次，已经接触到应用程序的
 
 ## 什么是 Serverless
 
+<div align=center><img width="400" style="border: 0px" src="/gallery/serverless/architecture.png"></div>
+
 Serverless 是由事件（event）驱动的全托管计算服务。用户无需管理服务器等基础设施，只需编写代码和选择触发器（trigger），（比如 rpc 请求，定时器等）并上传。其余的工作（实例选择、 扩缩容、部署、容灾、监控、日志、安全补丁等）全部由 Serverless 系统托管。用户只需要为代码实际运行消耗的资源付费——代码未运行则不产生费用。
 
-Serverless 相对于 Serverful，对业务用户强调 noserver（Serverless并不是说没有服务器，只是业务人员无需关注服务器了，代码仍然是运行在真实存在的服务器上）的运维理念，业务人员只需要聚焦业务逻辑代码。
+Serverless 相对于 Serverful，对业务用户强调 noserver（Serverless 并不是说没有服务器，只是业务人员无需关注服务器了，代码仍然是运行在真实存在的服务器上）的运维理念，业务人员只需要聚焦业务逻辑代码。
 
 Serverless 相比 Serverful，有以下 3 个改变：
 
 1. 弱化了存储和计算之间的联系。服务的储存和计算被分开部署和收费，存储不再是服务本身的一部分，而是演变成了独立的云服务，这使得计算变得无状态化，更容易调度和扩缩容，同时也降低了数据丢失的风险
-2. 代码的执行不再需要手动分配资源。不需要为服务的运行指定需要的资源（比如使用几台机器、多大的带宽、多大的磁盘等），只需要提供一份代码，剩下的交由 Serverless 平台去处理就行了。当前阶段的实现平台分配资源时还需要用户方提供一些策略，例如单个实例的规格和最大并发数，单实例的最大 cpu 使用率。理想的情况是通过某些学习算法来进行完全自动的自适应分配
+2. 代码的执行不再需要手动分配资源。不需要为服务的运行指定需要的资源（比如使用几台机器、多大的带宽、多大的磁盘等），只需要提供一份代码，剩下的交由 Serverless 平台去处理就行了。当前阶段的实现平台分配资源时还需要用户方提供一些策略，例如单个实例的规格和最大并发数，单实例的最大 CPU 使用率。理想的情况是通过某些学习算法来进行完全自动的自适应分配
 3. 按使用量计费。Serverless 按照服务的使用量（调用次数、时长等）计费，而不是像传统的 Serverful 服务那样，按照使用的资源（ECS 实例、VM 的规格等）计费
 
 ## Serverless 的定义
@@ -75,7 +70,7 @@ BaaS（Backend as a Service）后端即服务，一般是一个个的 API 调用
 
 ### Fass
 
-FaaS（Functions as a Service）函数即服务，FaaS 是无服务器计算的一种形式，当前使用最广泛的是 AWS 的Lambada。
+FaaS（Functions as a Service）函数即服务，FaaS 是无服务器计算的一种形式，当前使用最广泛的是 AWS 的 Lambada。
 
 FaaS 本质上是一种事件驱动的由消息触发的服务，FaaS 供应商一般会集成各种同步和异步的事件源，通过订阅这些事件源，可以突发或者定期的触发函数运行。
 
