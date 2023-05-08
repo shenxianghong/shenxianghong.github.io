@@ -6,7 +6,7 @@ thumbnail: https://blogs.vmware.com/opensource/files/2022/03/velero.png
 date: 2022-02-20
 toc: true
 categories:
-- Code Walkthrough
+- Disaster Recovery
 tag:
 - Velero
 ---

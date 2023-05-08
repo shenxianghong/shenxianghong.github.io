@@ -6,7 +6,7 @@ thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f966909460
 date: 2022-10-27
 toc: true
 categories:
-- Meetup
+- Container Runtime
 tag:
 - Kata Containers
 ---

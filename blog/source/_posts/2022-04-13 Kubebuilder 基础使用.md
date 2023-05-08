@@ -6,7 +6,7 @@ thumbnail: https://storage.googleapis.com/kubebuilder-logos/icon-no-text.png
 date: 2022-04-13
 toc: true
 categories:
-- Getting Started
+- Kubernetes
 tag:
 - Kubebuilder
 ---

@@ -6,7 +6,7 @@ thumbnail: https://landscape.cncf.io/logos/virtual-kubelet.svg
 date: 2022-11-22
 toc: true
 categories:
-- Overview
+- Serverless
 tag:
 - Virtual Kubelet
 ---

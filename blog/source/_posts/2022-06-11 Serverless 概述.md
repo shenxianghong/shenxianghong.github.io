@@ -6,7 +6,7 @@ thumbnail: https://app.serverless.com/static/media/icon-text-serverless-framewor
 date: 2022-06-11
 toc: true
 categories:
-- Overview
+- Serverless
 tag:
 - Serverless
 ---

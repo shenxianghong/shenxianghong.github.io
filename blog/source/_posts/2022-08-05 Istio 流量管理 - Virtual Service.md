@@ -6,7 +6,7 @@ thumbnail: /gallery/istio/istio-thumbnail.png
 date: 2022-08-05
 toc: true
 categories:
-- Overview
+- Service Mesh
 tag:
 - Istio
 ---

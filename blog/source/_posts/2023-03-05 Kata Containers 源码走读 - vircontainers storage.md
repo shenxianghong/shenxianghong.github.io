@@ -6,7 +6,7 @@ thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f966909460
 date: 2023-03-05
 toc: true
 categories:
-- Code Walkthrough
+- Container Runtime
 tag:
 - Kata Containers
 ---

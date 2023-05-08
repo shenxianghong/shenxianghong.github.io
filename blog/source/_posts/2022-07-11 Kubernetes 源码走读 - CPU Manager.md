@@ -6,7 +6,7 @@ thumbnail: https://raw.githubusercontent.com/kubernetes/kubernetes/master/logo/l
 date: 2022-07-11
 toc: true
 categories:
-- Code Walkthrough
+- Kubernetes
 tag:
 - Kubernetes
 ---

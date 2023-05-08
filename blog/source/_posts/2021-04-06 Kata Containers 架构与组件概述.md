@@ -6,7 +6,7 @@ thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f966909460
 date: 2021-04-06
 toc: true
 categories:
-- Overview
+- Container Runtime
 tag:
 - Kata Containers
 ---
