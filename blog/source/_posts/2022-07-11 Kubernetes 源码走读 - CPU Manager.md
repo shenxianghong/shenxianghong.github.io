@@ -15,7 +15,7 @@ tag:
 
 ------
 
-> base on **v1.20.12**
+> based on **v1.20.12**
 
 # state
 
