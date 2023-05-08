@@ -10789,7 +10789,7 @@ article.media .image {
   height: 64px;
 }
 article.media .image img {
-  object-fit: cover;
+  object-fit: contain;
   width: 100%;
   height: 100%;
 }
