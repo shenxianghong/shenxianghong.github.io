@@ -6,7 +6,7 @@
   <link href="http://shenxianghong.github.io/atom.xml" rel="self"/>
   
   <link href="http://shenxianghong.github.io/"/>
-  <updated>2023-05-08T10:02:07.803Z</updated>
+  <updated>2023-05-09T09:54:24.103Z</updated>
   <id>http://shenxianghong.github.io/</id>
   
   <author>
@@ -21,9 +21,9 @@
     <link href="http://shenxianghong.github.io/2023/05/08/2023-05-08%20OpenFaaS%20%E6%A6%82%E8%BF%B0/"/>
     <id>http://shenxianghong.github.io/2023/05/08/2023-05-08%20OpenFaaS%20%E6%A6%82%E8%BF%B0/</id>
     <published>2023-05-07T16:00:00.000Z</published>
-    <updated>2023-05-08T10:02:07.803Z</updated>
+    <updated>2023-05-09T09:54:24.103Z</updated>
     
-    <content type="html"><![CDATA[<div align=center><img width="200" style="border: 0px" src="https://blog.alexellis.io/content/images/2017/08/faas_side.png"></div><hr><blockquote><p>based on <strong>0.26.3</strong></p></blockquote>]]></content>
+    <content type="html"><![CDATA[<div align=center><img width="200" style="border: 0px" src="/gallery/openfaas/openfaas-logo.png"></div><hr><blockquote><p>based on <strong>0.26.3</strong></p></blockquote><h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><blockquote><p>Serverless Functions Made Simple</p></blockquote><p>OpenFaaS 使开发人员可以轻松地将事件驱动（event-driven）的功能和微服务部署到 Kubernetes 中，而无需重复的模板代码。OpenFaaS 将代码或现有的二进制文件打包到 Docker 镜像中，使其具有自动缩放和服务指标的高度可扩展点。</p><p>OpenFaaS 具备以下特点：</p><ul><li>支持丰富 UI 和一键安装，便于使用</li><li>借助<a href="https://www.openfaas.com/blog/template-store/">模板库</a> 或 Dockerfile 以任何语言编写服务和函数</li><li>构建和发布代码至 Docker 镜像或其他 OCI 兼容格式的镜像中</li><li>易于移植，借助 <a href="https://github.com/openfaas/faas-netes">faas-netes</a> 可在现有硬件或公有&#x2F;私有云上运行</li><li>支持 YAML 格式的命令行工具 — <a href="https://github.com/openfaas/faas-cli">faas-cli</a> ，用于模板化和定义函数</li><li>自动缩放，支持流量高峰扩容，并在空闲时缩减直至 0</li><li><a href="https://www.openfaas.com/pricing/">版本丰富</a>，包含社区版、标准版和商业版</li></ul><h1 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h1><p>无论是本地环境、自托管集群，还是带有托管服务（如 AWS Elastic Kubernetes Service (EKS)）的平台，部署 OpenFaaS 的推荐平台都是 <strong>Kubernetes</strong>。</p><div align=center><img width="800" style="border: 0px" src="https://github.com/openfaas/faas/raw/master/docs/of-layer-overview.png"></div><h2 id="CI-x2F-GitOps-layer"><a href="#CI-x2F-GitOps-layer" class="headerlink" title="CI &#x2F; GitOps layer"></a>CI &#x2F; GitOps layer</h2><p>OpenFaaS 即可以运行函数，也可以运行 HTTP 微服务。每个工作负载都构建到一个容器镜像中，并在发布至镜像仓库。</p><p>在开发阶段，通常使用 faas-cli 手动操作完成，而在生产阶段，有几个流行的选择：</p><ul><li><p>源代码控制管理（SCM）系统中内置的 CI 工具</p><p>GitHub Actions 或 GitLab pipeline 通过在 Job 中运行 faas-cli deploy 或 faas-cli up 提供构建和部署函数。部署是在 Job 完成后进行的，将变更推送到集群中，如果需要访问私有 VPC 或本地的集群，可以通过使用私有且安全的入口隧道来实现</p></li><li><p>使用 ArgoCD 和 Flux 等 GitOps 控制器</p><p>GitOps 方法通常涉及在新版本可用时立即持续部署。部署是通过从特殊的配置库中获取预期状态来进行的</p></li></ul><h2 id="Application-Layer"><a href="#Application-Layer" class="headerlink" title="Application Layer"></a>Application Layer</h2><h2 id="Infrastructure-Layer"><a href="#Infrastructure-Layer" class="headerlink" title="Infrastructure Layer"></a>Infrastructure Layer</h2>]]></content>
     
     
     <summary type="html">OpenFaaS 概述</summary>
