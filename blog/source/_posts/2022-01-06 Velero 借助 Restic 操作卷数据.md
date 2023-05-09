@@ -2,7 +2,7 @@
 title: "「 Velero 」操作卷数据（Restic）"
 excerpt: "借助 Restic 实现对容器卷数据的快速、安全和高效备份与恢复"
 cover: https://picsum.photos/0?sig=20220106
-thumbnail: https://blogs.vmware.com/opensource/files/2022/03/velero.png
+thumbnail: https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/stacked/199150-vmw-os-lgo-velero-final_stacked-gry.svg
 date: 2022-01-06
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Velero
 ---
 
-<div align=center><img width="170" style="border: 0px" src="https://velero.io/img/Velero.svg"></div>
+<div align=center><img width="170" style="border: 0px" src="https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/one-line/199150-vmw-os-lgo-velero-final_gry.svg"></div>
 
 ------
 
