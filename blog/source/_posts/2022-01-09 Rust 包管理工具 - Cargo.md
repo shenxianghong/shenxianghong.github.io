@@ -7,7 +7,6 @@ date: 2022-01-09
 toc: true
 categories:
 - Programming
-- Quick Start
 tag:
 - Rust
 ---

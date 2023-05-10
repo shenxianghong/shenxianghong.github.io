@@ -6,6 +6,7 @@ thumbnail: https://github.com/cncf/artwork/raw/master/projects/kubernetes/stacke
 date: 2022-07-11
 toc: true
 categories:
+- Scheduling & Orchestration
 - Kubernetes
 tag:
 - Kubernetes

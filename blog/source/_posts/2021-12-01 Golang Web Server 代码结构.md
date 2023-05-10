@@ -7,7 +7,6 @@ date: 2021-12-01
 toc: true
 categories:
 - Programming
-- Elegant Coding
 tag:
 - Golang
 ---
