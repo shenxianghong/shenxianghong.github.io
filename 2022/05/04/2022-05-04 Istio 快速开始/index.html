@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Istio 」快速开始 - 🐾Corgi</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="🐾Corgi"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="🐾Corgi"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="初识 Service Mesh，借助 Bookinfo 示例，简单上手 Istio 使用"><meta property="og:type" content="blog"><meta property="og:title" content="「 Istio 」快速开始"><meta property="og:url" content="http://shenxianghong.github.io/2022/05/04/2022-05-04%20Istio%20%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B/"><meta property="og:site_name" content="🐾Corgi"><meta property="og:description" content="初识 Service Mesh，借助 Bookinfo 示例，简单上手 Istio 使用"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://picsum.photos/0?sig=20220504"><meta property="article:published_time" content="2022-05-03T16:00:00.000Z"><meta property="article:modified_time" content="2023-05-11T07:27:33.562Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Istio"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://picsum.photos/0?sig=20220504"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://shenxianghong.github.io/2022/05/04/2022-05-04%20Istio%20%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B/"},"headline":"「 Istio 」快速开始","image":[],"datePublished":"2022-05-03T16:00:00.000Z","dateModified":"2023-05-11T07:27:33.562Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"🐾Corgi","logo":{"@type":"ImageObject","url":"http://shenxianghong.github.io/img/logo.svg"}},"description":"初识 Service Mesh，借助 Bookinfo 示例，简单上手 Istio 使用"}</script><link rel="canonical" href="http://shenxianghong.github.io/2022/05/04/2022-05-04%20Istio%20%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B/"><link rel="alternate" href="/atom.xml" title="🐾Corgi" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/xcode.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+  (function () {
+      function switchTab() {
+          if (!location.hash) {
+            return;
+          }
+
+          const id = '#' + CSS.escape(location.hash.substring(1));
+          const $tabMenu = document.querySelector(`.tabs a[href="${id}"]`);
+          if (!$tabMenu) {
+            return;
+          }
+
+          const $tabMenuContainer = $tabMenu.parentElement.parentElement;
+          Array.from($tabMenuContainer.children).forEach($menu => $menu.classList.remove('is-active'));
+          Array.from($tabMenuContainer.querySelectorAll('a'))
+              .map($menu => document.getElementById($menu.getAttribute("href").substring(1)))
+              .forEach($content => $content.classList.add('is-hidden'));
+
+          if ($tabMenu) {
+              $tabMenu.parentElement.classList.add('is-active');
+          }
+          const $activeTab = document.querySelector(id);
+          if ($activeTab) {
+              $activeTab.classList.remove('is-hidden');
+          }
+      }
+      switchTab();
+      window.addEventListener('hashchange', switchTab, false);
+  })();
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item night" id="night-nav" title="Night Mode" href="javascript:;"><i class="fas fa-moon" id="night-icon"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="https://picsum.photos/0?sig=20220504" alt="「 Istio 」快速开始"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><i class="fa fa-calendar"></i> <time dateTime="${date_xml(page.date)}" title="${date_xml(page.date)}">2022-05-04</time></span><span class="level-item"><i class="fa fa-calendar-check"></i> <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">2023-05-11</time></span><span class="level-item"><i class="far fa-folder-open"></i> <a class="link-muted" href="/categories/Service-Mesh/">Service Mesh</a></span><span class="level-item"><i class="far fa-clock"></i> 44 minutes read (About 6641 words)</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Istio 」快速开始</h1><div class="content"><div align=center><img width="120" style="border: 0px" src="https://github.com/cncf/artwork/raw/master/projects/istio/horizontal/color/istio-horizontal-color.svg"></div>
+
+<hr>
+<blockquote>
+<p>based on <strong>1.15.0</strong></p>
+</blockquote>
+<h1 id="Service-Mesh"><a href="#Service-Mesh" class="headerlink" title="Service Mesh"></a>Service Mesh</h1><h2 id="什么是服务网格"><a href="#什么是服务网格" class="headerlink" title="什么是服务网格"></a>什么是服务网格</h2><p>Service Mesh 又译作 “服务网格”，作为服务间通信的基础设施层。Buoyant 公司的 CEO Willian Morgan 在他的这篇文章 <a target="_blank" rel="noopener" href="https://buoyant.io/what-is-a-service-mesh/">WHAT’S A SERVICE MESH? AND WHY DO I NEED ONE?</a> 中解释了什么是 Service Mesh，为什么云原生应用需要 Service Mesh。</p>
+<p>服务网格是用于处理服务间通信的专用基础设施层。它负责通过包含现代云原生应用程序的复杂服务拓扑来可靠地传递请求。实际上，服务网格通常通过一组轻量级网络代理来实现，这些代理与应用程序代码一起部署，而不需要感知应用程序本身。—— <a target="_blank" rel="noopener" href="https://twitter.com/wm">Willian Morgan</a> Buoyant CEO</p>
+<p>服务网格（Service Mesh）这个术语通常用于描述构成这些应用程序的微服务网络以及应用之间的交互。随着规模和复杂性的增长，服务网格越来越难以理解和管理。它的需求包括服务发现、负载均衡、故障恢复、指标收集和监控以及通常更加复杂的运维需求，例如 A&#x2F;B 测试、金丝雀发布、限流、访问控制和端到端认证等。</p>
+<h2 id="服务网格的特点"><a href="#服务网格的特点" class="headerlink" title="服务网格的特点"></a>服务网格的特点</h2><p>服务网格有如下几个特点：</p>
+<ul>
+<li>应用程序间通讯的中间层</li>
+<li>轻量级网络代理</li>
+<li>应用程序无感知</li>
+<li>解耦应用程序的重试&#x2F;超时、监控、追踪和服务发现</li>
+</ul>
+<p>目前两款流行的服务网格开源软件 <a target="_blank" rel="noopener" href="https://linkerd.io/">Linkerd</a> 和 <a target="_blank" rel="noopener" href="https://istio.io/">Istio</a> 都可以直接在 Kubernetes 中集成，其中 Linkerd 是 CNCF 成员项目，并在 2021 年 7 月毕业。Istio 在 2018年7月31日宣布 1.0，并在 2020 年 7 月将<a target="_blank" rel="noopener" href="https://istio.io/latest/blog/2020/open-usage/">商标捐献</a>给 <a target="_blank" rel="noopener" href="https://openusage.org/">Open Usage Commons</a>。</p>
+<h2 id="理解服务网格"><a href="#理解服务网格" class="headerlink" title="理解服务网格"></a>理解服务网格</h2><p>如果用一句话来解释什么是服务网格，可以将它比作是应用程序或者说微服务间的 TCP&#x2F;IP，负责服务之间的网络调用、限流、熔断和监控。对于编写应用程序来说一般无须关心 TCP&#x2F;IP 这一层（比如通过 HTTP 协议的 RESTful 应用），同样使用服务网格也就无须关心服务之间的那些原来是通过应用程序或者其他框架实现的事情，比如 Spring Cloud、OSS，现在只要交给服务网格就可以了。</p>
+<p><a target="_blank" rel="noopener" href="http://philcalcado.com/">Phil Calçado</a> 在他的这篇博客 <a target="_blank" rel="noopener" href="http://philcalcado.com/2017/08/03/pattern_service_mesh.html">Pattern: Service Mesh</a> 中详细解释了服务网格的来龙去脉：</p>
+<ol>
+<li>从最原始的主机之间直接使用网线相连</li>
+<li>网络层的出现</li>
+<li>集成到应用程序内部的控制流</li>
+<li>分解到应用程序外部的控制流</li>
+<li>应用程序的中集成服务发现和断路器</li>
+<li>出现了专门用于服务发现和断路器的软件包&#x2F;库，如 <a target="_blank" rel="noopener" href="https://finagle.github.io/">Twitter 的 Finagle</a> 和 <a target="_blank" rel="noopener" href="https://code.fb.com/networking-traffic/introducing-proxygen-facebook-s-c-http-framework/">Facebook 的 Proxygen</a>，这时候还是集成在应用程序内部</li>
+<li>出现了专门用于服务发现和断路器的开源软件，如 <a target="_blank" rel="noopener" href="https://netflix.github.io/">Netflix OSS</a>、Airbnb 的 <a target="_blank" rel="noopener" href="https://github.com/airbnb/synapse">synapse</a> 和 <a target="_blank" rel="noopener" href="https://github.com/airbnb/nerve">nerve</a></li>
+<li>最后作为微服务的中间层服务网格出现</li>
+</ol>
+<p>服务网格作为 sidecar 运行，对应用程序来说是透明，所有应用程序间的流量都会通过它，所以对应用程序流量的控制都可以在 serivce mesh 中实现。</p>
+<h2 id="服务网格如何工作？"><a href="#服务网格如何工作？" class="headerlink" title="服务网格如何工作？"></a>服务网格如何工作？</h2><p>下面以 Istio 为例讲解服务网格如何在 Kubernetes 中工作：</p>
+<ol>
+<li>Istio 将服务请求路由到目的地址，根据中的参数判断是到生产环境、测试环境还是 staging 环境中的服务（服务可能同时部署在这三个环境中），是路由到本地环境还是公有云环境？所有的这些路由信息可以动态配置，可以是全局配置也可以为某些服务单独配置</li>
+<li>当 Istio 确认了目的地址后，将流量发送到相应服务发现端点，在 Kubernetes 中是 service，然后 service 会将服务转发给后端的实例</li>
+<li>Istio 根据它观测到最近请求的延迟时间，选择出所有应用程序的实例中响应最快的实例</li>
+<li>Istio 将请求发送给该实例，同时记录响应类型和延迟数据</li>
+<li>如果该实例挂了、不响应了或者进程不工作了，Istio 将把请求发送到其他实例上重试</li>
+<li>如果该实例持续返回 error，Istio 会将该实例从负载均衡池中移除，稍后再周期性得重试</li>
+<li>如果请求的截止时间已过，Istio 主动失败该请求，而不是再次尝试添加负载</li>
+<li>Istio 以 metric 和分布式追踪的形式捕获上述行为的各个方面，这些追踪信息将发送到集中 metric 系统</li>
+</ol>
+<h2 id="为何使用服务网格？"><a href="#为何使用服务网格？" class="headerlink" title="为何使用服务网格？"></a>为何使用服务网格？</h2><p>服务网格并没有给我们带来新功能，它是用于解决其他工具已经解决过的问题，只不过这次是在云原生的 Kubernetes 环境下的实现。</p>
+<p>在传统的 MVC 三层 Web 应用程序架构下，服务之间的通讯并不复杂，在应用程序内部自己管理即可，但是在现今的复杂的大型网站情况下，单体应用被分解为众多的微服务，服务之间的依赖和通讯十分复杂，出现了 Twitter 开发的 <a target="_blank" rel="noopener" href="https://twitter.github.io/finagle/">Finagle</a>、Netflix 开发的 <a target="_blank" rel="noopener" href="https://github.com/Netflix/Hystrix">Hystrix</a> 和 Google 的 Stubby 这样的 “胖客户端” 库，这些就是早期的服务网格，但是它们都近适用于特定的环境和特定的开发语言，并不能作为平台级的服务网格支持。</p>
+<p>在云原生架构下，容器的使用给予了异构应用程序的更多可行性，Kubernetes 增强的应用的横向扩容能力，用户可以快速的编排出复杂环境、复杂依赖关系的应用程序，同时开发者又无须过分关心应用程序的监控、扩展性、服务发现和分布式追踪这些繁琐的事情而专注于程序开发，赋予开发者更多的创造性。</p>
+<p>要想说明为什么要使用服务网格，那就要从微服务架构说起，可以说服务网格很大程度上是一种新一代的微服务架构，它解决了微服务中网络层操控性、弹性、可视性的问题。</p>
+<h3 id="微服务架构"><a href="#微服务架构" class="headerlink" title="微服务架构"></a>微服务架构</h3><p>开发人员经常将云原生应用程序分解为多个执行特定动作的服务。你可能有一个只处理客户的服务和另一个处理订单或付款的服务。所有这些服务都通过网络相互沟通。如果一个新的付款需要被处理，请求会被发送到付款服务。如果客户数据需要更新，请求会被发送到客户服务，等等。</p>
+<p>这种类型的架构被称为微服务架构。这种架构有几个好处。你可以有多个较小的团队从事个别服务。这些团队可以灵活地选择他们的技术栈和语言，并且通常有独立部署和发布服务的自主权。这种机制得以运作得益于在其背后通信的网络。随着服务数量的增加，它们之间的通信和网络通信也在增加。服务和团队的数量使得监控和管理通信逻辑变得相当复杂。由于我们也知道网络是不可靠的，它们会失败，所有这些的结合使得微服务的管理和监控相当复杂。</p>
+<h3 id="服务网格概述"><a href="#服务网格概述" class="headerlink" title="服务网格概述"></a>服务网格概述</h3><p>服务网格被定义为一个专门的基础设施层，用于管理服务与服务之间的通信，使其可管理、可见、可控制。在某些版本的定义中，你可能还会听到服务网格如何使服务间的通信安全和可靠。如果我必须用一个更直接的句子来描述服务网格，我会说，服务网格是关于服务之间的通信。</p>
+<p>但是，服务网格是如何帮助通信的呢？让我们思考一下通信逻辑和它通常所在的地方。在大多数情况下，开发人员将这种逻辑作为服务的一部分来构建。通信逻辑是处理入站或出站请求的任何代码，重试逻辑，超时，甚至可能是流量路由。因此，无论何时服务 A 调用服务 B，请求都要经过这个通信代码逻辑，这个逻辑决定如何处理这个请求。</p>
+<p>我们提到，如果我们采用微服务的方法，最终可能会有大量的服务。我们如何处理所有这些服务的通信逻辑呢？我们可以创建一个包含这种逻辑的共享库，并在多个地方重用它。假设我们对所有的服务都使用相同的堆栈或编程语言，共享库的方法可能会很有效。如果我们不这样做，我们将不得不重新实现这个库，这会带来巨大的工作量而且效率低下。你也可能使用自己本身不拥有代码库的服务。在这种情况下，我们无法控制通信逻辑或监控。</p>
+<p>第二个问题是配置。除了配置你的应用程序外，我们还必须维护通信逻辑配置。如果我们需要同时调整或更新多个服务，我们将不得不为每个服务单独进行调整。</p>
+<p>服务网格所做的是，它将这种通信逻辑、重试、超时等从单个服务中分离出来，并将其移到一个单独的基础设施层。在服务网格的情况下，基础设施层是一个网络代理的阵列。这些网络代理的集合（每个服务实例旁边都有一个）处理你的服务之间的所有通信逻辑。我们称这些代理为 sidecar，因为它们与每个服务并存。</p>
+<p>以前，我们让 Customer 服务直接与 Payment 服务通信，现在我们有一个 Customer 服务旁边的代理与 Payment 服务旁边的代理通信。服务网格控制平面以这样一种方式配置代理，即它们透明地拦截所有入站和出站请求。这些代理的集合（基础设施层）形成了一个网络网格，称为服务网格。</p>
+<p>将通信逻辑从业务和应用逻辑中分离出来，可以使开发人员专注于业务逻辑，而服务网格运维人员则专注于服务网格配置。</p>
+<h3 id="服务网格的功能"><a href="#服务网格的功能" class="headerlink" title="服务网格的功能"></a>服务网格的功能</h3><p>服务网格为我们提供了一种一致的方式来连接、保护和观察微服务。网格内的代理捕获了网格内所有通信的请求和指标。每一次失败、每一次成功的调用、重试或超时都可以被捕获、可视化，并发出警报。此外，可以根据请求属性做出决定。例如，我们可以检查入站（或出站）请求并编写规则，将所有具有特定头值的请求路由到不同的服务版本。</p>
+<p>所有这些信息和收集到的指标使得一些场景可以合理地直接实现。开发人员和运营商可以配置和执行以下方案，而不需要对服务进行任何代码修改。</p>
+<ul>
+<li>mTLS 和自动证书轮换</li>
+<li>使用指标识别性能和可靠性问题</li>
+<li>在 Grafana 等工具中实现指标的可视化</li>
+<li>使用 Jaeger 或 Zipkin（需要对代码进行小的修改，以便在服务之间传播跟踪头信息） 对服务进行调试和追踪</li>
+<li>基于权重和请求的流量路由，金丝雀部署，A&#x2F;B 测试</li>
+<li>流量镜像</li>
+<li>通过超时和重试提高服务的弹性</li>
+<li>通过在服务之间注入故障和延迟来进行混沌测试</li>
+<li>检测和弹出不健康的服务实例的断路器</li>
+</ul>
+<hr>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Istio 是一个开源服务网格，它透明地分层到现有的分布式应用程序上。 Istio 强大的特性提供了一种统一和更有效的方式来保护、连接和监视服务。 Istio 是实现负载平衡、服务到服务身份验证和监视的路径——只需要很少或不需要更改服务代码。它强大的控制平面带来了重要的特点，包括：</p>
+<ul>
+<li>使用 TLS 加密、强身份认证和授权的集群内服务到服务的安全通信</li>
+<li>自动负载均衡的 HTTP、gRPC、WebSocket，和 TCP 流量</li>
+<li>通过丰富的路由规则、重试、故障转移和故障注入对流量行为进行细粒度控制</li>
+<li>一个可插入的策略层和配置 API，支持访问控制、速率限制和配额</li>
+<li>对集群内的所有流量（包括集群入口和出口）进行自动度量、日志和跟踪</li>
+</ul>
+<p>Istio 是为可扩展性而设计的，可以处理不同范围的部署需求。Istio 的控制平面运行在 Kubernetes 上，您可以将部署在该集群中的应用程序添加到您的网格中，将网格扩展到其他集群，甚至连接 VM 或运行在 Kubernetes 之外的其他端点。</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><h3 id="Istio-与-Kubernetes-版本映射关系"><a href="#Istio-与-Kubernetes-版本映射关系" class="headerlink" title="Istio 与 Kubernetes 版本映射关系"></a>Istio 与 Kubernetes 版本映射关系</h3><p>参考：<a target="_blank" rel="noopener" href="https://istio.io/latest/docs/setup/platform-setup/">https://istio.io/latest/docs/setup/platform-setup/</a></p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Currently Supported</th>
+<th>Release Date</th>
+<th>End of Life</th>
+<th>Supported Kubernetes Versions</th>
+<th>Tested, but not supported</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>master</td>
+<td>No, development only</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>1.15</td>
+<td>Yes</td>
+<td>August 31, 2022</td>
+<td>~March 2023 (Expected)</td>
+<td>1.22, 1.23, 1.24, 1.25</td>
+<td>1.16, 1.17, 1.18, 1.19, 1.20, 1.21</td>
+</tr>
+<tr>
+<td>1.14</td>
+<td>Yes</td>
+<td>May 24, 2022</td>
+<td>~January 2023 (Expected)</td>
+<td>1.21, 1.22, 1.23, 1.24</td>
+<td>1.16, 1.17, 1.18, 1.19, 1.20</td>
+</tr>
+<tr>
+<td>1.13</td>
+<td>Yes</td>
+<td>February 11, 2022</td>
+<td>~October 2022 (Expected)</td>
+<td>1.20, 1.21, 1.22, 1.23</td>
+<td>1.16, 1.17, 1.18, 1.19</td>
+</tr>
+<tr>
+<td>1.12</td>
+<td>Yes</td>
+<td>November 18, 2021</td>
+<td>~June 2022 (Expected)</td>
+<td>1.19, 1.20, 1.21, 1.22</td>
+<td>1.16, 1.17, 1.18</td>
+</tr>
+<tr>
+<td>1.11</td>
+<td>Yes</td>
+<td>August 12, 2021</td>
+<td>~Mar 2022 (Expected)</td>
+<td>1.18, 1.19, 1.20, 1.21, 1.22</td>
+<td>1.16, 1.17</td>
+</tr>
+<tr>
+<td>1.10</td>
+<td>No</td>
+<td>May 18, 2021</td>
+<td>Jan 7, 2022</td>
+<td>1.18, 1.19, 1.20, 1.21</td>
+<td>1.16, 1.17, 1.22</td>
+</tr>
+<tr>
+<td>1.9</td>
+<td>No</td>
+<td>February 9, 2021</td>
+<td>Oct 8, 2021</td>
+<td>1.17, 1.18, 1.19, 1.20</td>
+<td>1.15, 1.16</td>
+</tr>
+<tr>
+<td>1.8</td>
+<td>No</td>
+<td>November 10, 2020</td>
+<td>May 12, 2021</td>
+<td>1.16, 1.17, 1.18, 1.19</td>
+<td>1.15</td>
+</tr>
+<tr>
+<td>1.7</td>
+<td>No</td>
+<td>August 21, 2020</td>
+<td>Feb 25, 2021</td>
+<td>1.16, 1.17, 1.18</td>
+<td>1.15</td>
+</tr>
+<tr>
+<td>1.6 and earlier</td>
+<td>No</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="profile-概念"><a href="#profile-概念" class="headerlink" title="profile 概念"></a>profile 概念</h3><p>参考：<a target="_blank" rel="noopener" href="https://istio.io/latest/docs/setup/additional-setup/config-profiles/">https://istio.io/latest/docs/setup/additional-setup/config-profiles/</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl profile list</span></span><br><span class="line">Istio configuration profiles:</span><br><span class="line">    default</span><br><span class="line">    demo</span><br><span class="line">    empty</span><br><span class="line">    external</span><br><span class="line">    minimal</span><br><span class="line">    openshift</span><br><span class="line">    preview</span><br></pre></td></tr></table></figure>
+
+<p>profile 描述了 Istio 控制平面与数据平面的配置信息，以下为 Istio 内建的 profile 类别，同时也支持自定义的 profile。</p>
+<ul>
+<li>default<br><em>根据 <a target="_blank" rel="noopener" href="https://istio.io/latest/zh/docs/reference/config/istio.operator.v1alpha1/">IstioOperator API</a> 的默认设置启动组件。 建议用于生产部署和 <a target="_blank" rel="noopener" href="https://istio.io/latest/zh/docs/ops/deployment/deployment-models/#multiple-clusters">Multicluster Mesh</a> 中的 Primary Cluster</em></li>
+<li>demo<br><em>这一配置具有适度的资源需求，旨在展示 Istio 功能的配置。它适合运行 <a target="_blank" rel="noopener" href="https://istio.io/latest/docs/examples/bookinfo/">Bookinfo</a> 应用程序和相关任务</em></li>
+<li>empty<br><em>什么都不部署。可以作为自定义配置的基本配置文件</em></li>
+<li>external<br><em>用于配置远程集群由一个外部控制平面或者通过控制平面主要集群<a target="_blank" rel="noopener" href="https://istio.io/latest/docs/ops/deployment/deployment-models/#multiple-clusters">多集群网格</a></em></li>
+<li>minimal<br><em>与默认配置文件相同，但仅安装控制平面组件。这允许您使用<a target="_blank" rel="noopener" href="https://istio.io/latest/docs/setup/additional-setup/gateway/#deploying-a-gateway">单独的配置文件</a>配置控制平面和数据平面组件（例如网关）</em></li>
+<li>openshift</li>
+<li>preview<br><em>包含实验性功能。旨在探索 Istio 的新功能。不能保证稳定性、安全性和性能</em></li>
+</ul>
+<p><strong>不同的 profile 包含的核心组件</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>default</th>
+<th>demo</th>
+<th>minimal</th>
+<th>external</th>
+<th>empty</th>
+<th>preview</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Core components</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>istio-egressgateway</td>
+<td></td>
+<td>✔</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>istio-ingressgateway</td>
+<td>✔</td>
+<td>✔</td>
+<td></td>
+<td></td>
+<td></td>
+<td>✔</td>
+</tr>
+<tr>
+<td>istiod</td>
+<td>✔</td>
+<td>✔</td>
+<td>✔</td>
+<td></td>
+<td></td>
+<td>✔</td>
+</tr>
+</tbody></table>
+<p><strong>展示 profile 具体内容</strong></p>
+<p>可以将 profile dump 出来，便于浏览和修改配置信息，可以看到 profile 的本质就是 IstioOperator 资源（详见下文）。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl profile dump demo</span></span><br><span class="line">apiVersion: install.istio.io/v1alpha1</span><br><span class="line">kind: IstioOperator</span><br><span class="line">spec:</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+
+<p>也可以进一步通过 <code>--config-path</code> 参数（更多配置参考：<a target="_blank" rel="noopener" href="https://istio.io/latest/docs/reference/config/%EF%BC%89%EF%BC%8C%E9%80%89%E6%8B%A9%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E4%B8%AD%E6%8C%87%E5%AE%9A%E8%B7%AF%E5%BE%84%E7%9A%84%E5%B1%80%E9%83%A8%E5%86%85%E5%AE%B9">https://istio.io/latest/docs/reference/config/），选择配置文件中指定路径的局部内容</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl profile dump --config-path components.pilot demo</span></span><br><span class="line">enabled: true</span><br><span class="line">k8s:</span><br><span class="line">  env:</span><br><span class="line">  - name: PILOT_TRACE_SAMPLING</span><br><span class="line">    value: &quot;100&quot;</span><br><span class="line">  resources:</span><br><span class="line">    requests:</span><br><span class="line">      cpu: 10m</span><br><span class="line">      memory: 100Mi</span><br></pre></td></tr></table></figure>
+
+<p><strong>展示 profile 之间差别</strong></p>
+<p>可以看到 default 和 demo profile 之间的差别之一是，default 不会部署 istio-egressgateway 组件。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl profile diff default demo</span></span><br><span class="line">spec:</span><br><span class="line">   components:</span><br><span class="line">     base:</span><br><span class="line">       enabled: true</span><br><span class="line">     cni:</span><br><span class="line">       enabled: false</span><br><span class="line">     egressGateways:</span><br><span class="line">-    - enabled: false</span><br><span class="line">+    - enabled: true</span><br><span class="line">+      k8s:</span><br><span class="line">+        resources:</span><br><span class="line">+          requests:</span><br><span class="line">+            cpu: 10m</span><br><span class="line">+            memory: 40Mi</span><br><span class="line">       name: istio-egressgateway</span><br></pre></td></tr></table></figure>
+
+<h3 id="Istio-准备"><a href="#Istio-准备" class="headerlink" title="Istio 准备"></a>Istio 准备</h3><p>Istio 可以通过 <a target="_blank" rel="noopener" href="https://github.com/istio/istio/releases/tag/1.15.0">release</a> 下载，也可以通过 Istio 官方提供的 downloadIstio 脚本下载，两者等价</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">curl -L https://istio.io/downloadIstio | sh -</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">脚本本身也提供了诸多参数，例如指定版本、指定架构下载</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.15.0 TARGET_ARCH=x86_64 sh -</span></span><br></pre></td></tr></table></figure>
+
+<p>下载后包括以下内容，其中 istioctl 位于 bin 目录中，示例位于 samples 目录中</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">ls</span></span></span><br><span class="line">bin  LICENSE  manifests  manifest.yaml  README.md  samples  tools</span><br></pre></td></tr></table></figure>
+
+<h3 id="环境预检"><a href="#环境预检" class="headerlink" title="环境预检"></a>环境预检</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl x precheck</span></span><br><span class="line">✔ No issues found when checking the cluster. Istio is safe to install or upgrade!</span><br><span class="line">  To get started, check out https://istio.io/latest/docs/setup/getting-started/</span><br></pre></td></tr></table></figure>
+
+<h2 id="通过-Istioctl-安装"><a href="#通过-Istioctl-安装" class="headerlink" title="通过 Istioctl 安装"></a>通过 Istioctl 安装</h2><p>安装默认的 Istio（即 profile 为 default），该 profile 常用于生产环境。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl install</span></span><br></pre></td></tr></table></figure>
+
+<p>也可以进行一些定制化（–set），例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl install --<span class="built_in">set</span> meshConfig.accessLogFile=/dev/stdout</span></span><br></pre></td></tr></table></figure>
+
+<p>该效果等价于（-f），使用 Istio Operator API 的方式更适用于生产环境。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl install -f - &lt;&lt;<span class="string">EOF</span></span></span><br><span class="line">apiVersion: install.istio.io/v1alpha1</span><br><span class="line">kind: IstioOperator</span><br><span class="line">spec:</span><br><span class="line">  meshConfig:</span><br><span class="line">    accessLogFile: /dev/stdout</span><br><span class="line">EOF    </span><br></pre></td></tr></table></figure>
+
+<p>为了更好的演示 Istio 的特性，因此使用 demo 的 profile 安装 Istio。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl install --<span class="built_in">set</span> profile=demo -y</span></span><br><span class="line">✔ Istio core installed</span><br><span class="line">✔ Istiod installed</span><br><span class="line">✔ Egress gateways installed</span><br><span class="line">✔ Ingress gateways installed</span><br><span class="line">✔ Installation complete</span><br></pre></td></tr></table></figure>
+
+<h2 id="通过-Istio-Operator-安装"><a href="#通过-Istio-Operator-安装" class="headerlink" title="通过 Istio Operator 安装"></a>通过 Istio Operator 安装</h2><p>类似于 Prometheus Operator，Istio 提供了通过 Operator 安装 Istio 的方式，只需要简单的更新 Istio Operator 声明的 API 对象，便可以非常便捷地处理多版本 Istio。</p>
+<h3 id="部署-Istio-Operator"><a href="#部署-Istio-Operator" class="headerlink" title="部署 Istio Operator"></a>部署 Istio Operator</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl operator init</span></span><br><span class="line">Installing operator controller in namespace: istio-operator using image: docker.io/istio/operator:1.15.0</span><br><span class="line">Operator controller will watch namespaces: istio-system</span><br><span class="line">✔ Istio operator installed</span><br><span class="line">✔ Installation complete</span><br></pre></td></tr></table></figure>
+
+<p>在部署 Istio Operator 时，支持指定详细规格（更多配置参考：<a target="_blank" rel="noopener" href="https://istio.io/latest/docs/reference/config/%EF%BC%89%E3%80%82%E4%BE%8B%E5%A6%82%EF%BC%8C%E5%9C%A8%E6%8C%87%E5%AE%9A%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E8%A7%82%E6%B5%8B%E8%B5%84%E6%BA%90%E3%80%82">https://istio.io/latest/docs/reference/config/）。例如，在指定命名空间观测资源。</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl operator init --watchedNamespaces=istio-namespace1,istio-namespace2</span></span><br></pre></td></tr></table></figure>
+
+<p>部署 Istio Operator 后会产生以下资源</p>
+<ul>
+<li><p>CRD</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get crd | grep istio</span></span><br><span class="line">istiooperators.install.istio.io                       2022-05-14T03:11:20Z</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Deployment</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get deploy -n istio-operator</span></span><br><span class="line">NAME             READY   UP-TO-DATE   AVAILABLE   AGE</span><br><span class="line">istio-operator   1/1     1            1           6m20s</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Service（用于暴露 Istio Operator 指标）</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get svc -n istio-operator</span></span><br><span class="line">NAME             TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE</span><br><span class="line">istio-operator   ClusterIP   10.96.212.28   &lt;none&gt;        8383/TCP   6m47s</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">curl 10.96.212.28:8383/metrics</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>RBAC（细节不做展示）</p>
+</li>
+</ul>
+<h3 id="创建-IstioOperator-资源"><a href="#创建-IstioOperator-资源" class="headerlink" title="创建 IstioOperator 资源"></a>创建 IstioOperator 资源</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f - &lt;&lt;<span class="string">EOF</span></span></span><br><span class="line">apiVersion: install.istio.io/v1alpha1</span><br><span class="line">kind: IstioOperator</span><br><span class="line">metadata:</span><br><span class="line">  namespace: istio-system</span><br><span class="line">  name: example-istiocontrolplane</span><br><span class="line">spec:</span><br><span class="line">  profile: demo</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p>Istio Operator watch 到 IstioOperator 资源，然后根据 spec 中声明的详细规格（具体参考：更多配置参考：<a target="_blank" rel="noopener" href="https://istio.io/latest/docs/reference/config/%EF%BC%89%EF%BC%8C%E5%AE%89%E8%A3%85%E9%83%A8%E7%BD%B2">https://istio.io/latest/docs/reference/config/），安装部署</a> Istio 服务。</p>
+<h2 id="安装内容"><a href="#安装内容" class="headerlink" title="安装内容"></a>安装内容</h2><p>安装 Istio（profile 为 demo）后会产生以下资源</p>
+<ul>
+<li><p>Deployment</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get deploy -n istio-system</span></span><br><span class="line">NAME                   READY   UP-TO-DATE   AVAILABLE   AGE</span><br><span class="line">istio-egressgateway    1/1     1            1           4m14s</span><br><span class="line">istio-ingressgateway   1/1     1            1           4m14s</span><br><span class="line">istiod                 1/1     1            1           4m23s</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>Service</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get svc -n istio-system</span></span><br><span class="line">NAME                   TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                                                                      AGE</span><br><span class="line">istio-egressgateway    ClusterIP      10.96.206.121   &lt;none&gt;        80/TCP,443/TCP                                                               85s</span><br><span class="line">istio-ingressgateway   LoadBalancer   10.96.159.246   &lt;pending&gt;     15021:31641/TCP,80:31235/TCP,443:30268/TCP,31400:32741/TCP,15443:31149/TCP   85s</span><br><span class="line">istiod                 ClusterIP      10.96.2.143     &lt;none&gt;        15010/TCP,15012/TCP,443/TCP,15014/TCP                                        2m24s</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>CRD</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get crd | grep istio</span></span><br><span class="line">authorizationpolicies.security.istio.io               2022-09-13T05:55:57Z</span><br><span class="line">destinationrules.networking.istio.io                  2022-09-13T05:55:57Z</span><br><span class="line">envoyfilters.networking.istio.io                      2022-09-13T05:55:57Z</span><br><span class="line">gateways.networking.istio.io                          2022-09-13T05:55:57Z</span><br><span class="line">istiooperators.install.istio.io                       2022-09-13T05:55:57Z</span><br><span class="line">peerauthentications.security.istio.io                 2022-09-13T05:55:57Z</span><br><span class="line">proxyconfigs.networking.istio.io                      2022-09-13T05:55:57Z</span><br><span class="line">requestauthentications.security.istio.io              2022-09-13T05:55:58Z</span><br><span class="line">serviceentries.networking.istio.io                    2022-09-13T05:55:58Z</span><br><span class="line">sidecars.networking.istio.io                          2022-09-13T05:55:58Z</span><br><span class="line">telemetries.telemetry.istio.io                        2022-09-13T05:55:58Z</span><br><span class="line">virtualservices.networking.istio.io                   2022-09-13T05:55:58Z</span><br><span class="line">wasmplugins.extensions.istio.io                       2022-09-13T05:55:58Z</span><br><span class="line">workloadentries.networking.istio.io                   2022-09-13T05:55:58Z</span><br><span class="line">workloadgroups.networking.istio.io                    2022-09-13T05:55:58Z</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>webhook</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get mutatingwebhookconfigurations</span></span><br><span class="line">NAME                         WEBHOOKS   AGE</span><br><span class="line">istio-revision-tag-default   4          8m57s</span><br><span class="line">istio-sidecar-injector       4          9m19s</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get validatingwebhookconfigurations</span></span><br><span class="line">NAME                           WEBHOOKS   AGE</span><br><span class="line">istio-validator-istio-system   1          9m27s</span><br><span class="line">istiod-default-validator       1          9m4s</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>RBAC，PodDisruptionBudget，ConfigMap，EnvoyFilter（细节不做展示）</p>
+</li>
+</ul>
+<p>也可以查看 IstioOperator 对象来获取安装细节，installed-state 为 istioctl 安装的默认名称。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get istiooperator -n istio-system</span></span><br><span class="line">NAME              REVISION   STATUS   AGE</span><br><span class="line">installed-state                       10m</span><br></pre></td></tr></table></figure>
+
+<p>如果 Istio 集群由 Istio Operator 创建，那么 Istio Operator 会维护 IstioOperator 对象。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get istiooperator -n istio-system</span></span><br><span class="line">NAMESPACE      NAME                        REVISION   STATUS    AGE</span><br><span class="line">istio-system   example-istiocontrolplane              HEALTHY   2m59s</span><br></pre></td></tr></table></figure>
+
+<p>此外，也可以生成安装的资源清单，并校验安装是否完整。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl manifest generate --<span class="built_in">set</span> profile=demo | istioctl verify-install -f -</span></span><br><span class="line">...</span><br><span class="line">✔ Service: istio-ingressgateway.istio-system checked successfully</span><br><span class="line">✔ Service: istiod.istio-system checked successfully</span><br><span class="line">Checked 15 custom resource definitions</span><br><span class="line">Checked 3 Istio Deployments</span><br><span class="line">✔ Istio is installed and verified successfully</span><br></pre></td></tr></table></figure>
+
+<h2 id="配置校验"><a href="#配置校验" class="headerlink" title="配置校验"></a>配置校验</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl analyze --all-namespaces</span></span><br><span class="line"></span><br><span class="line">✔ No validation issues found when analyzing all namespaces.</span><br></pre></td></tr></table></figure>
+
+<p>例如，当 VirtualService 指向的 Gateway 不存在时：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl analyze --all-namespaces</span></span><br><span class="line">Error [IST0101] (VirtualService default/bookinfo) Referenced gateway not found: &quot;bookinfo-gateway-error&quot;</span><br><span class="line">Warning [IST0132] (VirtualService default/bookinfo) one or more host [*] defined in VirtualService default/bookinfo not found in Gateway default/bookinfo-gateway-error.</span><br><span class="line">Error: Analyzers found issues when analyzing all namespaces.</span><br><span class="line">See https://istio.io/v1.15/docs/reference/config/analysis for more information about causes and resolutions.</span><br></pre></td></tr></table></figure>
+
+<h1 id="卸载"><a href="#卸载" class="headerlink" title="卸载"></a>卸载</h1><h2 id="卸载-Istio-Operator"><a href="#卸载-Istio-Operator" class="headerlink" title="卸载 Istio Operator"></a>卸载 Istio Operator</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl operator remove</span></span><br><span class="line">Removing Istio operator...</span><br><span class="line">  Removed Deployment:istio-operator:istio-operator.</span><br><span class="line">  Removed Service:istio-operator:istio-operator.</span><br><span class="line">  Removed ServiceAccount:istio-operator:istio-operator.</span><br><span class="line">  Removed ClusterRole::istio-operator.</span><br><span class="line">  Removed ClusterRoleBinding::istio-operator.</span><br><span class="line">✔ Removal complete</span><br></pre></td></tr></table></figure>
+
+<h2 id="卸载-Istio"><a href="#卸载-Istio" class="headerlink" title="卸载 Istio"></a>卸载 Istio</h2><p><code>--purge</code> 会移除所有 Istio 资源，包括集群级别的（会对其他共享资源的 Istio 集群造成破坏），更多配置参考：<a target="_blank" rel="noopener" href="https://istio.io/latest/docs/reference/config/">https://istio.io/latest/docs/reference/config/</a></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl uninstall --purge</span></span><br></pre></td></tr></table></figure>
+
+<p>也可以通过安装的资源清单，执行卸载操作。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">istioctl manifest generate --<span class="built_in">set</span> profile=demo | kubectl delete -f -</span></span><br></pre></td></tr></table></figure>
+
+<p>默认情况下，istio-system namespace 不会被删除，需要手动删除。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl delete ns istio-system</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="BookInfo-示例"><a href="#BookInfo-示例" class="headerlink" title="BookInfo 示例"></a>BookInfo 示例</h1><p>这个示例部署了一个用于演示多种 Istio 特性的应用，该应用由四个单独的微服务构成。这个应用模仿在线书店的一个分类，显示一本书的信息。 页面上会显示一本书的描述，书籍的细节（ISBN、页数等），以及关于这本书的一些评论。</p>
+<p>BookInfo 应用分为四个单独的微服务</p>
+<ul>
+<li>productpage 会调用 details 和 reviews 两个微服务，用来生成页面</li>
+<li>details 包含了书籍的信息</li>
+<li>reviews 包含了书籍相关的评论。它还会调用 ratings 微服务</li>
+<li>ratings 包含了由书籍评价组成的评级信息</li>
+</ul>
+<p>reviews 微服务有 3 个版本</p>
+<ul>
+<li>v1 版本不会调用 ratings 服务</li>
+<li>v2 版本会调用 ratings 服务，并使用 1 到 5 个黑色星形图标来显示评分信息</li>
+<li>v3 版本会调用 ratings 服务，并使用 1 到 5 个红色星形图标来显示评分信息</li>
+</ul>
+<p>该应用的端到端架构如下</p>
+<div align=center><img width="600" style="border: 0px" src="https://istio.io/latest/docs/examples/bookinfo/withistio.svg"></div>
+
+<p>BookInfo 应用中的几个微服务是由不同的语言编写的。 这些服务对 Istio 并无依赖，但是构成了一个有代表性的服务网格的例子：它由多个服务、多个语言构成，并且 reviews 服务具有多个版本。</p>
+<p>所有的微服务都和 Envoy sidecar 集成在一起，被集成服务所有的出入流量都被 sidecar 所劫持，这样就为外部控制准备了所需的 Hook，然后就可以利用 Istio 控制平面为应用提供服务路由、遥测数据收集以及策略实施等功能。</p>
+<p>根据名为 istio-ingressgateway 的 Service 的信息，可以明确 http 的访问地址为 <code>http://178.104.162.69:31235</code>。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get svc -n istio-system istio-ingressgateway</span></span><br><span class="line">NAME                   TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                                                                      AGE</span><br><span class="line">istio-ingressgateway   LoadBalancer   10.96.159.246   &lt;pending&gt;     15021:31641/TCP,80:31235/TCP,443:30268/TCP,31400:32741/TCP,15443:31149/TCP   3m34s</span><br></pre></td></tr></table></figure>
+
+<h2 id="注入-Sidecar"><a href="#注入-Sidecar" class="headerlink" title="注入 Sidecar"></a>注入 Sidecar</h2><p>Istio 默认自动注入 Sidecar，目前为 default 命名空间打上标签 istio-injection&#x3D;enabled。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl label namespace default istio-injection=enabled</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="部署测试应用"><a href="#部署测试应用" class="headerlink" title="部署测试应用"></a>部署测试应用</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f samples/bookinfo/platform/kube/bookinfo.yaml</span></span><br><span class="line">service/details created</span><br><span class="line">serviceaccount/bookinfo-details created</span><br><span class="line">deployment.apps/details-v1 created</span><br><span class="line">service/ratings created</span><br><span class="line">serviceaccount/bookinfo-ratings created</span><br><span class="line">deployment.apps/ratings-v1 created</span><br><span class="line">service/reviews created</span><br><span class="line">serviceaccount/bookinfo-reviews created</span><br><span class="line">deployment.apps/reviews-v1 created</span><br><span class="line">deployment.apps/reviews-v2 created</span><br><span class="line">deployment.apps/reviews-v3 created</span><br><span class="line">service/productpage created</span><br><span class="line">serviceaccount/bookinfo-productpage created</span><br><span class="line">deployment.apps/productpage-v1 created</span><br></pre></td></tr></table></figure>
+
+<p>状态检查，可以看到所有的 Pod 均为 2 容器，其中就包含了 Sidecar 容器。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get pod</span></span><br><span class="line">NAME                              READY   STATUS    RESTARTS   AGE</span><br><span class="line">details-v1-79f774bdb9-m9njc       2/2     Running   2          20m</span><br><span class="line">productpage-v1-6b746f74dc-8xps7   2/2     Running   2          20m</span><br><span class="line">ratings-v1-b6994bb9-54w28         2/2     Running   2          20m</span><br><span class="line">reviews-v1-545db77b95-57wkb       2/2     Running   2          20m</span><br><span class="line">reviews-v2-7bf8c9648f-qj7zg       2/2     Running   2          20m</span><br><span class="line">reviews-v3-84779c7bbc-fl2mx       2/2     Running   1          20m</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get svc</span></span><br><span class="line">NAME          TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE</span><br><span class="line">details       ClusterIP   10.96.15.22     &lt;none&gt;        9080/TCP   13m</span><br><span class="line">kubernetes    ClusterIP   10.96.0.1       &lt;none&gt;        443/TCP    43d</span><br><span class="line">productpage   ClusterIP   10.96.59.210    &lt;none&gt;        9080/TCP   13m</span><br><span class="line">ratings       ClusterIP   10.96.136.207   &lt;none&gt;        9080/TCP   13m</span><br><span class="line">reviews       ClusterIP   10.96.254.165   &lt;none&gt;        9080/TCP   13m</span><br></pre></td></tr></table></figure>
+
+<p>通过访问可以看到，Bookinfo 服务正在运行。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl <span class="built_in">exec</span> -it $(kubectl get pod -l app=ratings -o jsonpath=<span class="string">&#x27;&#123;.items[0].metadata.name&#125;&#x27;</span>) -c ratings -- curl productpage:9080/productpage | grep -o <span class="string">&quot;&lt;title&gt;.*&lt;/title&gt;&quot;</span></span></span><br><span class="line">&lt;title&gt;Simple Bookstore App&lt;/title&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建-Gateway-与默认的-VirtualService"><a href="#创建-Gateway-与默认的-VirtualService" class="headerlink" title="创建 Gateway 与默认的 VirtualService"></a>创建 Gateway 与默认的 VirtualService</h2><p> 为了保证服务流量可以进入到服务网格，需要创建 Gateway 资源，同时创建一个默认的 VirtualService。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f samples/bookinfo/networking/bookinfo-gateway.yaml</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get gateway</span></span><br><span class="line">NAME               AGE</span><br><span class="line">bookinfo-gateway   9s</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get virtualservice</span></span><br><span class="line">NAME       GATEWAYS               HOSTS   AGE</span><br><span class="line">bookinfo   [&quot;bookinfo-gateway&quot;]   [&quot;*&quot;]   23m</span><br></pre></td></tr></table></figure>
+
+<p>创建的 Gateway，本质上是将入站流量交给满足标签 istio&#x3D;ingressgateway 的 Pod 的流量接管。</p>
+<p><em>也就是说流量从 istio-ingressgateway 的 Service 80 端口入站，转发到后端的 istio-ingressgateway 的 Pod。创建 Gateway 之后 istio-ingressgateway 会动态绑定 Gateway 中声明的 port 端口，因此需要保证流量可以从路由至该端口（即 istio-ingressgateway Service 的 Endpoint 端口中也同样为 80）</em></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spec:</span></span><br><span class="line">    <span class="attr">selector:</span></span><br><span class="line">      <span class="attr">istio:</span> <span class="string">ingressgateway</span></span><br><span class="line">    <span class="attr">servers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">hosts:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;*&#x27;</span></span><br><span class="line">      <span class="attr">port:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">        <span class="attr">number:</span> <span class="number">80</span></span><br><span class="line">        <span class="attr">protocol:</span> <span class="string">HTTP</span></span><br></pre></td></tr></table></figure>
+
+<p>创建的 VirtualService，绑定了上面创建的 Gateway，本质上是将匹配到的路由定向到 productpage Service 的 9080 端口。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spec:</span></span><br><span class="line">    <span class="attr">gateways:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">bookinfo-gateway</span></span><br><span class="line">    <span class="attr">hosts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;*&#x27;</span></span><br><span class="line">    <span class="attr">http:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">match:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">          <span class="attr">exact:</span> <span class="string">/productpage</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">          <span class="attr">prefix:</span> <span class="string">/static</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">          <span class="attr">exact:</span> <span class="string">/login</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">          <span class="attr">exact:</span> <span class="string">/logout</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">uri:</span></span><br><span class="line">          <span class="attr">prefix:</span> <span class="string">/api/v1/products</span></span><br><span class="line">      <span class="attr">route:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">          <span class="attr">host:</span> <span class="string">productpage</span></span><br><span class="line">          <span class="attr">port:</span></span><br><span class="line">            <span class="attr">number:</span> <span class="number">9080</span></span><br></pre></td></tr></table></figure>
+
+<p>此时访问 <code>http://178.104.162.69:31235/productpage</code>，review 部分在 v1, v2, v3 版本平均切换</p>
+<p><em>其实可以看到 VirtualService 将流量路由到 productpage 的 Service 后，此后的流量的路径还是 K8s 原生的路由方式</em></p>
+<h2 id="创建-DestinationRule"><a href="#创建-DestinationRule" class="headerlink" title="创建 DestinationRule"></a>创建 DestinationRule</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f samples/bookinfo/networking/destination-rule-all.yaml</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get destinationrule</span></span><br><span class="line">NAME          HOST          AGE</span><br><span class="line">details       details       4m41s</span><br><span class="line">productpage   productpage   4m42s</span><br><span class="line">ratings       ratings       4m41s</span><br><span class="line">reviews       reviews       4m41s</span><br></pre></td></tr></table></figure>
+
+<p>此时 BookInfo 的 VirtualService 只是将流量转发到 productpage 上，而 productpage 只有 v1 版本，其他 DestinationRule 只是创建，未被引用，可以理解成 DestinationRule 注册了 productpage 的 v1 版本以及 reviews 的 v1，v2 和 v3 版本，如果后续需要使用，需要创建 VirtualService 路由流量。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1alpha3</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">productpage</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">productpage</span></span><br><span class="line">  <span class="attr">subsets:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">v1</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="attr">version:</span> <span class="string">v1</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1alpha3</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DestinationRule</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">host:</span> <span class="string">reviews</span></span><br><span class="line">  <span class="attr">subsets:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">v1</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="attr">version:</span> <span class="string">v1</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">v2</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="attr">version:</span> <span class="string">v2</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">v3</span></span><br><span class="line">    <span class="attr">labels:</span></span><br><span class="line">      <span class="attr">version:</span> <span class="string">v3</span></span><br></pre></td></tr></table></figure>
+
+<p>由于没有 VirtualService 路由访问 Service 的流量，因此，此时访问页面，页面中 Review 微服务还是会三个版本平均切换的。</p>
+<h2 id="创建智能路由的-VirtualService"><a href="#创建智能路由的-VirtualService" class="headerlink" title="创建智能路由的 VirtualService"></a>创建智能路由的 VirtualService</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f samples/bookinfo/networking/virtual-service-all-v1.yaml</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get virtualservice</span></span><br><span class="line">NAME          GATEWAYS               HOSTS             AGE</span><br><span class="line">bookinfo      [&quot;bookinfo-gateway&quot;]   [&quot;*&quot;]             5d22h</span><br><span class="line">details                              [&quot;details&quot;]       114s</span><br><span class="line">productpage                          [&quot;productpage&quot;]   114s</span><br><span class="line">ratings                              [&quot;ratings&quot;]       114s</span><br><span class="line">reviews                              [&quot;reviews&quot;]       114s</span><br></pre></td></tr></table></figure>
+
+<p>创建的 VirtualService 的本质上是将访问各组件的所有的流量路由至对应的 v1 版本。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">productpage</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">productpage</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">productpage</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.istio.io/v1alpha3</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VirtualService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">reviews</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hosts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">reviews</span></span><br><span class="line">  <span class="attr">http:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">route:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">destination:</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">reviews</span></span><br><span class="line">        <span class="attr">subset:</span> <span class="string">v1</span></span><br></pre></td></tr></table></figure>
+
+<p>此时访问页面，页面中的 Review 只会有 v1 版本样式，即没有任何星星。</p>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Istio 」快速开始</p><p><a href="http://shenxianghong.github.io/2022/05/04/2022-05-04 Istio 快速开始/">http://shenxianghong.github.io/2022/05/04/2022-05-04 Istio 快速开始/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2022-05-04</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-05-11</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><hr style="height:1px;margin:1rem 0"><div class="level is-mobile is-flex"><div class="article-tags is-size-7 is-uppercase"><i class="fas fa-tags has-text-grey"></i> <a class="link-muted" rel="tag" href="/tags/Istio/">Istio </a></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2022/07/04/2022-07-04%20Istio%20%E6%B5%81%E9%87%8F%E7%AE%A1%E7%90%86%20-%20%E6%95%B4%E4%BD%93%E6%A6%82%E8%BF%B0/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Istio 」流量管理 — 整体概述</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2022/04/21/2022-04-21%20Golang%20%E4%BC%98%E9%9B%85%E5%A4%84%E7%90%86%E6%9E%9A%E4%B8%BE%E7%B1%BB%E5%9E%8B/"><span class="level-item">「 Golang 」优雅处理枚举类型</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">49</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">7</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">9</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/shenxianghong" target="_blank" rel="noopener">Follow</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Youtube" href="https://youtube.com"><i class="fab fa-youtube"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Bilibili" href="https://bilibili.com"><i class="fab fa-bilibili"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Reddit" href="https://reddit.com"><i class="fab fa-reddit"></i></a></div></div></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://google.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Google</span></span><span class="level-right"><span class="level-item tag">google.com</span></span></a></li><li><a class="level is-mobile" href="https://freegpt.one" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">ChatGPT</span></span><span class="level-right"><span class="level-item tag">freegpt.one</span></span></a></li></ul></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#Service-Mesh"><span class="level-left"><span class="level-item">1</span><span class="level-item">Service Mesh</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#什么是服务网格"><span class="level-left"><span class="level-item">1.1</span><span class="level-item">什么是服务网格</span></span></a></li><li><a class="level is-mobile" href="#服务网格的特点"><span class="level-left"><span class="level-item">1.2</span><span class="level-item">服务网格的特点</span></span></a></li><li><a class="level is-mobile" href="#理解服务网格"><span class="level-left"><span class="level-item">1.3</span><span class="level-item">理解服务网格</span></span></a></li><li><a class="level is-mobile" href="#服务网格如何工作？"><span class="level-left"><span class="level-item">1.4</span><span class="level-item">服务网格如何工作？</span></span></a></li><li><a class="level is-mobile" href="#为何使用服务网格？"><span class="level-left"><span class="level-item">1.5</span><span class="level-item">为何使用服务网格？</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#微服务架构"><span class="level-left"><span class="level-item">1.5.1</span><span class="level-item">微服务架构</span></span></a></li><li><a class="level is-mobile" href="#服务网格概述"><span class="level-left"><span class="level-item">1.5.2</span><span class="level-item">服务网格概述</span></span></a></li><li><a class="level is-mobile" href="#服务网格的功能"><span class="level-left"><span class="level-item">1.5.3</span><span class="level-item">服务网格的功能</span></span></a></li></ul></li></ul></li><li><a class="level is-mobile" href="#简介"><span class="level-left"><span class="level-item">2</span><span class="level-item">简介</span></span></a></li><li><a class="level is-mobile" href="#安装"><span class="level-left"><span class="level-item">3</span><span class="level-item">安装</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#环境准备"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">环境准备</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#Istio-与-Kubernetes-版本映射关系"><span class="level-left"><span class="level-item">3.1.1</span><span class="level-item">Istio 与 Kubernetes 版本映射关系</span></span></a></li><li><a class="level is-mobile" href="#profile-概念"><span class="level-left"><span class="level-item">3.1.2</span><span class="level-item">profile 概念</span></span></a></li><li><a class="level is-mobile" href="#Istio-准备"><span class="level-left"><span class="level-item">3.1.3</span><span class="level-item">Istio 准备</span></span></a></li><li><a class="level is-mobile" href="#环境预检"><span class="level-left"><span class="level-item">3.1.4</span><span class="level-item">环境预检</span></span></a></li></ul></li><li><a class="level is-mobile" href="#通过-Istioctl-安装"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">通过 Istioctl 安装</span></span></a></li><li><a class="level is-mobile" href="#通过-Istio-Operator-安装"><span class="level-left"><span class="level-item">3.3</span><span class="level-item">通过 Istio Operator 安装</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#部署-Istio-Operator"><span class="level-left"><span class="level-item">3.3.1</span><span class="level-item">部署 Istio Operator</span></span></a></li><li><a class="level is-mobile" href="#创建-IstioOperator-资源"><span class="level-left"><span class="level-item">3.3.2</span><span class="level-item">创建 IstioOperator 资源</span></span></a></li></ul></li><li><a class="level is-mobile" href="#安装内容"><span class="level-left"><span class="level-item">3.4</span><span class="level-item">安装内容</span></span></a></li><li><a class="level is-mobile" href="#配置校验"><span class="level-left"><span class="level-item">3.5</span><span class="level-item">配置校验</span></span></a></li></ul></li><li><a class="level is-mobile" href="#卸载"><span class="level-left"><span class="level-item">4</span><span class="level-item">卸载</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#卸载-Istio-Operator"><span class="level-left"><span class="level-item">4.1</span><span class="level-item">卸载 Istio Operator</span></span></a></li><li><a class="level is-mobile" href="#卸载-Istio"><span class="level-left"><span class="level-item">4.2</span><span class="level-item">卸载 Istio</span></span></a></li></ul></li><li><a class="level is-mobile" href="#BookInfo-示例"><span class="level-left"><span class="level-item">5</span><span class="level-item">BookInfo 示例</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#注入-Sidecar"><span class="level-left"><span class="level-item">5.1</span><span class="level-item">注入 Sidecar</span></span></a></li><li><a class="level is-mobile" href="#部署测试应用"><span class="level-left"><span class="level-item">5.2</span><span class="level-item">部署测试应用</span></span></a></li><li><a class="level is-mobile" href="#创建-Gateway-与默认的-VirtualService"><span class="level-left"><span class="level-item">5.3</span><span class="level-item">创建 Gateway 与默认的 VirtualService</span></span></a></li><li><a class="level is-mobile" href="#创建-DestinationRule"><span class="level-left"><span class="level-item">5.4</span><span class="level-item">创建 DestinationRule</span></span></a></li><li><a class="level is-mobile" href="#创建智能路由的-VirtualService"><span class="level-left"><span class="level-item">5.5</span><span class="level-item">创建智能路由的 VirtualService</span></span></a></li></ul></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Container-Runtime/"><span class="level-start"><span class="level-item">Container Runtime</span></span><span class="level-end"><span class="level-item tag">17</span></span></a></li><li><a class="level is-mobile" href="/categories/Disaster-Recovery/"><span class="level-start"><span class="level-item">Disaster Recovery</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/"><span class="level-start"><span class="level-item">Programming</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li><li><a class="level is-mobile" href="/categories/Scheduling-Orchestration/"><span class="level-start"><span class="level-item">Scheduling &amp; Orchestration</span></span><span class="level-end"><span class="level-item tag">2</span></span></a><ul><li><a class="level is-mobile" href="/categories/Scheduling-Orchestration/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Service-Mesh/"><span class="level-start"><span class="level-item">Service Mesh</span></span><span class="level-end"><span class="level-item tag">10</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7"><br/>And did you get what you wanted from this life, even so?</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+            article: {
+                highlight: {
+                    clipboard: true,
+                    fold: 'unfolded'
+                }
+            }
+        };</script><script src="/js/column.js"></script><script src="/js/animation.js"></script><a id="back-to-top" title="Back to top" href="javascript:;"><i class="fas fa-chevron-up"></i></a><script src="/js/back_to_top.js" defer></script><!--!--><!--!--><!--!--><!--!--><script src="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.js" defer></script><script>window.addEventListener("load", () => {
+      window.cookieconsent.initialise({
+        type: "info",
+        theme: "edgeless",
+        static: false,
+        position: "bottom-left",
+        content: {
+          message: "This website uses cookies to improve your experience.",
+          dismiss: "Got it!",
+          allow: "Allow cookies",
+          deny: "Decline",
+          link: "Learn more",
+          policy: "Cookie Policy",
+          href: "https://www.cookiesandyou.com/",
+        },
+        palette: {
+          popup: {
+            background: "#edeff5",
+            text: "#838391"
+          },
+          button: {
+            background: "#4b81e8"
+          },
+        },
+      });
+    });</script><script src="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/js/lightgallery.min.js" defer></script><script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/js/jquery.justifiedGallery.min.js" defer></script><script>window.addEventListener("load", () => {
+            if (typeof $.fn.lightGallery === 'function') {
+                $('.article').lightGallery({ selector: '.gallery-item' });
+            }
+            if (typeof $.fn.justifiedGallery === 'function') {
+                if ($('.justified-gallery > p > .gallery-item').length) {
+                    $('.justified-gallery > p > .gallery-item').unwrap();
+                }
+                $('.justified-gallery').justifiedGallery();
+            }
+        });</script><!--!--><!--!--><!--!--><!--!--><!--!--><script src="/js/main.js" defer></script><script src="/js/night.js" defer></script><div class="searchbox"><div class="searchbox-container"><div class="searchbox-header"><div class="searchbox-input-container"><input class="searchbox-input" type="text" placeholder="Type something..."></div><a class="searchbox-close" href="javascript:;">×</a></div><div class="searchbox-body"></div></div></div><script src="/js/insight.js" defer></script><script>document.addEventListener('DOMContentLoaded', function () {
+            loadInsight({"contentUrl":"/content.json"}, {"hint":"Type something...","untitled":"(Untitled)","posts":"Posts","pages":"Pages","categories":"Categories","tags":"Tags"});
+        });</script></body></html>
