@@ -1,6 +1,6 @@
 ---
 title: "「 Istio 」流量管理 — Gateway"
-excerpt: "Istio 中流量管理组件 Gateway 对象介绍"
+excerpt: "Istio 流量管理场景下的 Gateway 资源对象使用范例与 API 结构概览"
 cover: https://picsum.photos/0?sig=20220710
 thumbnail: https://github.com/cncf/artwork/raw/master/projects/istio/stacked/color/istio-stacked-color.svg
 date: 2022-07-10

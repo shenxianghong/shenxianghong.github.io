@@ -1,6 +1,6 @@
 ---
 title: "「 Istio 」流量管理 — DestinationRule"
-excerpt: "Istio 中流量管理组件 DestinationRule 对象介绍"
+excerpt: "Istio 流量管理场景下的 DestinationRule 资源对象使用范例与 API 结构概览"
 cover: https://picsum.photos/0?sig=20220809
 thumbnail: https://github.com/cncf/artwork/raw/master/projects/istio/stacked/color/istio-stacked-color.svg
 date: 2022-08-09

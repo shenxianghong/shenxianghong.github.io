@@ -1,6 +1,6 @@
 ---
 title: "「 Kubernetes」源码走读 - CPU Manager"
-excerpt: "Kubelet CM 模块中与 CPU Manager 相关的源码走读"
+excerpt: "Kubelet 中 CPU Manager 模块的流程梳理"
 cover: https://picsum.photos/0?sig=20220711
 thumbnail: https://github.com/cncf/artwork/raw/master/projects/kubernetes/stacked/color/kubernetes-stacked-color.svg
 date: 2022-07-11

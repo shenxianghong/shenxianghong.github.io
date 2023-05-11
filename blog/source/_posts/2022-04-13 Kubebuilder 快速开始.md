@@ -1,5 +1,5 @@
 ---
-title: "「 Kubebuilder 」基础使用"
+title: "「 Kubebuilder 」快速开始"
 excerpt: "使用 Kubebuilder 和 Code Generator 生成自定义的 K8s Operator 框架"
 cover: https://picsum.photos/0?sig=20220413
 thumbnail: https://storage.googleapis.com/kubebuilder-logos/icon-no-text.png

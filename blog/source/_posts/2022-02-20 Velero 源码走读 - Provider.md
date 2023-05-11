@@ -1,6 +1,6 @@
 ---
 title: "「 Velero 」源码走读 — Provider"
-excerpt: "Velero 中与 StorageProvider 和 SnapshotProvider 相关的源码走读"
+excerpt: "Velero 中与 StorageProvider 和 SnapshotProvider 等维护站点资源模块相关的流程梳理"
 cover: https://picsum.photos/0?sig=20220220
 thumbnail: https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/stacked/199150-vmw-os-lgo-velero-final_stacked-gry.svg
 date: 2022-02-20

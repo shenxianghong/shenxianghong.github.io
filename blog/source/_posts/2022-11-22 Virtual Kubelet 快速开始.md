@@ -1,6 +1,6 @@
 ---
-title: "「 Virtual Kubelet 」Virtual Kubelet 概述"
-excerpt: "Virtual Kubelet 的架构概述、Provider 实现以及实践操作"
+title: "「 Virtual Kubelet 」快速开始"
+excerpt: "以 Tensile Kube Provider 实践操作为例，理解 Virtual Kubelet 的设计理念、Provider 原语以及各厂商的探索实现"
 cover: https://picsum.photos/0?sig=20221122
 thumbnail: https://github.com/cncf/artwork/raw/master/projects/virtualkubelet/stacked/color/virtualkubelet-stacked-color.svg
 date: 2022-11-22

@@ -1,6 +1,6 @@
 ---
-title: "「 Kata Containers 」资源限制"
-excerpt: "Kata Containers 在 K8s 中资源限制与实践验证"
+title: "「 Kata Containers 」资源限制场景总结"
+excerpt: "Kata Containers 在 Kubernetes 集群场景中资源限制与实践验证"
 cover: https://picsum.photos/0?sig=20210714
 thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
 date: 2021-07-14

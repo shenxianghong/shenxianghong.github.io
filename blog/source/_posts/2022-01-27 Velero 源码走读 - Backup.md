@@ -1,6 +1,6 @@
 ---
 title: "「 Velero 」源码走读 — Backup"
-excerpt: "Velero 中与 Backup 相关的源码走读"
+excerpt: "Velero 中与 Backup 等备份模块相关的流程梳理"
 cover: https://picsum.photos/0?sig=20220127
 thumbnail: https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/stacked/199150-vmw-os-lgo-velero-final_stacked-gry.svg
 date: 2022-01-27
