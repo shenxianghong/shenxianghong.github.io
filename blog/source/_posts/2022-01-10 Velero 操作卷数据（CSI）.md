@@ -1,6 +1,6 @@
 ---
 title: "「 Velero 」操作卷数据（CSI）"
-excerpt: "借助 CSI 实现对 Kubernetes 场景下容器卷数据的备份与恢复"
+excerpt: "借助 CSI 实现对 Kubernetes 集群中容器卷数据的备份与恢复"
 cover: https://picsum.photos/0?sig=20220110
 thumbnail: https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/stacked/199150-vmw-os-lgo-velero-final_stacked-gry.svg
 date: 2022-01-10
