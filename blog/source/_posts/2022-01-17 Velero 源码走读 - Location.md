@@ -1,6 +1,6 @@
 ---
 title: "「 Velero 」源码走读 — Location"
-excerpt: "Velero 中与 Location 和 Repository 等存储站点模块相关的流程梳理"
+excerpt: "Velero 中与 Location、Repository 等存储站点相关的流程梳理"
 cover: https://picsum.photos/0?sig=20220117
 thumbnail: https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/stacked/199150-vmw-os-lgo-velero-final_stacked-gry.svg
 date: 2022-01-17

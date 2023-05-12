@@ -1,6 +1,6 @@
 ---
 title: "「 Velero 」源码走读 — Server"
-excerpt: "Velero 中与 VeleroServer 和 ResticServer 等主体服务模块相关的流程梳理"
+excerpt: "Velero 中与 VeleroServer、ResticServer 等主体服务相关的流程梳理"
 cover: https://picsum.photos/0?sig=20220306
 thumbnail: https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/stacked/199150-vmw-os-lgo-velero-final_stacked-gry.svg
 date: 2022-03-06

@@ -1,6 +1,6 @@
 ---
 title: "「 Velero 」源码走读 — Request"
-excerpt: "Velero 中与 DownloadRequest 和 ServerStatusRequest 等资源请求模块相关的流程梳理"
+excerpt: "Velero 中与 DownloadRequest、ServerStatusRequest 等资源请求相关的流程梳理"
 cover: https://picsum.photos/0?sig=20220205
 thumbnail: https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/stacked/199150-vmw-os-lgo-velero-final_stacked-gry.svg
 date: 2022-02-05

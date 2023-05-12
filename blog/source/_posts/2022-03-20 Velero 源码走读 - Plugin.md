@@ -1,6 +1,6 @@
 ---
 title: "「 Velero 」源码走读 — Plugin"
-excerpt: "Velero 中与 Plugin 等插件模块相关的流程梳理"
+excerpt: "Velero 中与 ObjectStore、VolumeSnapshotter 等插件相关的流程梳理"
 cover: https://picsum.photos/0?sig=20220320
 thumbnail: https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/stacked/199150-vmw-os-lgo-velero-final_stacked-gry.svg
 date: 2022-03-20
