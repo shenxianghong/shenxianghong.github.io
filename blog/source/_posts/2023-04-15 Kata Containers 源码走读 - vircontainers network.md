@@ -207,7 +207,20 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/macvtap_endpoint.go#L68)
 
-1. 
+1. 创建 /dev/tap\<endpoint.EndpointProperties.Iface.Index\>，构建 fds（[]*os.File，元素为数量等于 [hypervisor].default_vcpus 的 /dev/tap\<endpoint.EndpointProperties.Iface.Index\> 文件句柄），回写到 endpoint.VMFds 中
+2. 如果 [hypervisor].disable_vhost_net 未开启，则创建 /dev/vhost-net，构建 fds（[]*os.File，元素为数量等于 [hypervisor].default_vcpus 的 /dev/vhost-net 文件句柄），回写到 endpoint.VhostFds 中
+3. 调用 hypervisor 的 **AddDevice**，添加 endpoint 中相关设备到 VM 中
+
+### PhysicalEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/physical_endpoint.go#L82)
+
+1. 将 BDF 写入 /sys/bus/pci/devices/\<endpoint.BDF\>/driver/unbind 文件中<br>*用于解除该设备在 host driver 上的绑定*
+2. 将 endpoint.VendorDeviceID 写入 /sys/bus/pci/drivers/vfio-pci/new_id 文件中；并将 endpoint.BDF 写入 /sys/bus/pci/drivers/vfio-pci/bind 文件中<br>*用于将该设备绑定到 vfio-pci driver 上，用于以 vfio-passthrough 传递给 hypervisor*
+3. 获取 /sys/bus/pci/devices/\<endpoint.BDF\>/iommu_group 软链接的指向路径，得到其 base 路径（即路径最后一个元素），构建 vfio 设备路径，即 /dev/vfio/\<base\> 
+4. 根据 vfio 设备路径，获取设备信息，构建 DeviceInfo，并调用 devManager 的 **NewDevice**，初始化 vfio 类型设备
+5. 调用 devManager 的 **AttachDevice**，冷添加此设备到 VM 中
+
 
 ## Detach
 
@@ -233,7 +246,7 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 1. 调用 Network 的 **xConnectVMNetwork**，配置网络信息
 2. 调用 hypervisor 的 **HotplugAddDevice**，热添加 endpoint 中相关设备到 VM 中
 
-### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint
+### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint、PhysicalEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/ipvlan_endpoint.go#L130)
 
@@ -249,7 +262,7 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 1. 进入到该 netns 中，调用 **xDisconnectVMNetwork**，移除网络信息
 1. 调用 hypervisor 的 **HotplugRemoveDevice**，热移除 endpoint 中 VM 的相关设备
 
-### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint
+### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint、PhysicalEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/ipvlan_endpoint.go#L135)
 
