@@ -405,7 +405,7 @@ Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **Ge
 
 **attach 设备**
 
-*根据不同的实现，可能是冷启动添加或者热添加*
+*根据不同的实现，可能是冷添加或者热添加*
 
 ### GenericDevice
 
@@ -419,7 +419,7 @@ Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **Ge
 
 1. 调用 **bumpAttachCount**，维护 attach 计数，判断是否执行后续实际操作
 2. 遍历 /sys/kernel/iommu_groups/\<device.DeviceInfo.HostPath\>/devices，获取 VFIO 设备的 BDF（PCIe 总线中的每一个功能都有一个唯一的标识符与之对应。这个标识符就是 BDF，即 Bus，Device，Function）、sysfsDev 和设备类型，判断是否为 PCIe 设备，获取 PCI class 等信息，如果为 PCIe 设备，生成 Bus 信息<br>*具体参考 VFIODev 结构体注释*
-3. 如果设备必须冷启动，则调用 devReceiver 的 **AppendDevice**，添加设备；否则调用 devReceiver 的 **HotplugAddDevice**，热添加设备
+3. 如果设备必须冷添加，则调用 devReceiver 的 **AppendDevice**，添加设备；否则调用 devReceiver 的 **HotplugAddDevice**，热添加设备
 
 ### BlockDevice
 
@@ -469,7 +469,7 @@ Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **Ge
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/device/drivers/vfio#L128)
 
 1. 调用 **bumpAttachCount**，维护 attach 计数，判断是否执行后续实际操作
-2. 如果设备是冷启动的，说明没有运行后的 attach 动作，因此则无需 detach；否则，调用 devReceiver 的 **HotplugRemoveDevice**，热移除设备
+2. 如果设备是冷添加的，说明没有运行后的 attach 动作，因此则无需 detach；否则，调用 devReceiver 的 **HotplugRemoveDevice**，热移除设备
 
 ### BlockDevice
 
