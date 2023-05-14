@@ -196,12 +196,12 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 ## Attach
 
-### VethEndpoint、IPVlanEndpoint、MacvlanEndpoint
+### VethEndpoint、IPVlanEndpoint、MacvlanEndpoint、TuntapEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L99)
 
-1. 调用 Network 的 **xConnectVMNetwork**，配置网络信息
-1. 调用 hypervisor 的 **AddDevice**，添加 endpoint 中相关设备到 VM 中
+1. 调用 network 的 **xConnectVMNetwork**，配置网络信息
+1. 调用 hypervisor 的 **AddDevice**，以 NetDev 类型添加 endpoint 中相关设备到 VM 中
 
 ### MacvtapEndpoint
 
@@ -209,17 +209,29 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 1. 创建 /dev/tap\<endpoint.EndpointProperties.Iface.Index\>，构建 fds（[]*os.File，元素为数量等于 [hypervisor].default_vcpus 的 /dev/tap\<endpoint.EndpointProperties.Iface.Index\> 文件句柄），回写到 endpoint.VMFds 中
 2. 如果 [hypervisor].disable_vhost_net 未开启，则创建 /dev/vhost-net，构建 fds（[]*os.File，元素为数量等于 [hypervisor].default_vcpus 的 /dev/vhost-net 文件句柄），回写到 endpoint.VhostFds 中
-3. 调用 hypervisor 的 **AddDevice**，添加 endpoint 中相关设备到 VM 中
+3. 调用 hypervisor 的 **AddDevice**，以 NetDev 类型添加 endpoint 中相关设备到 VM 中
 
 ### PhysicalEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/physical_endpoint.go#L82)
 
-1. 将 BDF 写入 /sys/bus/pci/devices/\<endpoint.BDF\>/driver/unbind 文件中<br>*用于解除该设备在 host driver 上的绑定*
-2. 将 endpoint.VendorDeviceID 写入 /sys/bus/pci/drivers/vfio-pci/new_id 文件中；并将 endpoint.BDF 写入 /sys/bus/pci/drivers/vfio-pci/bind 文件中<br>*用于将该设备绑定到 vfio-pci driver 上，用于以 vfio-passthrough 传递给 hypervisor*
+1. 将 endpoint.BDF 写入 /sys/bus/pci/devices/\<endpoint.BDF\>/driver/unbind 文件中<br>*用于解除该设备在 host driver 上的绑定*
+2. 将 endpoint.VendorDeviceID 写入 /sys/bus/pci/drivers/vfio-pci/new_id 文件中；并将 endpoint.BDF 写入 /sys/bus/pci/drivers/vfio-pci/bind 文件中<br>*用于将该设备绑定到 vfio-pci driver 上，后续以 vfio-passthrough 传递给 hypervisor*
 3. 获取 /sys/bus/pci/devices/\<endpoint.BDF\>/iommu_group 软链接的指向路径，得到其 base 路径（即路径最后一个元素），构建 vfio 设备路径，即 /dev/vfio/\<base\> 
 4. 根据 vfio 设备路径，获取设备信息，构建 DeviceInfo，并调用 devManager 的 **NewDevice**，初始化 vfio 类型设备
 5. 调用 devManager 的 **AttachDevice**，冷添加此设备到 VM 中
+
+### VhostUserEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/vhostuser_endpoint.go#L84)
+
+1. 调用 hypervisor 的 **AddDevice**，以 VhostuserDev 类型添加 virtio-net-pci 设备（socketPath、MacAddress 等信息从 endpoint 中赋值）到 VM 中
+
+### TapEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/tap_endpoint.go#L76)
+
+1. 暂不支持添加此类设备，返回错误
 
 
 ## Detach
@@ -229,13 +241,27 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L114)
 
 1. 如果 netns 不是由 Kata Containers 创建的，则直接跳过后续<br>*根据创建 pod_sandbox 或者 single_container 时，spec.Linux.Namespace 中的 network 是否指定判断，如果未指定，表示需要由 Kata Containers 创建，反之表示 netns 已经提前创建好*
-1. 进入到该 netns 中，调用 **xDisconnectVMNetwork**，移除网络信息
+1. 进入到该 netns 中，调用 network 的 **xDisconnectVMNetwork**，移除网络信息
 
-### MacvtapEndpoint
+### MacvtapEndpoint、VhostUserEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/macvtap_endpoint.go#L92)
 
 1. 无任何操作，直接返回
+
+### PhysicalEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/physical_endpoint.go#L112)
+
+1. 将 endpoint.BDF 写入 /sys/bus/pci/devices/\<endpoint.BDF\>/driver/unbind 文件中<br>*用于解除该设备在 vfio-pci driver 上的绑定*
+2. 将 endpoint.VendorDeviceID 写入 /sys/bus/pci/drivers/vfio-pci/remove_id 文件中；并将 endpoint.BDF 写入 /sys/bus/pci/drivers/\<endpoint.Driver\>/bind 文件中<br>*用于将该设备绑定到 host driver 上*
+
+### TapEndpoint、TuntapEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/tap_endpoint.go#L81)
+
+1. 如果 netns 不是由 Kata Containers 创建的，并且 netns 路径存在，则直接跳过后续
+2. 进入到该 netns 中，获取名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的设备，关停并移除
 
 ## HotAttach
 
@@ -244,13 +270,34 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L130)
 
 1. 调用 Network 的 **xConnectVMNetwork**，配置网络信息
-2. 调用 hypervisor 的 **HotplugAddDevice**，热添加 endpoint 中相关设备到 VM 中
+2. 调用 hypervisor 的 **HotplugAddDevice**，以 NetDev 类型热添加 endpoint 中相关设备到 VM 中
 
-### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint、PhysicalEndpoint
+### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint、PhysicalEndpoint、VhostUserEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/ipvlan_endpoint.go#L130)
 
 1. 暂不支持热添加此类设备，返回错误
+
+### TapEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/tap_endpoint.go#L96)
+
+1. 创建名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的 tuntap 设备（mode 为 tap；队列长度取自 [hypervisor].default_vcpus 最大为 1，即如果队列长度大于 1，为了避免不支持多队列，需要重置为 1，参考 [tuntap 实现](https://github.com/kata-containers/kata-containers/blob/e6e5d2593ac319329269d7b58c30f99ba7b2bf5a/src/runtime/vendor/github.com/vishvananda/netlink/link_linux.go#L1164-L1316)），并返回空的 fds，回写到 endpoint.TapInterface.VMFds 中
+2. 如果 [hypervisor].disable_vhost_net 未开启，则创建 /dev/vhost-net，构建 fds（[]*os.File，元素为队列长度数量的 /dev/vhost-net 文件句柄），回写到 endpoint.TapInterface.VhostFds 中
+3. 设置 endpoint.TapInterface.TAPIface.HardAddr 为 veth 设备的 MAC 地址<br>*将 veth MAC 地址保存到 tap 中，以便稍后用于构建 hypervisor 命令行。 此 MAC 地址必须是 VM 内部的地址，以避免任何防火墙问题。 host 上的网络插件预期流量源自这个 MAC 地址*
+4. 设置 tuntap 设备的 mtu 值为 veth 设备的 mtu 值
+5. 启用 tuntap 设备
+6. 调用 hypervisor 的 **HotplugAddDevice**，以 NetDev 类型热添加 endpoint 中相关设备到 VM 中
+
+### TuntapEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/tuntap_endpoint.go#L107)
+
+1. 创建名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的 tuntap 设备（mode 为 tap；队列长度取自 [hypervisor].default_vcpus 最大为 1，即如果队列长度大于 1，为了避免不支持多队列，需要重置为 1，参考 [tuntap 实现](https://github.com/kata-containers/kata-containers/blob/e6e5d2593ac319329269d7b58c30f99ba7b2bf5a/src/runtime/vendor/github.com/vishvananda/netlink/link_linux.go#L1164-L1316)）
+2. 设置 endpoint.TuntapInterface.TAPIface.HardAddr 为 veth 设备的 MAC 地址<br>*将 veth MAC 地址保存到 tap 中，以便稍后用于构建 hypervisor 命令行。 此 MAC 地址必须是 VM 内部的地址，以避免任何防火墙问题。 host 上的网络插件预期流量源自这个 MAC 地址*
+3. 设置 tuntap 设备的 mtu 值为 veth 设备的 mtu 值
+4. 启用 tuntap 设备
+5. 调用 hypervisor 的 **HotplugAddDevice**，以 NetDev 类型热添加 endpoint 中相关设备到 VM 中
 
 ## HotDetach
 
@@ -260,13 +307,20 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 1. 如果 netns 不是由 Kata Containers 创建的，则直接跳过后续<br>*根据创建 pod_sandbox 或者 single_container 时，spec.Linux.Namespace 中的 network 是否指定判断，如果未指定，表示需要由 Kata Containers 创建，反之表示 netns 已经提前创建好*
 1. 进入到该 netns 中，调用 **xDisconnectVMNetwork**，移除网络信息
-1. 调用 hypervisor 的 **HotplugRemoveDevice**，热移除 endpoint 中 VM 的相关设备
+1. 调用 hypervisor 的 **HotplugRemoveDevice**，以 NetDev 热移除 endpoint 中 VM 的相关设备
 
-### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint、PhysicalEndpoint
+### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint、PhysicalEndpoint、VhostUserEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/ipvlan_endpoint.go#L135)
 
 1. 暂不支持热移除此类设备，返回错误
+
+### TapEndpoint、TuntapEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/tap_endpoint.go#L115)
+
+1. 进去到该 netns 中，获取名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的设备，关停并移除
+2. 调用 hypervisor 的 **HotplugRemoveDevice**，以 NetDev 热移除 endpoint 中 VM 的相关设备
 
 # Network
 
@@ -305,7 +359,7 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
    - 如果网络模型为 tcfilter
 
      1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象，并进一步获取 veth 设备
-     2. 创建名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的 tuntap 设备，并返回空的 fds，回写到 netPair.VMFds 中
+     2. 创建名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的 tuntap 设备（mode 为 tap；队列长度最大为 1，即如果队列长度大于 1，为了避免不支持多队列，需要重置为 1，参考 [tuntap 实现](https://github.com/kata-containers/kata-containers/blob/e6e5d2593ac319329269d7b58c30f99ba7b2bf5a/src/runtime/vendor/github.com/vishvananda/netlink/link_linux.go#L1164-L1316)），并返回空的 fds，回写到 netPair.VMFds 中
      3. 如果 [hypervisor].disable_vhost_net 未开启，则创建 /dev/vhost-net，构建 fds（[]*os.File，元素为队列长度数量的 /dev/vhost-net 文件句柄），回写到 netPair.VhostFds 中
      4. 设置 netPair.TAPIface.HardAddr 为 veth 设备的 MAC 地址<br>*将 veth MAC 地址保存到 tap 中，以便稍后用于构建 hypervisor 命令行。 此 MAC 地址必须是 VM 内部的地址，以避免任何防火墙问题。 host 上的网络插件预期流量源自这个 MAC 地址*
      5. 设置 tuntap 设备的 mtu 值为 veth 设备的 mtu 值
