@@ -19,34 +19,34 @@ tag:
 
 # cgroup 管理
 
-在 Kata Containers 中，工作负载在虚拟机中运行，虚拟机由运行在 host 上的 VMM（virtual machine monitor）管理。因此，Kata Containers 运行在两层 cgroup 之上：第一层为工作负载所在的 guest，第二层为运行 VMM 和相关线程的 host。
+Kata Containers 中，工作负载是在 VM 中运行，VM 由运行在 host 上的 VMM（virtual machine monitor）管理。因此，Kata Containers 运行在两层 cgroup 之上：一层为工作负载所在的 guest，另一层为运行 VMM 和相关线程的 host。
 
-容器 cgroup 路径的配置是在 [OCI runtime spec](https://github.com/opencontainers/runtime-spec/blob/main/config-linux.md) 中声明的 cgroupsPath 字段，可用于控制容器的 cgroup 层次结构以及在容器中运行的新进程。取决于上层编排器的不同，Pod 所在的 cgroup 是否由编排器管理也有所区别。在 Kubernetes 场景中，Pod 的 cgroup 是由 Kubelet 管理，而容器的 cgroup 由运行时管理。 Kubelet 将根据容器资源需求调整 Pod 的 cgroup 大小，其中包含 Pod spec.Overhead 中声明的资源。
+容器 cgroup 路径的配置是在 [OCI runtime spec](https://github.com/opencontainers/runtime-spec/blob/main/config-linux.md) 中声明的 cgroupsPath 字段，可用于控制容器的 cgroup 层次结构以及在容器中运行的进程。在 Kubernetes 场景中，Pod 的 cgroup 是由 Kubelet 管理，而容器的 cgroup 是由运行时管理。 Kubelet 将根据容器资源需求调整 Pod 的 cgroup 大小，其中包含 Pod spec.Overhead 中声明的资源。
 
-Kata Containers 为 sandbox 引入了不可忽略的资源开销。通常，与基于进程级别的容器运行时相比，Kata shim 会调用底层 VMM 创建许多额外的线程，例如半虚拟化 I/O 后端、VMM 实例以及 Kata shim 进程。所有这些 host 进程消耗内存和 CPU 资源是不与容器中的工作负载直接相关，而是属于引入 sandbox 的额外开销。为了使 Kata 工作负载在不显着降低性能的情况下运行，必须相应地配置其 sandbox 开销。因此，可能有两种情况：
+Kata Containers 的设计为 sandbox 引入了不可忽略的资源开销。通常，与基于进程级别的容器运行时相比，Kata shim（即 containerd-shim-kata-v2）会调用底层 VMM 创建额外的线程，例如半虚拟化 I/O 后端、VMM 实例以及 Kata shim 进程。这些 host 进程消耗的内存和 CPU 资源是不与容器中的工作负载直接相关，而是属于引入 sandbox 带来的额外开销。为了使 Kata 工作负载在不显着降低性能的情况下运行，必须相应地配置其 sandbox 的开销。因此，可能有两种情况：
 
-- 上层编排器在调整 Pod cgroup 大小时会考虑运行 sandbox 的额外开销。例如，Kubernetes 的 Pod Overhead 特性允许编排器将 sandbox 的额外开销添加到其所有容器资源的总和中。在这种情况下，所有 Kata 创建的进程都将在 Pod 的 cgroup 约束和限制下运行
-- 上层编排器不考虑 sandbox 的额外开销，因此 Pod 的 cgroup 大小可能无法满足运行所有 Kata 创建的进程。在这种情况下，将所有 Kata 进程附加到 Pod 的 cgroup 中可能会导致不可忽略的工作负载性能下降。因此，Kata Containers 会将除 vCPU 线程之外的所有进程移动到 /kata_overhead 下的子 cgroup 中。 Kata 运行时不会对该 cgroup 作出任何约束或限制，而由集群管理员选择设置
+- 上层编排器在调整 Pod cgroup 大小时考虑运行 sandbox 的额外开销。例如，Kubernetes 的 Pod Overhead 特性允许编排器将 sandbox 的额外开销计入其所有容器资源的总和中。在这种情况下，Kata 创建的所有进程都将在 Pod 的 cgroup 约束和限制下运行
+- 上层编排器不考虑 sandbox 的额外开销，因此 Pod 的 cgroup 大小可能无法满足运行 Kata 创建的所有进程。在这种情况下，将所有 Kata 相关进程附加到 Pod 的 cgroup 中可能会导致不可忽略的工作负载性能下降。因此，Kata Containers 会将除 vCPU 线程之外的所有进程移动到名为 /kata_overhead 下的子 cgroup 中。 Kata 运行时不会对该 cgroup 作出任何约束或限制，而由集群管理员选择性设置
 
 Kata Containers 并不会动态检测这两种情况，而是通过配置文件中的 [runtime].sandbox_cgroup_only 选项决定的。
 
-**名词梳理**
+**cgroup 种类**
 
 - Pod cgroup
 
-  位于 /kubepods 层级下的子 cgroup，命名为 /kubepods/\<PodUID\>，是 Kubernetes 场景中为 Pod 专用的 cgroup，由 Kubelet 管理，针对每一个 Pod 均会创建一个对应的 cgroup
+  位于 /kubepods 层级下的子 cgroup，命名为 /kubepods/\<PodUID\>，由 Kubelet 管理
 
 - sandbox cgroup
 
-  位于 /kubepods/\<PodUID\> 层级下的子 cgroup，命名为 /kata\_\<sandboxID\>，由运行时管理，针对每一个 Pod 均会创建一个对应的 cgroup
+  位于 /kubepods/\<PodUID\> 层级下的子 cgroup，命名为 /kata\_\<sandboxID\>，由运行时管理
 
 - overhead cgroup
 
-  位于 /kata_overhead 层级下的子 cgroup，命名为 /kata_overhead/\<sandboxID\>，由运行时管理，针对每一个 Pod 均会创建一个对应的 cgroup，
+  位于 /kata_overhead 层级下的子 cgroup，命名为 /kata_overhead/\<sandboxID\>，由运行时管理
 
 ## sandbox_cgroup_only = true
 
-sandbox_cgroup_only 设置为 true 意味着 Kubelet 在设置 Pod cgroup 的大小时会将 Pod 的额外开销考虑在内（Kubernetes 1.16 起，借助 Pod Overhead 特性）。相对而言，这种方式较为推荐，所有 Kata Containers 相关进程都可以简单地放置在给定的 cgroup 路径中。
+sandbox_cgroup_only 设置为 true 意味着 Kubelet 在设置 Pod cgroup 的大小时会将 Pod 的额外开销考虑在内（Kubernetes 1.16 起，借助 Pod Overhead 特性）。相对而言，这种方式较为推荐，Kata Containers 所有相关进程都可以简单地放置在给定的 cgroup 路径中。
 
 ```shell
 ┌─────────────────────────────────────────┐
@@ -70,7 +70,7 @@ sandbox_cgroup_only 设置为 true 意味着 Kubelet 在设置 Pod cgroup 的大
 
 ### 实现细节
 
-当启用 sandbox_cgroup_only 时，Kata shim 将在 Pod cgroup 下创建一个名为 /kata\_<sandboxID\> 的子 cgroup，即 sandbox cgroup。大多数情况下，在 sandbox cgroup 不受约束和限制，并且继承并共享父 cgroup 的所有约束和限制。cpuset 和 devices cgroup 子系统除外，它们是由 Kata shim 管理。
+当启用 sandbox_cgroup_only 时，Kata shim 将在 Pod cgroup 下创建一个名为 /kata\_<sandboxID\> 的子 cgroup，即 sandbox cgroup。大多数情况下，sandbox cgroup 不作单独约束和限制，而是自继承父 cgroup。cpuset 和 devices cgroup 子系统除外，它们是由 Kata shim 管理。
 
 ```shell
 # ======= host =======
@@ -114,7 +114,7 @@ sandbox_cgroup_only 设置为 true 意味着 Kubelet 在设置 Pod cgroup 的大
     	└── cpu.cfs_quota_us	(-> -1)
 ```
 
-在创建 /kata\_\<sandboxID\> cgroup 之后，Kata shim 在虚拟机启动之前会将自身加入到该 cgroup 中。因此，随后由 Kata shim 创建的所有进程（VMM 本身，以及所有 vCPU 和 I/O 相关线程）都将在 /kata\_\<sandboxID\> cgroup 中约束。
+创建 sandbox cgroup 之后，Kata shim 在 VM 启动之前会将其自身加入到该 cgroup 中。因此，随后由 Kata shim 创建的所有进程（VMM 本身，以及所有 vCPU 和 I/O 相关线程）都将受 sandbox cgroup 约束。
 
 ### /kata\_\<sandboxID\> 的价值
 
