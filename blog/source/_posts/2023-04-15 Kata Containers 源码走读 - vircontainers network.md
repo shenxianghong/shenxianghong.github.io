@@ -21,7 +21,7 @@ tag:
 
 *<u>src/runtime/virtcontainers/endpoint.go</u>*
 
-Endpoint 代表了一组物理或虚拟网卡接口的基础结构，具体包括：veth、ipvlan、macvlan、physical、vhostuser、tap 和 tuntap 7 种实现方式。借助 `github.com/vishvananda/netlink` 将抽象 endpoint 类型转变成具体的 netlink 类型，配置后回写到 endpoint 的具体属性（例如 NetPair 等）后，交由 hypervisor 创建或配置该设备信息。
+Endpoint 代表了物理或虚拟网卡接口的基础结构，具体包括：veth、ipvlan、macvlan、macvtap、physical、vhostuser、tap 和 tuntap 8 种实现方式。借助 `github.com/vishvananda/netlink` 将抽象 endpoint 类型转变成具体的 netlink 类型，配置后回写到 endpoint 的具体属性（例如 NetPair 等）后，交由 hypervisor 创建或配置该设备信息。
 
 ```go
 // VethEndpoint gathers a network pair and its properties.
@@ -171,6 +171,7 @@ type TuntapEndpoint struct {
 type NetworkInterfacePair struct {
 	TapInterface
 	VirtIface NetworkInterface
+	// [runtime].internetworking_model。Kata 网络模型，支持 macvtap 和 tcfilter（默认）
 	NetInterworkingModel
 }
 ```
@@ -179,7 +180,7 @@ NetworkInterfacePair 即 netpair（例如 br0_kata），描述了 tap 设备（T
 
 *工厂函数为简单的赋值操作，具体参考 Network。*
 
-Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties**、**SetPciPath**、**GetRxRateLimiter**、**SetRxRateLimiter**、**GetTxRateLimiter** 和 **GetTxRateLimiter** 均为参数获取与赋值，无复杂逻辑，不作详述。
+Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties**、**SetPciPath**、**GetRxRateLimiter**、**SetRxRateLimiter**、**GetTxRateLimiter** 和 **GetTxRateLimiter** 均为参数获取与赋值（其中 VhostUserEndpoint 和 PhysicalEndpoint 不支持网络 I/O inbound 和 outbound 限速），无复杂逻辑，不作详述。
 
 其中，**Name**、**HardwareAddr** 和 **NetworkPair** 视不同的 Endpoint 实现，取值有所不同，具体为：
 
@@ -195,6 +196,8 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 | TuntapEndpoint    | TuntapInterface.Name          | TapInterface.TAPIface.HardAddr        | NetPair     |
 
 ## Attach
+
+**添加 endpoint 相关设备到 VM 中**
 
 ### VethEndpoint、IPVlanEndpoint、MacvlanEndpoint、TuntapEndpoint
 
@@ -233,8 +236,9 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 1. 暂不支持添加此类设备，返回错误
 
-
 ## Detach
+
+**移除 VM 中的 endpoint 相关设备**
 
 ### VethEndpoint、IPVlanEndpoint、MacvlanEndpoint
 
@@ -264,6 +268,8 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 2. 进入到该 netns 中，获取名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的设备，关停并移除
 
 ## HotAttach
+
+**热添加 endpoint 相关设备到 VM 中**
 
 ### VethEndpoint
 
@@ -301,6 +307,8 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 ## HotDetach
 
+**热移除 VM 中的 endpoint 相关设备**
+
 ### VethEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L147)
@@ -319,12 +327,33 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/tap_endpoint.go#L115)
 
-1. 进去到该 netns 中，获取名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的设备，关停并移除
+1. 进入到该 netns 中，获取名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的设备，关停并移除
 2. 调用 hypervisor 的 **HotplugRemoveDevice**，以 NetDev 热移除 endpoint 中 VM 的相关设备
+
+***
 
 # Network
 
-实际操作均借助 `github.com/vishvananda/netlink` 实现，该库提供了等价于 ip addr、ip link、tc qdisc、tc filter 命令行的功能。
+*<u>src/runtime/virtcontainers/network.go</u>*
+
+实际操作均借助 `github.com/vishvananda` 实现，该库提供了等价于 ip addr、ip link、tc qdisc、tc filter 等命令行的功能。
+
+```go
+// LinuxNetwork represents a sandbox networking setup.
+type LinuxNetwork struct {
+	netNSPath         string
+	eps               []Endpoint
+	// [runtime].internetworking_model。Kata 网络模型，支持 macvtap 和 tcfilter（默认）
+	interworkingModel NetInterworkingModel
+	// 当前 netns 是否为 Kata Containers 创建
+	// Kata Containers 的 netns 可以有两种创建方式：
+	// - 事先准备好 netns，创建 Kata 容器时，在 oci spec 中传递该 netns（network 类型的 linux.Namespace）。例如 Kubernetes 场景下，netns 由 CNI 创建
+	// - 由 Kata Containers 创建，Kata Containers 发现 oci spec 中不存在 network 类型的 linux.Namespace，则会手动创建一个 netns（以 cnitest 开头）。例如 Containerd 场景下，运行 single_container
+	netNSCreated      bool
+}
+```
+
+*工厂函数为参数赋值初始化，无复杂逻辑，不作详述。*
 
 ## xConnectVMNetwork
 
@@ -389,3 +418,28 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
      3. 获取 veth 设备所有的 ingress 类型的 tc 规则，并移除
      4. 获取 veth 设备所有的 ingress 类型的 qdisc，并移除
      5. 关停 veth 设备，并移除
+
+## addSingleEndpoint
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L110)
+
+1. 根据网络接口的类型，初始化对应的 Endpoint<br>*物理设备是根据 ethtools 获取指定网卡名称的 bus 信息判断，如果 bus 格式为 0000:00:03.0（即以冒号切分后长度为 3），则表示为物理设备；<br>vhost-user 设备是根据 /tmp/vhostuser_\<addr\>/vhu.sock（其中 addr 为网卡的每一个地址）文件是否存在，如果存在，则表示为 vhost-user 设备；<br>tuntap 设备仅支持 tap mode*
+2. 调用 endpoint 的 **SetProperties**，设置 endpoint 属性信息
+3. 根据是否为 hotplug，则调用 endpoint 的 **HotAttach** 或 **Attach**，热添加/添加 endpoint 的相关设备到 VM 中
+4. 调用 hypervisor 的 **IsRateLimiterBuiltin**，判断是否内置了限速特性。如果本身不支持限速，则需要额外配置：
+   - 需要对网络 I/O inbound 带宽限速（即 [hypervisor].rx_rate_limiter_max_rate 大于 0）
+     1. 调用 endpoint 的 **SetRxRateLimiter**，设置 inbound 限速标识（VhostUserEndpoint 和 PhysicalEndpoint 不支持 inbound 限速）
+     2. 
+
+## AddEndpoints
+
+**添加 endpoint 相关设备到 VM 网络中**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L324)
+
+1. 如果未指定任何 endpoint，则默认所有
+   1. 针对 netns 中每一个网络设备接口信息，获得其名称、类型、IP 地址、路由、ARP neighbor 等信息
+   2. 忽略缺少 IP 地址的网络接口，以及本地回环接口<br>*缺少 IP 地址意味着要么是没有命名空间的基本隧道设备，如 gre0、gretap0、sit0、ipip0、tunl0，要么是错误设置的接口*
+   3. 进入到该 netns 中，调用 **addSingleEndpoint**
+2. 否则，针对每一个 endpoint，调用 **addSingleEndpoint**
+
