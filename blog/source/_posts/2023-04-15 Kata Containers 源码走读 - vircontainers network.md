@@ -180,7 +180,7 @@ NetworkInterfacePair 即 netpair（例如 br0_kata），描述了 tap 设备（T
 
 *工厂函数为简单的赋值操作，具体参考 Network。*
 
-Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties**、**SetPciPath**、**GetRxRateLimiter**、**SetRxRateLimiter**、**GetTxRateLimiter** 和 **GetTxRateLimiter** 均为参数获取与赋值（其中 VhostUserEndpoint 和 PhysicalEndpoint 不支持网络 I/O inbound 和 outbound 限速），无复杂逻辑，不作详述。
+Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties**、**SetPciPath**、**GetRxRateLimiter**、**SetRxRateLimiter**、**GetTxRateLimiter** 和 **GetTxRateLimiter** 均为参数获取与赋值（其中 vhost-user 和 physical 类型的 endpoint 不支持网络 I/O inbound 和 outbound 限速），无复杂逻辑，不作详述。
 
 其中，**Name**、**HardwareAddr** 和 **NetworkPair** 视不同的 Endpoint 实现，取值有所不同，具体为：
 
@@ -433,9 +433,9 @@ type LinuxNetwork struct {
 
    - 对网络 I/O inbound 带宽限速（即 [hypervisor].rx_rate_limiter_max_rate 大于 0）
 
-     1. 调用 endpoint 的 **SetRxRateLimiter**，设置 inbound 限速标识（VhostUser 和 Physical 类型的 endpoint 不支持 inbound 限速）
+     1. 调用 endpoint 的 **SetRxRateLimiter**，设置 inbound 限速标识
 
-     2. 获取 endpoint 设备号，使用 HTB（Hierarchical Token Bucket）qdisc traffic shaping 方案来控制网口流量，设置 class 的 rate 和 ceil 均为 [hypervisor].rx_rate_limiter_max_rate<br>*class 1:2 是基于 class 1:1 创建，两者的 rate 和 ceil 流控指标保持一致，class 1:2 最终作为默认的 class，class 1:n 用于限制特定流量（截至 Kata 3.0，暂未实现）。<br>之所以创建了 class 1:2 作为默认的 class，是一种常规做法，一般 class 1:1 承担限制整体的最大速率，class 1:2 用于控制非特权流量。如果统一由 class 1:1 负责，可能会导致非特权流量无法得到适当的控制和优先级管理。没有专门的子类别来定义规则和限制非特权流量，可能会导致这些流量占用过多的带宽，从而影响网络的性能和服务质量；难以灵活地调整限制策略。如果需要根据具体情况对非特权流量进行不同的限制和优先级分配，使用单一的1:1类别会显得不够灵活。而有一个专门的子类别，可以根据需要定义更具体的规则和策略，更好地控制非特权流量。所以，通过设置专门的 class 1:2，可以更好地组织和管理流量，确保网络的资源分配和性能满足特定的需求和优先级。*
+     2. 获取 endpoint netPair 中 tap 设备的索引，使用 HTB（Hierarchical Token Bucket）qdisc traffic shaping 方案来控制网口流量，设置 class 的 rate 和 ceil 均为 [hypervisor].rx_rate_limiter_max_rate<br>*class 1:2 是基于 class 1:1 创建，两者的 rate 和 ceil 流控指标保持一致，class 1:2 最终作为默认的 class，class 1:n 用于限制特定流量（截至 Kata 3.0，暂未实现）。<br>之所以创建了 class 1:2 作为默认的 class，是一种常规做法，一般 class 1:1 承担限制整体的最大速率，class 1:2 用于控制非特权流量。如果统一由 class 1:1 负责，可能会导致非特权流量无法得到适当的控制和优先级管理。没有专门的子类别来定义规则和限制非特权流量，可能会导致这些流量占用过多的带宽，从而影响网络的性能和服务质量；难以灵活地调整限制策略。如果需要根据具体情况对非特权流量进行不同的限制和优先级分配，使用单一的1:1类别会显得不够灵活。而有一个专门的子类别，可以根据需要定义更具体的规则和策略，更好地控制非特权流量。所以，通过设置专门的 class 1:2，可以更好地组织和管理流量，确保网络的资源分配和性能满足特定的需求和优先级。*
 
         ```shell
          +-----+     +---------+     +-----------+      +-----------+
@@ -453,7 +453,7 @@ type LinuxNetwork struct {
 
    - 对网络 I/O outbound 带宽限速（即 [hypervisor].tx_rate_limiter_max_rate 大于 0）
 
-     1. 针对每一个
+     1. 对于 veth、ipvlan、tuntap 和 macvlan 类型的 endpoint 且当网络模型为 tcfilter 时，则获取 endpoint netPair 中 veth 设备的索引，同样的使用 HTB（Hierarchical Token Bucket）qdisc traffic shaping 方案来控制网口流量，设置 class 的 rate 和 ceil 均为 [hypervisor].tx_rate_limiter_max_rate
 
 ## AddEndpoints
 
