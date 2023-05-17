@@ -62,8 +62,8 @@ ignore: null
 theme: icarus
 deploy:
   type: git
-  repo: git@github.com:shenxianghong/shenxianghong.github.io.git
-  # repo: https://github.com/shenxianghong/shenxianghong.github.io.git
+  # repo: git@github.com:shenxianghong/shenxianghong.github.io.git
+  repo: https://github.com/shenxianghong/shenxianghong.github.io.git
   branch: gh-pages
 feed:
   type: atom
