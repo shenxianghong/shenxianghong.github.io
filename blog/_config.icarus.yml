@@ -278,7 +278,7 @@ widgets:
         # Names and URLs of the sites
         links:
             Google: https://google.com
-            ChatGPT: https://freegpt.one
+            Poe: https://poe.com
     # Categories widget configurations
     -
         # Where should the widget be placed, left sidebar or right sidebar

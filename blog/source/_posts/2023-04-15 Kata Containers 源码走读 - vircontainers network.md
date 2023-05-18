@@ -21,7 +21,7 @@ tag:
 
 *<u>src/runtime/virtcontainers/endpoint.go</u>*
 
-Endpoint 代表了物理或虚拟网卡接口的基础结构，具体包括：veth、ipvlan、macvlan、macvtap、physical、vhostuser、tap 和 tuntap 8 种实现方式。借助 `github.com/vishvananda/netlink` 将抽象 endpoint 类型转变成具体的 netlink 类型，配置后回写到 endpoint 的具体属性（例如 NetPair 等）后，交由 hypervisor 创建或配置该设备信息。
+Endpoint 代表了某一个物理或虚拟网络设备的基础结构，具体包括：veth、ipvlan、macvlan、macvtap、physical、vhostuser、tap 和 tuntap 8 种实现方式。借助 `github.com/vishvananda/netlink` 将抽象 endpoint 类型转变成具体的 netlink 类型，配置后回写到 endpoint 的具体属性（例如 netPair 等）后，交由 hypervisor 创建或配置该设备信息。
 
 ```go
 // VethEndpoint gathers a network pair and its properties.
@@ -133,7 +133,7 @@ type VhostUserEndpoint struct {
 ```go
 // TapEndpoint represents just a tap endpoint
 type TapEndpoint struct {
-  // TapInterface.Name 为初始化入参指定，缺省为 eth<idx>
+	// TapInterface.Name 为初始化入参指定，缺省为 eth<idx>
 	// TapInterface.TAPIface.Name 为 tap<idx>_kata
 	TapInterface       TapInterface
 	EndpointProperties NetworkInfo
@@ -176,13 +176,26 @@ type NetworkInterfacePair struct {
 }
 ```
 
-NetworkInterfacePair 即 netpair（例如 br0_kata），描述了 tap 设备（TapInterface）和 veth 设备（VirtIface，即位于容器命名空间内部的 veth-pair 设备，如 eth0）的数据结构（非真实设备）。
+NetworkInterfacePair 即 netpair（例如 br0_kata），描述了 tap 设备（TapInterface）和 veth 设备（VirtIface，即位于容器命名空间内部的 veth-pair 设备，如 eth0）的数据结构（netPair 并非真实设备）。
+
+```go
+// NetworkInfo gathers all information related to a network interface.
+// It can be used to store the description of the underlying network.
+type NetworkInfo struct {
+	Iface     NetlinkIface
+	DNS       DNSInfo
+	Link      netlink.Link
+	Addrs     []netlink.Addr
+	Routes    []netlink.Route
+	Neighbors []netlink.Neigh
+}
+```
+
+NetworkInfo 描述 endpoint 设备的属性信息。
 
 *工厂函数为简单的赋值操作，具体参考 Network。*
 
-Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties**、**SetPciPath**、**GetRxRateLimiter**、**SetRxRateLimiter**、**GetTxRateLimiter** 和 **GetTxRateLimiter** 均为参数获取与赋值（其中 vhost-user 和 physical 类型的 endpoint 不支持网络 I/O inbound 和 outbound 限速），无复杂逻辑，不作详述。
-
-其中，**Name**、**HardwareAddr** 和 **NetworkPair** 视不同的 Endpoint 实现，取值有所不同，具体为：
+Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties**、**SetPciPath**、**GetRxRateLimiter**、**SetRxRateLimiter**、**GetTxRateLimiter** 和 **GetTxRateLimiter** 均为参数获取与赋值，无复杂逻辑，不作详述。<br>其中，**Name**、**HardwareAddr** 和 **NetworkPair** 视不同的 endpoint 实现，取值字段有所不同，具体为：
 
 | Endpoint          | Name                          | HardwareAddr                          | NetworkPair |
 | ----------------- | ----------------------------- | ------------------------------------- | ----------- |
@@ -197,14 +210,14 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 ## Attach
 
-**添加 endpoint 相关设备到 VM 中**
+**添加 endpoint 设备到 VM 中**
 
 ### VethEndpoint、IPVlanEndpoint、MacvlanEndpoint、TuntapEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L99)
 
 1. 调用 network 的 **xConnectVMNetwork**，配置网络信息
-1. 调用 hypervisor 的 **AddDevice**，以 NetDev 类型添加 endpoint 中相关设备到 VM 中
+2. 调用 hypervisor 的 **AddDevice**，以 NetDev 类型添加 endpoint 设备到 VM 中
 
 ### MacvtapEndpoint
 
@@ -212,7 +225,7 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 1. 创建 /dev/tap\<endpoint.EndpointProperties.Iface.Index\>，构建 fds（[]*os.File，元素为数量等于 [hypervisor].default_vcpus 的 /dev/tap\<endpoint.EndpointProperties.Iface.Index\> 文件句柄），回写到 endpoint.VMFds 中
 2. 如果 [hypervisor].disable_vhost_net 未开启，则创建 /dev/vhost-net，构建 fds（[]*os.File，元素为数量等于 [hypervisor].default_vcpus 的 /dev/vhost-net 文件句柄），回写到 endpoint.VhostFds 中
-3. 调用 hypervisor 的 **AddDevice**，以 NetDev 类型添加 endpoint 中相关设备到 VM 中
+3. 调用 hypervisor 的 **AddDevice**，以 NetDev 类型添加 endpoint 设备到 VM 中
 
 ### PhysicalEndpoint
 
@@ -238,7 +251,7 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 ## Detach
 
-**移除 VM 中的 endpoint 相关设备**
+**移除 VM 中的 endpoint 设备**
 
 ### VethEndpoint、IPVlanEndpoint、MacvlanEndpoint
 
@@ -269,14 +282,14 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 
 ## HotAttach
 
-**热添加 endpoint 相关设备到 VM 中**
+**热添加 endpoint 设备到 VM 中**
 
 ### VethEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L130)
 
 1. 调用 Network 的 **xConnectVMNetwork**，配置网络信息
-2. 调用 hypervisor 的 **HotplugAddDevice**，以 NetDev 类型热添加 endpoint 中相关设备到 VM 中
+2. 调用 hypervisor 的 **HotplugAddDevice**，以 NetDev 类型热添加 endpoint 设备到 VM 中
 
 ### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint、PhysicalEndpoint、VhostUserEndpoint
 
@@ -293,7 +306,7 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 3. 设置 endpoint.TapInterface.TAPIface.HardAddr 为 veth 设备的 MAC 地址<br>*将 veth MAC 地址保存到 tap 中，以便稍后用于构建 hypervisor 命令行。 此 MAC 地址必须是 VM 内部的地址，以避免任何防火墙问题。 host 上的网络插件预期流量源自这个 MAC 地址*
 4. 设置 tuntap 设备的 mtu 值为 veth 设备的 mtu 值
 5. 启用 tuntap 设备
-6. 调用 hypervisor 的 **HotplugAddDevice**，以 NetDev 类型热添加 endpoint 中相关设备到 VM 中
+6. 调用 hypervisor 的 **HotplugAddDevice**，以 NetDev 类型热添加 endpoint 设备到 VM 中
 
 ### TuntapEndpoint
 
@@ -303,19 +316,19 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 2. 设置 endpoint.TuntapInterface.TAPIface.HardAddr 为 veth 设备的 MAC 地址<br>*将 veth MAC 地址保存到 tap 中，以便稍后用于构建 hypervisor 命令行。 此 MAC 地址必须是 VM 内部的地址，以避免任何防火墙问题。 host 上的网络插件预期流量源自这个 MAC 地址*
 3. 设置 tuntap 设备的 mtu 值为 veth 设备的 mtu 值
 4. 启用 tuntap 设备
-5. 调用 hypervisor 的 **HotplugAddDevice**，以 NetDev 类型热添加 endpoint 中相关设备到 VM 中
+5. 调用 hypervisor 的 **HotplugAddDevice**，以 NetDev 类型热添加 endpoint 设备到 VM 中
 
 ## HotDetach
 
-**热移除 VM 中的 endpoint 相关设备**
+**热移除 VM 中的 endpoin 设备**
 
 ### VethEndpoint
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/veth_endpoint.go#L147)
 
 1. 如果 netns 不是由 Kata Containers 创建的，则直接跳过后续<br>*根据创建 pod_sandbox 或者 single_container 时，spec.Linux.Namespace 中的 network 是否指定判断，如果未指定，表示需要由 Kata Containers 创建，反之表示 netns 已经提前创建好*
-1. 进入到该 netns 中，调用 **xDisconnectVMNetwork**，移除网络信息
-1. 调用 hypervisor 的 **HotplugRemoveDevice**，以 NetDev 热移除 endpoint 中 VM 的相关设备
+2. 进入到该 netns 中，调用 **xDisconnectVMNetwork**，移除网络信息
+3. 调用 hypervisor 的 **HotplugRemoveDevice**，以 NetDev 热移除 endpoint 中 VM 的设备
 
 ### IPVlanEndpoint、MacvlanEndpoint、MacvtapEndpoint、PhysicalEndpoint、VhostUserEndpoint
 
@@ -328,7 +341,7 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/tap_endpoint.go#L115)
 
 1. 进入到该 netns 中，获取名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的设备，关停并移除
-2. 调用 hypervisor 的 **HotplugRemoveDevice**，以 NetDev 热移除 endpoint 中 VM 的相关设备
+2. 调用 hypervisor 的 **HotplugRemoveDevice**，以 NetDev 热移除 VM 中的 endpoint 设备
 
 ***
 
@@ -355,6 +368,8 @@ type LinuxNetwork struct {
 
 *工厂函数为参数赋值初始化，无复杂逻辑，不作详述。*
 
+Network 中声明的 **NetworkID**、**NetworkCreated**、**Endpoints** 和 **SetEndpoints** 均为参数获取与赋值，无复杂逻辑，不作详述。其中，**Run** 是封装了进入 netns 中执行回调函数的流程。
+
 ## xConnectVMNetwork
 
 **根据不同的网络模型，打通容器和 VM 之间的网络**
@@ -362,9 +377,7 @@ type LinuxNetwork struct {
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L518)
 
 1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象的网络模型（即[runtime].internetworking_model，默认为 tcfilter）
-
 2. 调用 hypervisor 的 **Capabilities**，判断 hypervisor 是否支持多队列特性。如果支持，则队列数设为 [hypervisor].default_vcpus；否则为 0
-
 3. 根据网络模型，创建对应的 tap 设备，连通容器和 VM 之间的网络
 
    *无论哪种网络模式，VM 中的 eth0 都是 hypervisor 基于 tap 设备虚拟化出来，并 attach 到 VM 中建立两者的关联关系。区别在于 tap 设备和 veth 设备（即 CNI 为容器内分配的 eth0）的网络打通方式*
@@ -393,8 +406,7 @@ type LinuxNetwork struct {
      4. 设置 netPair.TAPIface.HardAddr 为 veth 设备的 MAC 地址<br>*将 veth MAC 地址保存到 tap 中，以便稍后用于构建 hypervisor 命令行。 此 MAC 地址必须是 VM 内部的地址，以避免任何防火墙问题。 host 上的网络插件预期流量源自这个 MAC 地址*
      5. 设置 tuntap 设备的 mtu 值为 veth 设备的 mtu 值
      6. 启用 tuntap 设备
-     7. 为 tuntap 设备和 veth 设备创建 ingress 类型的 qdisc
-     8. 为 tuntap 设备和 veth 设备创建 ingress 类型的 tc 规则分别指向对方，使得所有流量在两者之间可以被重定向
+     7. 为 tuntap 设备和 veth 设备分别创建 ingress 类型的网络队列规则与 tc 规则，将一方的入站流量重定向到另一方进行出站处理，使得所有流量在两者之间可以被重定向
      
      综上所述，tcfilter 网络模式下，仅仅是在 veth 和 tap 设备之间配置 tc 规则，实现容器网络流量和 VM 网络流量的互通。
 
@@ -409,34 +421,33 @@ type LinuxNetwork struct {
    - 如果网络模型为 macvtap
      1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象，并进一步获取 macvtap 设备与 veth 设备
      2. 移除 macvtap 设备
-     3. 将 veth 设备的 MAC 地址设置为 **xConnextVMNetwork** 流程中保存在 netPair.TAPIface.HardAddr 中的信息
+     3. 将 veth 设备的 MAC 地址还原（在 **xConnextVMNetwork** 流程中保存在 netPair.TAPIface.HardAddr）
      4. 关停 veth 设备
-     5. 将 veth 设备的 IP 地址设置为 **xConnextVMNetwork** 流程中保存在 netPair.VirtIface.Addrs 中的信息
+     5. 将 veth 设备的 IP 地址还原（在 **xConnextVMNetwork** 流程中保存在 netPair.VirtIface.Addrs）
    - 如果网络模型为 tcfilter
      1. 调用 endpoint 的 **NetworkPair**，获取 netPair 对象，并进一步获取 tuntap 设备与 veth 设备
      2. 关停 tuntap 设备，并移除
-     3. 获取 veth 设备所有的 ingress 类型的 tc 规则，并移除
-     4. 获取 veth 设备所有的 ingress 类型的 qdisc，并移除
-     5. 关停 veth 设备，并移除
+     3. 删除 veth 设备所有的 tc 规则与 ingress 类型的网络队列规则
+     4. 关停 veth 设备
 
 ## addSingleEndpoint
 
+**添加 endpoint 设备到 VM 中**
+
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L110)
 
-1. 根据网口的类型，初始化对应的 Endpoint<br>*物理设备是根据 ethtools 获取指定网口名称的 bus 信息判断，如果 bus 格式为 0000:00:03.0（即以冒号切分后长度为 3），则表示为物理设备；<br>vhost-user 设备是根据 /tmp/vhostuser_\<addr\>/vhu.sock（其中 addr 为网卡的每一个地址）文件是否存在，如果存在，则表示为 vhost-user 设备；<br>tuntap 设备仅支持 tap mode*
-
+1. 根据网口的类型，初始化对应的 endpoint<br>*物理设备是根据 ethtools 获取指定网口名称的 bus 信息判断，如果 bus 格式为 0000:00:03.0（即以冒号切分后长度为 3），则表示为物理设备；<br>vhost-user 设备是根据 /tmp/vhostuser_\<addr\>/vhu.sock（其中 addr 为网卡的每一个地址）文件是否存在，如果存在，则表示为 vhost-user 设备；<br>tuntap 设备仅支持 tap mode*
 2. 调用 endpoint 的 **SetProperties**，设置 endpoint 属性信息
+3. 根据是否为 hotplug，则调用 endpoint 的 **HotAttach** 或 **Attach**，热（添加）endpoint 设备到 VM 中
+4. 调用 hypervisor 的 **IsRateLimiterBuiltin**，判断是否内置支持限速特性。如果本身不支持限速（例如 QEMU），则需要额外配置：
 
-3. 根据是否为 hotplug，则调用 endpoint 的 **HotAttach** 或 **Attach**，热添加/添加 endpoint 的相关设备到 VM 中
+   - 网络 I/O inbound 带宽限速（即 [hypervisor].rx_rate_limiter_max_rate 大于 0）
 
-4. 调用 hypervisor 的 **IsRateLimiterBuiltin**，判断是否内置了限速特性。如果本身不支持限速（例如 QEMU），则需要额外配置：
-
-   - 对网络 I/O inbound 带宽限速（即 [hypervisor].rx_rate_limiter_max_rate 大于 0）
+     *veth、ipvlan、tuntap 和 macvlan 类型的 endpoint，待限速设备为 endpoint.NetPair 的 tap 设备；<br>macvtap 和 tap 类型的 endpoint，待限速设备为其本身，即 endpoint.Name()*
 
      1. 调用 endpoint 的 **SetRxRateLimiter**，设置 inbound 限速标识
-
-     2. 获取 endpoint netPair 中 tap 设备的索引，使用 HTB（Hierarchical Token Bucket）qdisc traffic shaping 方案来控制网口流量，设置 class 的 rate 和 ceil 均为 [hypervisor].rx_rate_limiter_max_rate<br>*class 1:2 是基于 class 1:1 创建，两者的 rate 和 ceil 流控指标保持一致，class 1:2 最终作为默认的 class，class 1:n 用于限制特定流量（截至 Kata 3.0，暂未实现）。<br>之所以创建了 class 1:2 作为默认的 class，是一种常规做法，一般 class 1:1 承担限制整体的最大速率，class 1:2 用于控制非特权流量。如果统一由 class 1:1 负责，可能会导致非特权流量无法得到适当的控制和优先级管理。没有专门的子类别来定义规则和限制非特权流量，可能会导致这些流量占用过多的带宽，从而影响网络的性能和服务质量；难以灵活地调整限制策略。如果需要根据具体情况对非特权流量进行不同的限制和优先级分配，使用单一的1:1类别会显得不够灵活。而有一个专门的子类别，可以根据需要定义更具体的规则和策略，更好地控制非特权流量。所以，通过设置专门的 class 1:2，可以更好地组织和管理流量，确保网络的资源分配和性能满足特定的需求和优先级。*
-
+     2. 获取待限速设备的索引，使用 HTB（Hierarchical Token Bucket）qdisc traffic shaping 方案来控制网口流量，设置 class 的 rate 和 ceil 均为 [hypervisor].rx_rate_limiter_max_rate<br>*class 1:2 是基于 class 1:1 创建，两者的 rate 和 ceil 流控指标保持一致，class 1:2 最终作为默认的 class，class 1:n 用于限制特定流量（截至 Kata 3.0，暂未实现）<br>之所以创建了 class 1:2 作为默认的 class，是一种常规做法，一般 class 1:1 承担限制整体的最大速率，class 1:2 用于控制非特权流量。如果统一由 class 1:1 负责，可能会导致非特权流量无法得到适当的控制和优先级管理。没有专门的子类别来定义规则和限制非特权流量，可能会导致这些流量占用过多的带宽，从而影响网络的性能和服务质量；难以灵活地调整限制策略。如果需要根据具体情况对非特权流量进行不同的限制和优先级分配，使用单一的1:1类别会显得不够灵活。而有一个专门的子类别，可以根据需要定义更具体的规则和策略，更好地控制非特权流量。所以，通过设置专门的 class 1:2，可以更好地组织和管理流量，确保网络的资源分配和性能满足特定的需求和优先级*
+   
         ```shell
          +-----+     +---------+     +-----------+      +-----------+
          |     |     |  qdisc  |     | class 1:1 |      | class 1:2 |
@@ -451,19 +462,37 @@ type LinuxNetwork struct {
                                                     |   +-----------+
         ```
 
-   - 对网络 I/O outbound 带宽限速（即 [hypervisor].tx_rate_limiter_max_rate 大于 0）
-
-     1. 对于 veth、ipvlan、tuntap 和 macvlan 类型的 endpoint 且当网络模型为 tcfilter 时，则获取 endpoint netPair 中 veth 设备的索引，同样的使用 HTB（Hierarchical Token Bucket）qdisc traffic shaping 方案来控制网口流量，设置 class 的 rate 和 ceil 均为 [hypervisor].tx_rate_limiter_max_rate
+   - 网络 I/O outbound 带宽限速（即 [hypervisor].tx_rate_limiter_max_rate 大于 0）
+   
+     *veth、ipvlan、tuntap 和 macvlan 类型的 endpoint 且当网络模型为 tcfilter 时，待限速设备为 endpoint.NetPair 的 veth 设备，当网络模型为 macvtap 或 none 时，待限速设备为 endpoint.NetPair 的 tap 设备；<br>macvtap 和 tap 类型的 endpoint，待限速设备为设备本身，即 endpoint.Name()*
+   
+     1. 对于 veth、ipvlan、tuntap 和 macvlan 类型的 endpoint 且当网络模型为 tcfilter 时，则获取 endpoint.NetPair 中 veth 设备的索引，同样的使用 HTB（Hierarchical Token Bucket）qdisc traffic shaping 方案来控制 veth 网口流量，设置 class 的 rate 和 ceil 均为 [hypervisor].tx_rate_limiter_max_rate<br>*对于 tcfilter，只需将 htb qdisc 应用于 veth pair。 对于其他网络模型，例如 macvtap，借助 ifb，通过将 endpoint 设备入口流量重定向到 ifb 出口，然后将 htb 应用于 ifb 出口，实现限速*
+     2. 其他场景时，调用 endpoint 的 **SetTxRateLimiter**，设置 outbound 限速标识
+     3. 尝试加载 host 的 ifb 模块，创建名为 ifb0 的 ifb 设备并启用，返回 ifb 设备索引号
+     4. 为待限速的设备创建 ingress 类型的网络队列规则
+     5. 为待限速设备添加过滤器规则，将其入站流量重定向到 ifb 设备进行出站处理
+     6. 使用 HTB（Hierarchical Token Bucket）qdisc traffic shaping 方案来控制 ifb 网口流量，设置 class 的 rate 和 ceil 均为 [hypervisor].tx_rate_limiter_max_rate
 
 ## AddEndpoints
 
-**添加 endpoint 相关设备到 VM 网络中**
+**添加 endpoint 设备到 VM 中**
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L324)
 
-1. 如果未指定任何 endpoint，则默认所有
-   1. 针对 netns 中每一个网络设备接口信息，获得其名称、类型、IP 地址、路由、ARP neighbor 等信息
+1. 如果未指定 endpoint，则默认添加 netns 中所有的 enpoint 设备
+   1. 针对 netns 中每一个网络设备接口信息（即 NetworkInfo），获得其名称、类型、IP 地址、路由、ARP neighbor 等信息（后续会设置在 endpoint.EndpointProperties 中，用于描述 endpoint 的属性）
    2. 忽略缺少 IP 地址的网络接口，以及本地回环接口<br>*缺少 IP 地址意味着要么是没有命名空间的基本隧道设备，如 gre0、gretap0、sit0、ipip0、tunl0，要么是错误设置的接口*
-   3. 进入到该 netns 中，调用 **addSingleEndpoint**
-2. 否则，针对每一个 endpoint，调用 **addSingleEndpoint**
+   3. 进入到该 netns 中，调用 **addSingleEndpoint**，向 VM 中添加 endpoint 设备
+2. 否则，针对每一个 endpoint，进入到该 netns 中，调用 **addSingleEndpoint**，向 VM 中添加 endpoint 设备
 
+## RemoveEndpoints
+
+**移除 VM 中的 endpoint 设备**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/network_linux.go#L356)
+
+1. 如果未指定 endpoint，则默认为 netns 中所有的 endpoint 设备（也就是 AddEndpoints 中添加的 endpoint 设备），针对每一个待移除的 endpoint
+   1. 调用 endpoint 的 **GetRxRateLimiter**，如果设置了 inbound 限速，则进入到该 netns 中，移除限速设备 htb 类型的网络队列规则<br>*本质上就是对 addSingleEndpoint 中 inbound 限速处理的逆操作*
+   2. 调用 endpoint 的 **GetTxRateLimiter**，如果设置了 outbound 限速，则进入到该 netns 中，移除限速设备 htb 类型的网络队列规则、删除限速设备所有的 tc 规则与 ingress 类型的网络队列规则以及关停并移除 ifb0 设备<br>*本质上就是对 addSingleEndpoint 中 outbound 限速处理的逆操作*
+   3. 根据是否为 hotplug，则调用 endpoint 的 **HotDetach** 或 **Detach**，（热）移除 VM 中的 endpoint 设备
+2. 如果 netns 是由 Kata Containers 创建，并且未指定 endpoint（即删除了 netns 中所有的 endpoint），则移除该 netns 的挂载点，并删除该 netns

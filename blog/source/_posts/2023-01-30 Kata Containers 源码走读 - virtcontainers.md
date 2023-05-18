@@ -56,18 +56,15 @@ VC 中声明的 **SetLogger** 和 **SetFactory** 均为参数赋值，无复杂�
    4. 调用 fsShare 的 **Prepare**，准备 sandbox 所需的共享文件系统目录
    5. 调用 agent 的 **createSandbox**，准备 sandbox 所需环境
    6. 设置 sandbox 状态为 ready
-2. 创建 sandbox 网络环境
-   1. 如果 [runtime].disable_new_netns 未启用并且不是 VM factory 场景（在 VM factory 场景下，网卡是在 VM 启动后热插进去的），则扫描容器环境中 netns 下现有的网卡信息（比如 eth0 网卡）
-   2. 将容器环境的网卡 attach 到 VM 中
-   3. 根据 [runtime].internetworking_model 的类型，给 VM 添加特定类型的 tap0_kata 网卡，配置 TC 策略（如果 internetworking_model 为 TcFilter），打通 CNI 网络和 VM 网络之间的连通性
+2. 如果未启用 [runtime].disable_new_netns 并且不是 VM factory 场景（在 VM factory 场景下，网卡是在 VM 启动后热插进去的），则调用 network 的 **AddEndpoints**，添加 netns 中的所有网卡到 VM 中<br>*netns 是要么为 Kata Containers 运行时创建，要么为 CNI 等提前创建。总之，此时 netns 已经存在了*
 3. 调用 resCtrl 的 **setupResourceController**，将当前进程加入 cgroup 中管理
 4. 启动 VM（在 1-2 步骤中的 VCSandbox 初始化流程中，已经创建了 VM）
    1. 如果 [hypervisor].enable_debug 启用（用于输出  hypervisor 和 kernel 产生的消息），则调用 hypervisor 的 **GetVMConsole**，获取 VM console 地址（/run/vc/vm/\<sandboxID\>/console.sock）
-   2. 在 VM factory 场景下，获取 factory 中缓存的 VM，调用 agent 的 **reuseAgent**，更新 agent 实例，并创建软链接 /run/vc/vm/\<sandboxID\> 指向 /run/vc/vm/\<vmID\>；否则，调用 hypervisor 的 **StartVM**，启动 VM 进程
-   3. 在 VM factory 场景下，扫描容器环境中 netns 下现有的网卡信息，热插到 VM 中
-   4. 如果 [hypervisor].enable_debug 启用，实时读取 VM console 地址获取其实时内容，并以 debug 级别日志形式输出
+   2. 调用 network 的 **Run**，进入到该 netns 中，执行以下逻辑：如果为 VM factory 场景，则获取 factory 中缓存的 VM，调用 agent 的 **reuseAgent**，更新 agent 实例，并创建软链接 /run/vc/vm/\<sandboxID\> 指向 /run/vc/vm/\<vmID\>；否则，调用 hypervisor 的 **StartVM**，启动 VM 进程
+   3. 如果为 VM factory 场景，则调用 network 的 **AddEndpoints**，热添加 netns 中的所有网卡到 VM 中
+   4. 如果启用 [hypervisor].enable_debug，实时读取 VM console 地址获取其实时内容，并以 debug 级别日志形式输出
    5. 调用 agent 的 **startSandbox**
-5. 关闭 veth-pair（如 br0_kata）位于 host 侧的 vhost_net 句柄（/dev/vhost-net）
+5. 调用 network 的 **Endpoints**，获取 VM 所有的 endpoint 网络设备，调用 endpoint 的 **NetworkPair**，关闭位于 host 侧的 vhost_net 句柄（即 /dev/vhost-net）<br>*截至 Kata 3.0，目前仅对 macvtap 类型的 endpoint 生效*
 6. 调用 agent 的 **getGuestDetails**，获取 guest 信息详情，更新至 sandbox 中
 7. 创建 sandbox 中的每一个容器（其实，此时 sandbox 中仅有一个容器，就是 pod_sandbox 容器本身）
    1. 初始化 VCContainer，准备容器所需环境
@@ -237,7 +234,7 @@ VCSandbox 中声明的 **Annotations**、**GetNetNs**、**GetAllContainers**、*
 5. 调用 hypervisor 的 **StopVM**，关停 VM
 6. 如果 [hypervisor]. enable_debug 启用，则关闭 VM console
 7. 设置 sandbox 状态为 stopped
-8. 移除 host 上的 sandbox 网络资源
+8. 调用 network 的 **RemoveEndpoints**，移除 VM 中的所有网卡
 9. 调用 store 的 **ToDisk**，保存状态数据到文件中
 10. 调用 agent 的 **disconnect**，关闭与 agent 的连接
 11. 移除 host 上的 /run/kata-containers/shared/sandboxes/swap\<ID\> 文件（sandbox 中的 SWAP 序号从 0 递增）
