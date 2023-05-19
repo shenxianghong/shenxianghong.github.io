@@ -32,7 +32,7 @@ tag:
 
 之所以选择 Rust，是因为它被设计为一种注重效率的系统语言。与 Go 相比，Rust 进行了各种设计权衡以获得良好的执行性能，其创新技术与 C 或 C++ 相比，提供了针对常见内存错误（缓冲区溢出、无效指针、范围错误）的合理保护、错误检查（确保错误得到处理）、线程安全、资源所有权等。
 
-当 Kata Containers Guest Agent 用 Rust 重写时，这些优点得到了验证。基于 Rust 的实现显着减少了内存使用量。
+当 Kata agent 用 Rust 重写时，这些优点得到了验证。基于 Rust 的实现显着减少了内存使用量。
 
 # 设计
 
@@ -83,7 +83,7 @@ Kata 3.x runtime 设计了 service、runtime、hypervisor 的扩展，结合配�
 
 ## 资源管理器
 
-在实际使用中，会有各种各样的资源，每个资源都有几个子类型。特别是对于 VirtContainer，资源的每个子类型都有不同的操作。并且可能存在依赖关系，例如 share-fs rootfs 和 share-fs volume 会使用 share-fs 资源将文件共享到 VM。目前，network、share-fs 被视为沙盒资源，rootfs、volume、cgroup 被视为容器资源。此外，社区为每个资源抽象出一个公共接口，并使用子类操作来评估不同子类型之间的差异。
+在实际使用中，会有各种各样的资源，每个资源都有几个子类型。特别是对于 virtcontainers，资源的每个子类型都有不同的操作。并且可能存在依赖关系，例如 share-fs rootfs 和 share-fs volume 会使用 share-fs 资源将文件共享到 VM。目前，network、share-fs 被视为沙盒资源，rootfs、volume、cgroup 被视为容器资源。此外，社区为每个资源抽象出一个公共接口，并使用子类操作来评估不同子类型之间的差异。
 
 <div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/kata-containers/kata-containers/3.0.0/docs/design/architecture_3.0/images/resourceManager.png"></div>
 
@@ -125,9 +125,9 @@ Kata 3.x runtime 设计了 service、runtime、hypervisor 的扩展，结合配�
 
   是的。它们是 Kata 3.x 运行时中的组件。它们将被打包成一个二进制文件
 
-  - Service 是一个接口，负责处理任务服务、镜像服务等多种服务
-  - Message Dispatcher 用于匹配来自服务模块的多个请求
-  - Runtime handler 用于处理对沙箱和容器的操作
+  - service 是一个接口，负责处理任务服务、镜像服务等多种服务
+  - message dispatcher 用于匹配来自服务模块的多个请求
+  - runtime handler 用于处理对沙箱和容器的操作
 
 - Kata 3.x runtime 二进制的名称是什么？
 
@@ -141,9 +141,9 @@ Kata 3.x runtime 设计了 service、runtime、hypervisor 的扩展，结合配�
 
   迁移计划将在 Kata 3.x 合并到主分支之前提供
 
-- Dragonball  是不是仅限于自己内置的 VMM？ Dragonball 系统是否可以配置为使用外部 Dragonball VMM/hypervisor 工作？
+- Dragonball 是不是仅限于自己内置的 VMM？ Dragonball 系统是否可以配置为使用外部 Dragonball VMM/hypervisor 工作？
 
-  Dragonball 可以用作外部管理程序。然而，在这种情况下，稳定性和性能具有挑战性。内置 VMM 可以优化容器开销，易于维护稳定性。runD 是 runC 的 containerd-shim-v2 对应物，可以运行 pod/容器。 Dragonball 是一种 microvm/VMM，旨在运行容器工作负载。有时将其称为安全沙箱，而不是 microvm/VMM
+  Dragonball 可以用作外部管理程序。然而，在这种情况下，稳定性和性能具有挑战性。内置 VMM 可以优化容器开销，易于维护稳定性。runD 是 runC 的 containerd-shim-v2 对应物，可以运行 Pod/容器。 Dragonball 是一种 microvm/VMM，旨在运行容器工作负载。有时将其称为安全沙箱，而不是 microvm/VMM
 
 - QEMU、Cloud Hypervisor 和 Firecracker 支持已在计划中，但如何运作。它们在不同的进程中工作吗？
 
@@ -155,9 +155,9 @@ Kata 3.x runtime 设计了 service、runtime、hypervisor 的扩展，结合配�
 
   - 避免依赖 PCI/ACPI
 
-  - 避免在 Guest 中依赖 udevd 并获得热插拔操作的确定性结果。所以 upcall 是基于 ACPI 的 CPU/内存/设备热插拔的替代方案。如果需要，Kata 社区会与相关社区合作添加对基于 ACPI 的 CPU/内存/设备热插拔的支持
+  - 避免在 guest 中依赖 udevd 并获得热插拔操作的确定性结果。所以 upcall 是基于 ACPI 的 CPU/内存/设备热插拔的替代方案。如果需要，Kata 社区会与相关社区合作添加对基于 ACPI 的 CPU/内存/设备热插拔的支持
 
-  Dbs-upcall 是 VMM 和 guest 之间基于 vsock 的直接通信工具。 upcall 的服务器端是 Guest 内核中的驱动程序（此功能需要内核补丁），一旦内核启动，它将开始为请求提供服务。而客户端在 VMM 中，它将是一个线程，通过 uds 与 VSOCK 通信。通过upcall 直接实现了设备的热插拔，避免了ACPI 的虚拟化，将虚拟机的开销降到最低。通过这种直接的通信手段，可能还有许多其他用途。现目前已经开源：https://github.com/openanolis/dragonball-sandbox/tree/main/crates/dbs-upcall
+  Dbs-upcall 是 VMM 和 guest 之间基于 vsock 的直接通信工具。 upcall 的服务器端是 guest 内核中的驱动程序（此功能需要内核补丁），一旦内核启动，它将开始为请求提供服务。而客户端在 VMM 中，它将是一个线程，通过 uds 与 VSOCK 通信。通过upcall 直接实现了设备的热插拔，避免了ACPI 的虚拟化，将虚拟机的开销降到最低。通过这种直接的通信手段，可能还有许多其他用途。现目前已经开源：https://github.com/openanolis/dragonball-sandbox/tree/main/crates/dbs-upcall
 
 - 内核补丁适用于 4.19，但它们也适用于 5.15+ 吗？
 
@@ -167,14 +167,14 @@ Kata 3.x runtime 设计了 service、runtime、hypervisor 的扩展，结合配�
 
   它几乎与平台无关，但一些与 CPU 热插拔相关的是与平台相关的
 
-- 是否可以使用 loopback VSOCK 将内核驱动程序替换为 Guest 中的用户态守护程序？
+- 是否可以使用 loopback VSOCK 将内核驱动程序替换为 guest 中的用户态守护程序？
 
   需要为热添加的 CPU/内存/设备创建设备节点，因此用户空间守护进程执行这些任务并不容易
 
-- upcall 允许 VMM 和 Guest 之间进行通信的事实表明，此架构可能与 https://github.com/confidential-containers 不兼容，其中 VMM 应该不知道 VM 内部发生的事情
+- upcall 允许 VMM 和 guest 之间进行通信的事实表明，此架构可能与 https://github.com/confidential-containers 不兼容，其中 VMM 应该不知道 VM 内部发生的事情
 
   - TDX 还不支持 CPU/内存热插拔
-  - 对于基于 ACPI 的设备热插拔，它依赖于 ACPI DSDT 表，Guest 内核将在处理这些热插拔事件时执行 ASL 代码来处理。与 ACPI ASL 方法相比，审计基于 VSOCK 的通信应该更容易
+  - 对于基于 ACPI 的设备热插拔，它依赖于 ACPI DSDT 表，guest 内核将在处理这些热插拔事件时执行 ASL 代码来处理。与 ACPI ASL 方法相比，审计基于 VSOCK 的通信应该更容易
 
 - 单体与内置 VMM 的安全边界是什么？
 
