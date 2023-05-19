@@ -409,6 +409,99 @@ Network 中声明的 **NetworkID**、**NetworkCreated**、**Endpoints** 和 **Se
      7. 为 tuntap 设备和 veth 设备分别创建 ingress 类型的网络队列规则与 tc 规则，将一方的入站流量重定向到另一方进行出站处理，使得所有流量在两者之间可以被重定向
      
      综上所述，tcfilter 网络模式下，仅仅是在 veth 和 tap 设备之间配置 tc 规则，实现容器网络流量和 VM 网络流量的互通。
+   
+   ***网络模型效果示例***
+   
+   ```shell
+   # 网络模型为 macvtap 时
+   $ ip netns exec cni-97333755-9052-db96-37fe-37d4e39bf046 ethtool -i tap0_kata
+   driver: macvlan
+   version: 0.1
+   firmware-version: 
+   expansion-rom-version: 
+   bus-info: 
+   supports-statistics: no
+   supports-test: no
+   supports-eeprom-access: no
+   supports-register-dump: no
+   supports-priv-flags: no
+   $ ip netns exec cni-fb0bd424-5621-3672-62d9-9233708dc54d ip a
+   1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+       link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+       inet 127.0.0.1/8 scope host lo
+          valid_lft forever preferred_lft forever
+       inet6 ::1/128 scope host 
+          valid_lft forever preferred_lft forever
+   2: tunl0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+       link/ipip 0.0.0.0 brd 0.0.0.0
+   4: eth0@if18: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1430 qdisc noqueue state UP group default 
+       link/ether 46:ba:a7:d6:85:ec brd ff:ff:ff:ff:ff:ff link-netnsid 0
+   55446: tap0_kata@eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1430 qdisc fq_codel state UP group default qlen 1500
+       link/ether c6:f1:06:ac:46:53 brd ff:ff:ff:ff:ff:ff
+       inet6 fe80::c4f1:6ff:feac:4653/64 scope link 
+          valid_lft forever preferred_lft forever
+   $ kata-runtime exec 7af17cb96ddaa59a4e370c0de584ea6df5759278ce6c203a188a3ab18b461216 
+   root@localhost:/# ip a
+   1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+       link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+       inet 127.0.0.1/8 scope host lo
+          valid_lft forever preferred_lft forever
+       inet6 ::1/128 scope host 
+          valid_lft forever preferred_lft forever
+   2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1430 qdisc fq_codel state UP group default qlen 1000
+       link/ether c6:f1:06:ac:46:53 brd ff:ff:ff:ff:ff:ff
+       inet 10.244.69.173/32 brd 10.244.69.173 scope global eth0
+          valid_lft forever preferred_lft forever
+       inet6 fe80::c4f1:6ff:feac:4653/64 scope link 
+          valid_lft forever preferred_lft forever
+   
+   
+   # 网络模型为 tcfilter 时
+   $ ip netns exec cni-d7e932c4-51a6-53e0-e73c-662aa84b4653 ethtool -i tap0_kata
+   driver: tun
+   version: 1.6
+   firmware-version: 
+   expansion-rom-version: 
+   bus-info: tap
+   supports-statistics: no
+   supports-test: no
+   supports-eeprom-access: no
+   supports-register-dump: no
+   supports-priv-flags: no
+   $ ip netns exec cni-d7e932c4-51a6-53e0-e73c-662aa84b4653 ip a
+   1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+       link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+       inet 127.0.0.1/8 scope host lo
+          valid_lft forever preferred_lft forever
+       inet6 ::1/128 scope host 
+          valid_lft forever preferred_lft forever
+   2: tunl0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+       link/ipip 0.0.0.0 brd 0.0.0.0
+   4: eth0@if17: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1430 qdisc noqueue state UP group default qlen 1000
+       link/ether 1e:03:66:df:ad:5e brd ff:ff:ff:ff:ff:ff link-netnsid 0
+       inet 10.244.69.163/32 scope global eth0
+          valid_lft forever preferred_lft forever
+       inet6 fe80::1c03:66ff:fedf:ad5e/64 scope link 
+          valid_lft forever preferred_lft forever
+   5: tap0_kata: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1430 qdisc mq state UNKNOWN group default qlen 1000
+       link/ether ee:b0:99:52:54:ef brd ff:ff:ff:ff:ff:ff
+       inet6 fe80::ecb0:99ff:fe52:54ef/64 scope link 
+          valid_lft forever preferred_lft forever
+   $ kata-runtime exec 8a390592512f2f27a35accd0fa5c2c82d29dea2f3d1eb982c6225be7856e78a6 
+   root@localhost:/# ip a
+   1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+       link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+       inet 127.0.0.1/8 scope host lo
+          valid_lft forever preferred_lft forever
+       inet6 ::1/128 scope host 
+          valid_lft forever preferred_lft forever
+   2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1430 qdisc fq_codel state UP group default qlen 1000
+       link/ether 1e:03:66:df:ad:5e brd ff:ff:ff:ff:ff:ff
+       inet 10.244.69.163/32 brd 10.244.69.163 scope global eth0
+          valid_lft forever preferred_lft forever
+       inet6 fe80::1c03:66ff:fedf:ad5e/64 scope link 
+          valid_lft forever preferred_lft forever
+   ```
 
 ## xDisconnectVMNetwork
 
@@ -472,6 +565,48 @@ Network 中声明的 **NetworkID**、**NetworkCreated**、**Endpoints** 和 **Se
      4. 为待限速的设备创建 ingress 类型的网络队列规则
      5. 为待限速设备添加过滤器规则，将其入站流量重定向到 ifb 设备进行出站处理
      6. 使用 HTB（Hierarchical Token Bucket）qdisc traffic shaping 方案来控制 ifb 网口流量，设置 class 的 rate 和 ceil 均为 [hypervisor].tx_rate_limiter_max_rate
+   
+   ***veth endpoint 限速示例***
+   
+   ```shell
+   # inbound 限速为 1024，outbound 限速为 2048
+   $ cat /etc/kata-containers/configuration.toml | grep rate_limiter_max_rate
+   rx_rate_limiter_max_rate = 1024
+   tx_rate_limiter_max_rate = 2048
+   
+   # 网络模型为 macvtap 时
+   $ ip netns exec cni-593e147b-3839-2615-f57f-39dc53181ef5 tc qdisc show
+   qdisc noqueue 0: dev lo root refcnt 2 
+   qdisc noqueue 0: dev eth0 root refcnt 2 
+   qdisc htb 1: dev tap0_kata root refcnt 2 r2q 10 default 2 direct_packets_stat 0 direct_qlen 1500
+   qdisc ingress ffff: dev tap0_kata parent ffff:fff1 ---------------- 
+   qdisc htb 1: dev ifb0 root refcnt 2 r2q 10 default 2 direct_packets_stat 0 direct_qlen 32
+   ## inbound 限速作用在 tap0_kata 设备上
+   $ ip netns exec cni-593e147b-3839-2615-f57f-39dc53181ef5 tc class show dev tap0_kata
+   class htb 1:1 root rate 1024bit ceil 1024bit burst 1600b cburst 1600b 
+   class htb 1:2 parent 1:1 prio 0 rate 1024bit ceil 1024bit burst 1600b cburst 1600b 
+   ## outbound 限速作用在 ifb0 设备上
+   $ ip netns exec cni-593e147b-3839-2615-f57f-39dc53181ef5 tc class show dev eth0
+   $ ip netns exec cni-593e147b-3839-2615-f57f-39dc53181ef5 tc class show dev ifb0
+   class htb 1:1 root rate 2048bit ceil 2048bit burst 1600b cburst 1600b 
+   class htb 1:2 parent 1:1 prio 0 rate 2048bit ceil 2048bit burst 1600b cburst 1600b
+   
+   # 网络模型为 tcfilter 时
+   $ ip netns exec cni-58d2c6b0-b9e5-797d-4c9f-291769802ac1 tc qdisc show
+   qdisc noqueue 0: dev lo root refcnt 2 
+   qdisc htb 1: dev eth0 root refcnt 2 r2q 10 default 2 direct_packets_stat 0 direct_qlen 1000
+   qdisc ingress ffff: dev eth0 parent ffff:fff1 ---------------- 
+   qdisc htb 1: dev tap0_kata root refcnt 257 r2q 10 default 2 direct_packets_stat 0 direct_qlen 1000
+   qdisc ingress ffff: dev tap0_kata parent ffff:fff1 ---------------- 
+   ## inbound 限速作用在 tap0_kata 设备上
+   $ ip netns exec cni-58d2c6b0-b9e5-797d-4c9f-291769802ac1 tc class show dev tap0_kata
+   class htb 1:1 root rate 1024bit ceil 1024bit burst 1600b cburst 1600b 
+   class htb 1:2 parent 1:1 prio 0 rate 1024bit ceil 1024bit burst 1600b cburst 1600b 
+   ## outbound 限速作用在容器 veth pair 的 eth0 设备上
+   $ ip netns exec cni-58d2c6b0-b9e5-797d-4c9f-291769802ac1 tc class show dev eth0
+   class htb 1:1 root rate 2048bit ceil 2048bit burst 1600b cburst 1600b 
+   class htb 1:2 parent 1:1 prio 0 rate 2048bit ceil 2048bit burst 1600b cburst 1600b
+   ```
 
 ## AddEndpoints
 
@@ -496,3 +631,4 @@ Network 中声明的 **NetworkID**、**NetworkCreated**、**Endpoints** 和 **Se
    2. 调用 endpoint 的 **GetTxRateLimiter**，如果设置了 outbound 限速，则进入到该 netns 中，移除限速设备 htb 类型的网络队列规则、删除限速设备所有的 tc 规则与 ingress 类型的网络队列规则以及关停并移除 ifb0 设备<br>*本质上就是对 addSingleEndpoint 中 outbound 限速处理的逆操作*
    3. 根据是否为 hotplug，则调用 endpoint 的 **HotDetach** 或 **Detach**，（热）移除 VM 中的 endpoint 设备
 2. 如果 netns 是由 Kata Containers 创建，并且未指定 endpoint（即删除了 netns 中所有的 endpoint），则移除该 netns 的挂载点，并删除该 netns
+
