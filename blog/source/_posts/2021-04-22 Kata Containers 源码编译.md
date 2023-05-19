@@ -139,12 +139,12 @@ $ export rootfsdistro=clearlinux
 $ export initrddistro=alpine
 ```
 
-**编译 Kata Agent（可选）**
+**编译 Kata agent（可选）**
 
 ```shell
 $ cd $GOPATH/src/github.com/kata-containers/kata-containers/src/agent && make
 
-# 默认情况下，Kata Agent 是使用 seccomp 功能构建的。如果要构建没有 seccomp 功能的 Kata Agent，则需要使用 SECCOMP=no 运行 make
+# 默认情况下，Kata agent 是使用 seccomp 功能构建的。如果要构建没有 seccomp 功能的 Kata agent，则需要使用 SECCOMP=no 运行 make
 $ make -C $GOPATH/src/github.com/kata-containers/kata-containers/src/agent SECCOMP=no
 
 # 如果在配置文件中启用了 seccomp 但构建了没有 seccomp 功能的 Kata Agent，则 runtime 会保守地退出并显示一条错误消息
@@ -161,9 +161,9 @@ $ cd $GOPATH/src/github.com/kata-containers/kata-containers/tools/osbuilder/root
 $ script -fec 'sudo -E GOPATH=$GOPATH USE_DOCKER=true ./rootfs.sh ${rootfsdistro}'
 ```
 
-**添加 Kata Agent**
+**添加 Kata agent**
 
-*仅在 Kata Agent 定制化后添加*
+*仅在 Kata agent 定制化后添加*
 
 ```shell
 $ sudo install -o root -g root -m 0550 -t ${ROOTFS_DIR}/usr/bin ../../../src/agent/target/x86_64-unknown-linux-musl/release/kata-agent
@@ -204,9 +204,9 @@ $ cd $GOPATH/src/github.com/kata-containers/kata-containers/tools/osbuilder/root
 $ script -fec 'sudo -E GOPATH=$GOPATH AGENT_INIT=yes USE_DOCKER=true ./rootfs.sh ${initrddistro}'
 ```
 
-**添加 Kata Agent**
+**添加 Kata agent**
 
-*仅在 Kata Agent 定制化后添加*
+*仅在 Kata agent 定制化后添加*
 
 ```shell
 $ sudo install -o root -g root -m 0550 -T ../../../src/agent/target/${ARCH}-unknown-linux-${LIBC}/release/kata-agent ${ROOTFS_DIR}/sbin/init
