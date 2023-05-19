@@ -23,7 +23,7 @@ Kubernetes 设计之初对基于 VM 的容器运行时考虑较少，很多场�
 
 Kubernetes 提供了 PV （persistent volume）资源来管理存储卷，制定了 CSI （Container Storage Interface）规范在存储提供者和容器运行时之间来管理存储设备。通常来说，CSI 会将不同类型的存储设备，比如云盘、本地存储、网络文件系统等，以文件系统的方式挂载到宿主机，然后再从宿主机将此文件系统挂载到容器中。在 Kata Containers 中，这个挂载是通过 virtiofs 协议，在宿主机和 guest OS 中实现了该存储卷的文件共享。虽然 virtiofs 在性能上比之前的 9p 有很大提升，但是和直接在宿主机上使用相比，性能损耗成为在生产环境中使用 Kata Containers 的阻碍因素之一。
 
-其次，使用 Kata Containers 在线调整 PV 的大小是很困难的。虽然 PV 可以在 host 上扩展，但更新后的元数据需要传递到 Guest OS 中，以便应用程序容器使用扩展的卷。目前，没有办法在不重新启动 Pod Sandbox 的情况下将 PV 元数据从 Host OS 传递到 Guest OS。
+其次，使用 Kata Containers 在线调整 PV 的大小是很困难的。虽然 PV 可以在 host 上扩展，但更新后的元数据需要传递到 guest OS 中，以便应用程序容器使用扩展的卷。目前，没有办法在不重新启动 Pod sandbox 的情况下将 PV 元数据从 host OS 传递到 guest OS。
 
 一个理想的长期解决方案是 Kubelet 协调 CSI Driver 和 Container Runtime 之间的通信，如 [KEP-2857](https://github.com/kubernetes/enhancements/pull/2893/files) 讨论，但是目前而言，KEP 仍在审查中，并且提议的解决方案有两个弊端：
 
@@ -47,7 +47,7 @@ Kubernetes 提供了 PV （persistent volume）资源来管理存储卷，制定
 
 # 实现方案
 
-传统 CSI 都会将存储设备挂载到宿主机上，在 Kata Containers 中，由于 VM 的存在，挂载操作需要移动到 Guest 中，由 Kata Agent 来完成存储卷的挂载。如下所示：
+传统 CSI 都会将存储设备挂载到宿主机上，在 Kata Containers 中，由于 VM 的存在，挂载操作需要移动到 guest 中，由 Kata agent 来完成存储卷的挂载。如下所示：
 
 **原挂载方案**
 
@@ -61,7 +61,7 @@ Kubernetes 提供了 PV （persistent volume）资源来管理存储卷，制定
 
 - StorageClass 参数中指定直通卷的相关标识，这样可以免去 CSI 查询 PVC 或者 Pod 的信息，但是基于该 StorageClass 供应的 PV 均会视为直通卷
 - PVC annotation 中注明，需要 CSI Plugin 支持 --extra-create-metadata 
-- RuntimeClass 中注明，CSI Driver 在 node publish 阶段通过 Runtime 来获得 Volume 是否需要直接挂载到 Guest 中，参考[阿里云实现](https://github.com/kubernetes-sigs/alibaba-cloud-csi-driver/blob/master/pkg/disk/nodeserver.go#L248)
+- RuntimeClass 中注明，CSI Driver 在 node publish 阶段通过 Runtime 来获得 Volume 是否需要直接挂载到 guest 中，参考[阿里云实现](https://github.com/kubernetes-sigs/alibaba-cloud-csi-driver/blob/master/pkg/disk/nodeserver.go#L248)
 
 当 CSI Driver 并不会直接将直通卷挂载给 Kata Containers 使用，而是需要在 CSI 的不同阶段调用 Kata Containers 在 2.4 新增的 direct-volume 命令向 Kata Containers 运行时传递并收集卷信息。
 
@@ -148,9 +148,9 @@ $ kata-runtime direct-volume stats
 
 1. 获取 /run/kata-containers/shared/direct-volumes/\<base64 volume path\> 目录下的 sandbox id 名称<br>*预期是一个直通卷仅有一个相关联的 sanbox，因此，该目录下，仅有两个文件，一个名为 sandbox id，一个名为 mountInfo.json*
 2. 解析 /run/kata-containers/shared/direct-volumes/\<base64 volume path\>/mountInfo.json 文件，构建 mountInfo 对象，获取 volume 的源 device 信息
-3. 向 shim 的 /direct-volume/stats 接口发起 http Get 请求
-4. 判断 host 上的该 device 是否存在，根据 sandbox 中的 container 卷挂载的映射信息，获取到位于 Guest OS 中的对应的挂载点
-5. 向 Kata Agent 发起 rpc 请求，获取 Guest OS 中的卷信息
+3. 向 containerd-shim-kata-v2 的 /direct-volume/stats 接口发起 HTTP Get 请求
+4. 判断 host 上的该 device 是否存在，根据 sandbox 中的 container 卷挂载的映射信息，获取到位于 guest OS 中的对应的挂载点
+5. 向 Kata agent 发起 rpc 请求，获取 guest OS 中的卷信息
 
 ### resize
 
@@ -169,9 +169,9 @@ $ kata-runtime direct-volume resize
 
 1. 获取 /run/kata-containers/shared/direct-volumes/\<base64 volume path\> 目录下的 sandbox id 名称<br>*预期是一个直通卷仅有一个相关联的 sandbox，因此，该目录下，仅有两个文件，一个名为 sandbox id，一个名为 mountInfo.json*
 2. 解析 /run/kata-containers/shared/direct-volumes/\<base64 volume path\>/mountInfo.json 文件，构建 mountInfo 对象
-3. 向 shim 的 /direct-volume/resize 接口发起 http Post 请求
-4. 判断 host 上的该 device 是否存在，根据 sandbox 中的 container 卷挂载的映射信息，获取到位于 Guest OS 中的对应的挂载点
-5. 向 Kata Agent 发起 rpc 请求，对 Guest OS 中指定的卷进行大小调整
+3. 向 containerd-shim-kata-v2 的 /direct-volume/resize 接口发起 HTTP Post 请求
+4. 判断 host 上的该 device 是否存在，根据 sandbox 中的 container 卷挂载的映射信息，获取到位于 guest OS 中的对应的挂载点
+5. 向 Kata agent 发起 rpc 请求，对 guest OS 中指定的卷进行大小调整
 
 ## containerd-shim-kata-v2
 
@@ -278,7 +278,7 @@ root     39547 39008  0 17:10 ?        00:00:00 /opt/kata/libexec/kata-qemu/virt
 You have mail in /var/spool/mail/root
 
 # 可以看到无论是哪种持久卷挂载方式，host 上的进程信息均为：两个 virtiofsd 进程，一个 qemu-system 进程，一个 containerd-shim-kata-v2 进程
-# 之所以卷直通模式也会有 virtiofsd 进程启动是因为卷直通仅限于持久卷的部分，对于 sandbox rootfs 仍以 virtiofs 协议挂载至 Guest 中
+# 之所以卷直通模式也会有 virtiofsd 进程启动是因为卷直通仅限于持久卷的部分，对于 sandbox rootfs 仍以 virtiofs 协议挂载至 guest 中
 ```
 
 ## host 端卷目录结构
@@ -355,7 +355,7 @@ tmpfs on /run/kata-containers/shared/sandboxes/3763faeb5fc0aa25265b751123b63fbba
 # 两种模式下，rootfs 的挂载点一致
 ```
 
-## container 端挂载点
+## 容器端挂载点
 
 ```shell
 # virtiofs 类型的 Pod
