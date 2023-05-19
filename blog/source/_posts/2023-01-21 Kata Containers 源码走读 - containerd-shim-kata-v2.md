@@ -192,7 +192,7 @@ shim server 对外暴露的 gRPC 服务。
       2. 创建 rootfs 目录（如果不存在），遍历 r.Rootfs，挂载至 rootfs 目录下（即 /run/containerd/io.containerd.runtime.v2.task/k8s.io/\<containerID\>/rootfs）
 
    5. 基于 factory 配置项，尝试获取现有 VM factory，如果获取失败且未启用 VM cache 特性时，会初始化新的 VM factory，并调用 vircontainers 的 **SetFactory**，透传 VM factory
-   6. 基于 [hypervisor].rootless 设置 rootless（默认情况下，QEMU VMM 以 root 身份运行。 当设置为 true 时，QEMU VMM 进程将以非 root 的随机用户运行），如果启用 rootless，则额外执行以下流程
+   6. 基于 [hypervisor].rootless 设置 rootless（默认情况下，QEMU 以 root 身份运行。 当设置为 true 时，QEMU 将以非 root 的随机用户运行），如果启用 rootless，则额外执行以下流程
       1. 创建一个用于运行 Kata Containers 的随机用户
       2. 根据用户名获取并设置 UID 和 GID
       3. 创建用户目录，并设置环境变量 XDG_RUNTIME_DIR

@@ -19,9 +19,9 @@ tag:
 
 # 概述
 
-Kata Containers 是一个开源项目，它采用轻量化虚拟机作为容器的隔离来构建一个安全容器运行时，而其虚拟化技术作为容器的二层保护为负载提供了更好的隔离性，这使得 Kata Containers 兼具传统容器的形态和虚拟机的安全性。 早在 2015 年，来自英特尔开源技术中心的工程师就开始探索采用 英特尔® 虚拟技术(英特尔® Virtualization Technology，英特尔® VT)来提高容器的安全隔离性，并以此发起了英特尔® Clear Containers 开源项目，与此同时，来自 Hyper.sh（一家中国的高科技初创公司）的工程师也发起了 runV10 开源项目，这两个项目采用的技术和目的都非常相似，都是为了将容器置于一个安全“沙箱“，以便进一步促进该技术发展和成熟。随后在 2017 年，英特尔和 Hyper.sh 团队将这两个开源项目在社区合并成了一个新的项目 Kata Containers。 传统虚拟机（VMs）可提供硬件隔离，而容器可快速响应，且占用空间相对较小，Kata Containers 将这两者的优势完美结合了起来。 每个 container 或 container pod 都在自己单独的虚拟机中启动， 并不再能够访问主机内核，杜绝了恶意代码侵入其它相临容器的可能。由于 Kata Containers 同时具备硬件隔离，也使得互不信任的租户，甚至于生产应用或前生产应用都能够在同一集群内安全运行，从而使得在裸机上运行容器即服务（Containers as a Service, CaaS）成为可能。
+Kata Containers 是一个开源项目，它采用轻量化虚拟机作为容器的隔离来构建一个安全容器运行时，而其虚拟化技术作为容器的二层保护为负载提供了更好的隔离性，这使得 Kata Containers 兼具传统容器的形态和虚拟机的安全性。 早在 2015 年，来自英特尔开源技术中心的工程师就开始探索采用 英特尔® 虚拟技术（英特尔® Virtualization Technology，英特尔® VT）来提高容器的安全隔离性，并以此发起了英特尔® Clear Containers 开源项目，与此同时，来自 Hyper.sh（一家中国的高科技初创公司）的工程师也发起了 runV10 开源项目，这两个项目采用的技术和目的都非常相似，都是为了将容器置于一个安全“沙箱“，以便进一步促进该技术发展和成熟。随后在 2017 年，英特尔和 Hyper.sh 团队将这两个开源项目在社区合并成了一个新的项目 Kata Containers。 传统虚拟机（VMs）可提供硬件隔离，而容器可快速响应，且占用空间相对较小，Kata Containers 将这两者的优势完美结合了起来。 每个容器或 Pod 都在自己单独的虚拟机中启动， 并不再能够访问主机内核，杜绝了恶意代码侵入其它相临容器的可能。由于 Kata Containers 同时具备硬件隔离，也使得互不信任的租户，甚至于生产应用或前生产应用都能够在同一集群内安全运行，从而使得在裸机上运行容器即服务（Containers as a Service, CaaS）成为可能。
 
-# Guest assets
+# Assets
 
 Kata Containers 创建一个 VM，在其中运行一个或多个容器。需要通过启动 Hypervisor 创建虚拟机来实现这一点。Hypervisor 需要两个 assets 来完成这项任务：一个 Linux 内核和一个用于引导 VM 的小型根文件系统镜像。
 
@@ -134,43 +134,43 @@ osbuilder 本身是 Kata Containers 项目中的一个模块，主要负责构�
 
 Kata Containers 支持两种引导镜像：rootfs 和 initrd。无论哪种方式，默认都会将 Kata Agent 编译到镜像中，在对 Kata Agent 有定制化需求的场景下，可以手动编译后添加到镜像中。
 
-# Virtualization
+# 虚拟化
 
-Kata 容器是在传统命名空间容器提供的隔离之上创建的第二层隔离。硬件虚拟化接口是这个附加层的基础。 Kata 将启动一个轻量级虚拟机，并使用 Guest 的 Linux 内核来创建容器工作负载，或者在多容器 Pod 的情况下创建工作负载。在 Kubernetes 和 Kata 实现中，沙箱是在 Pod 级别进行的。在 Kata 中，这个沙箱是使用虚拟机创建的。
+Kata 容器是在传统 namespace 隔离之上创建的以硬件虚拟化为基础的第二层隔离。 Kata 启动一个轻量级虚拟机，并使用 guest 中特供的内核来承载容器工作负载。
 
-## 概念映射
+## 接口映射
 
-Kata 容器的典型部署将通过容器运行时接口（即 CRI）实现在 Kubernetes 中进行。在每个节点上，Kubelet 将与 CRI 实现者（例如 Containerd 或 CRI-O）交互，后者将依次与 Kata Containers（基于 OCI 的运行时）交互。
+Kata 容器的典型部署场景是借助 CRI 实现在 Kubernetes 中进行。在每个节点上，Kubelet 将与 CRI 实现者（如 Containerd 或 CRI-O 等）交互，CRI 实现者将与 Kata Containers（基于 OCI 规范的底层运行时）交互。
 
 <div align=center><img width="700" style="border: 0px" src="/gallery/kata-containers/virtual-map.png"></div>
 
-## Hypervisor（VMM）
+## hypervisor（VMM）
 
-Kata Containers 本身支持多种 hypervisor  工具，如 QEMU、cloud-hypervisor、firecracker、ACRN 和 Dragonball（Kata 3.0 引入）。
+Kata Containers 本身支持多种 hypervisor 工具，如 QEMU、cloud-hypervisor、firecracker、ACRN 和 Dragonball（Kata 3.0 引入）。
 
-| Hypervisor                                                   | Written in | Architectures       | Type                                                         | Configuration file              |
-| ------------------------------------------------------------ | ---------- | ------------------- | ------------------------------------------------------------ | ------------------------------- |
-| [ACRN](https://projectacrn.org/)                             | C          | `x86_64`            | Type 1 (bare metal)                                          | `configuration-acrn.toml`       |
-| [Cloud Hypervisor](https://github.com/cloud-hypervisor/cloud-hypervisor) | rust       | `aarch64`, `x86_64` | Type 2 ([KVM](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine)) | `configuration-clh.toml`        |
-| [Firecracker](https://github.com/firecracker-microvm/firecracker) | rust       | `aarch64`, `x86_64` | Type 2 ([KVM](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine)) | `configuration-fc.toml`         |
-| [QEMU](http://www.qemu-project.org/)                         | C          | all                 | Type 2 ([KVM](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine)) | `configuration-qemu.toml`       |
-| [`Dragonball`](https://github.com/openanolis/dragonball-sandbox) | rust       | `aarch64`, `x86_64` | Type 2 ([KVM](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine)) | `configuration-dragonball.toml` |
+| Hypervisor                                                   | Written in | Architectures   | Type                                                         | Configuration file            |
+| ------------------------------------------------------------ | ---------- | --------------- | ------------------------------------------------------------ | ----------------------------- |
+| [ACRN](https://projectacrn.org/)                             | C          | x86_64          | Type 1 (bare metal)                                          | configuration-acrn.toml       |
+| [Cloud Hypervisor](https://github.com/cloud-hypervisor/cloud-hypervisor) | rust       | aarch64, x86_64 | Type 2 ([KVM](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine)) | configuration-clh.toml        |
+| [Firecracker](https://github.com/firecracker-microvm/firecracker) | rust       | aarch64, x86_64 | Type 2 ([KVM](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine)) | configuration-fc.toml         |
+| [QEMU](http://www.qemu-project.org/)                         | C          | all             | Type 2 ([KVM](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine)) | configuration-qemu.toml       |
+| [Dragonball](https://github.com/openanolis/dragonball-sandbox) | rust       | aarch64, x86_64 | Type 2 ([KVM](https://en.wikipedia.org/wiki/Kernel-based_Virtual_Machine)) | configuration-dragonball.toml |
 
 **异同点参考**
 
-| Hypervisor                                                   | Summary                                                   | Features          | Limitations                      | Container Creation speed | Memory density | Use cases                               | Comment                                     |
-| ------------------------------------------------------------ | --------------------------------------------------------- | ----------------- | -------------------------------- | ------------------------ | -------------- | --------------------------------------- | ------------------------------------------- |
-| [ACRN](https://projectacrn.org/)                             | Safety critical and real-time workloads                   |                   |                                  | excellent                | excellent      | Embedded and IOT systems                | For advanced users                          |
-| [Cloud Hypervisor](https://github.com/cloud-hypervisor/cloud-hypervisor) | Low latency, small memory footprint, small attack surface | Minimal           |                                  | excellent                | excellent      | High performance modern cloud workloads |                                             |
-| [Firecracker](https://github.com/firecracker-microvm/firecracker) | Very slimline                                             | Extremely minimal | Doesn't support all device types | excellent                | excellent      | Serverless / FaaS                       |                                             |
-| [QEMU](http://www.qemu-project.org/)                         | Lots of features                                          | Lots              |                                  | good                     | good           | Good option for most users              |                                             |
-| [`Dragonball`](https://github.com/openanolis/dragonball-sandbox) | Built-in VMM, low CPU and memory overhead                 | Minimal           |                                  | excellent                | excellent      | Optimized for most container workloads  | `out-of-the-box` Kata Containers experience |
+| Hypervisor                                                   | Summary                                                   | Features          | Limitations                      | Container Creation speed | Memory density | Use cases                               | Comment                                   |
+| ------------------------------------------------------------ | --------------------------------------------------------- | ----------------- | -------------------------------- | ------------------------ | -------------- | --------------------------------------- | ----------------------------------------- |
+| [ACRN](https://projectacrn.org/)                             | Safety critical and real-time workloads                   |                   |                                  | excellent                | excellent      | Embedded and IOT systems                | For advanced users                        |
+| [Cloud Hypervisor](https://github.com/cloud-hypervisor/cloud-hypervisor) | Low latency, small memory footprint, small attack surface | Minimal           |                                  | excellent                | excellent      | High performance modern cloud workloads |                                           |
+| [Firecracker](https://github.com/firecracker-microvm/firecracker) | Very slimline                                             | Extremely minimal | Doesn't support all device types | excellent                | excellent      | Serverless / FaaS                       |                                           |
+| [QEMU](http://www.qemu-project.org/)                         | Lots of features                                          | Lots              |                                  | good                     | good           | Good option for most users              |                                           |
+| [Dragonball](https://github.com/openanolis/dragonball-sandbox) | Built-in VMM, low CPU and memory overhead                 | Minimal           |                                  | excellent                | excellent      | Optimized for most container workloads  | out-of-the-box Kata Containers experience |
 
 ### QEMU/KVM
 
 Kata Containers with QEMU 与 Kubernetes 完全兼容（此外，Kata 社区对 QEMU 作了[定制化的 patch 补丁](https://github.com/kata-containers/kata-containers/tree/main/tools/packaging/qemu/patches)）
 
-根据主机架构，Kata Containers 支持各种机器类型，例如 x86 系统上的 q35、ARM 系统上的 virt 和 IBM Power 系统上的 pseries。默认的 Kata Containers 机器类型是 q35。可以通过修改配置文件来更改机器类型及其机器加速器。
+取决于不同的 host 架构，Kata Containers 支持各种机器类型（machine），例如 x86 系统上的 q35、ARM 系统上的 virt 和 IBM Power 系统上的 pseries。
 
 使用到的设备和特性有：
 
@@ -182,17 +182,21 @@ Kata Containers with QEMU 与 Kubernetes 完全兼容（此外，Kata 社区对 
 - hotplug
 - machine accelerators
 
-Kata 容器中使用机器加速器和热插拔来管理资源限制、缩短启动时间并减少内存占用。
+Kata 容器中使用加速器（accelerators）和热插拔来管理资源限制、缩短启动时间并减少内存占用。
 
-#### Machine accelerators
+**加速器**
 
-机器加速器是特定于体系结构的，可用于提高性能并启用机器类型的特定功能。 Kata 容器中支持以下机器加速器：
+加速器是特定于体系结构的，可用于提高性能并启用机器类型的特定功能。 Kata 容器中支持以下机器加速器：
 
-- NVDIMM：此机器加速器特定于 x86，并且仅受 q35 机器类型支持。 nvdimm 用于将根文件系统作为持久内存设备提供给虚拟机
+- NVDIMM
 
-#### 设备热插拔
+  此机器加速器特定于 x86，并且仅支持 q35 机器类型。 nvdimm 用于将根文件系统作为持久内存设备提供给 VM
 
-Kata Containers VM 以最少的资源启动，允许更快的启动时间和减少内存占用。随着容器启动的进行，设备会热插拔到 VM。例如，当指定了包含额外 CPU 的 CPU 约束时，可以热添加它们。 Kata Containers 支持热添加以下设备：
+**设备热插拔**
+
+Kata Containers VM 为了更快的启动时间和减少内存占用，往往是以最少的资源启动。在容器启动过程中，设备会热插拔到 VM 中。例如，当指定了额外 CPU 时，便是通过热添加的方式追加资源。 
+
+Kata Containers 支持热添加以下设备：
 
 - Virtio block
 - Virtio SCSI
@@ -201,9 +205,9 @@ Kata Containers VM 以最少的资源启动，允许更快的启动时间和减�
 
 ### Firecracker/KVM
 
-Firecracker 建立在 rust-VMM 中的许多 rust crate 上，具有非常有限的设备模型，提供更轻的体量和攻击面，专注于功能即服务，如用例。因此，带有 Firecracker VMM 的 Kata 容器支持 CRI API 的一个子集。 Firecracker 不支持文件系统共享，因此仅支持基于块的存储驱动程序。 Firecracker 不支持设备热插拔，也不支持 VFIO。因此，带有 Firecracker VMM 的 Kata Containers 不支持在启动后更新容器资源，也不支持设备透传。
+Firecracker 是基于 [rust-VMM](https://github.com/rust-vmm) 的衍生项目，支持的设备类型有限，但能提供更轻的体量和攻击面，专注于 FaaS 场景。因此，带有 Firecracker VMM 的 Kata 容器支持 CRI API 的一个子集。 Firecracker 不支持文件系统共享，仅支持基于块存储驱动程序。 Firecracker 不支持设备热插拔，也不支持 VFIO。因此，带有 Firecracker VMM 的 Kata Containers 不支持在启动后更新容器资源，也不支持设备透传。
 
-使用到的设备：
+支持的设备类型：
 
 - virtio VSOCK
 - virtio block
@@ -211,9 +215,9 @@ Firecracker 建立在 rust-VMM 中的许多 rust crate 上，具有非常有限�
 
 ### Cloud Hypervisor/KVM
 
-Cloud Hypervisor 基于 rust-vmm，旨在为运行现代云工作负载提供更小的占用空间和更小的攻击面。具有 Cloud Hypervisor 的 Kata Containers 提供与 Kubernetes 的几乎完全兼容性，与 QEMU 配置相当。从 Kata Containers 1.12 和 2.0.0 版本开始，Cloud Hypervisor 配置支持 CPU 和内存大小调整、设备热插拔（磁盘和 VFIO）、通过 virtio-fs 共享文件系统、基于块的卷、从 VM 映像启动由 pmem 设备支持，并为每个 VMM 线程（例如所有 virtio 设备工作线程）提供细粒度的 seccomp 过滤器。
+Cloud Hypervisor 同样是基于 [rust-VMM](https://github.com/rust-vmm) 的衍生项目，旨在为运行现代云工作负载提供更小的占用空间和更小的攻击面。具有 Cloud Hypervisor 的 Kata Containers 提供与 Kubernetes 的几乎完全兼容性，与 QEMU 能力相当。从 Kata Containers 1.12 和 2.0.0 版本开始，Cloud Hypervisor 配置支持 CPU 和内存大小调整、设备热插拔（磁盘和 VFIO）、通过 virtio-fs 共享文件系统、基于块的卷、从 VM 镜像启动由 pmem 设备支持，并为每个 VMM 线程（例如所有 virtio 设备工作线程）提供细粒度的 seccomp 过滤器。
 
-使用到的设备和特性有：
+支持的设备类型与特性：
 
 - virtio VSOCK or virtio serial
 - virtio block
@@ -379,18 +383,18 @@ Kata Containers 具有热插拔添加和热插拔移除块设备的能力。这�
 
 # Networking
 
-Kata Containers 受限于 hypervisor 的功能，没有直接采用 Docker 默认的 Bridge 网络方案，而是采用的 MACVTAP 或者 TC Filter（使用 tc rules 将 veth 的 ingress 和 egress 队列分别对接 tap 的 egress 和 ingress 队列实现 veth 和 tap 的直连）方案。Kata Containers 本身是支持 CNI 管理网络的，网络方面相比容器，虽有额外开销但兼容性不差。
+Kata Containers 受限于 hypervisor 的功能，没有直接采用 Docker 默认的 Bridge 网络方案，而是采用的 macvtap 或者 tcfilter（使用 tc rules 将 veth 的 ingress 和 egress 队列分别对接 tap 的 egress 和 ingress 队列实现 veth 和 tap 的直连）方案。Kata Containers 本身是支持 CNI 管理网络的，网络方面相比容器，虽有额外开销但兼容性不差。
 
 Docker 默认采用的容器网络方案是基于 network namespace + bridge + veth pairs 的，即在 host 上创建一个 network namespace，在 docker0 网桥上连接 veth pairs 的一端，再去 network namespace 中连上另一端，打通容器和 host 之间的网络。
-这种方案得益于 namespace 技术，而许多 hypervisor 比如 QEMU 不能处理 veth interfaces。所以 Kata Containers 为 VM 创建了 TAP interfaces 来打通 VM 和 host 之间的网络。传统的 Container Engine 比如 Docker，会为容器创建 network namespace 和 veth pair，然后 Kata 会将 veth pair 的一端连上 TAP，即 MACVTAP 方案。
+这种方案得益于 namespace 技术，而许多 hypervisor 比如 QEMU 不能处理 veth interfaces。所以 Kata Containers 为 VM 创建了 TAP interfaces 来打通 VM 和 host 之间的网络。传统的 Container Engine 比如 Docker，会为容器创建 network namespace 和 veth pair，然后 Kata 会将 veth pair 的一端连上 TAP，即 macvtap 方案。
 
 <div align=center><img width="700" style="border: 0px" src="https://github.com/kata-containers/kata-containers/blob/main/docs/design/arch-images/network.png?raw=true"></div>
 
 Kata Containers 网络由 network namespaces、tap 和 tc 打通，创建 sandbox 之前首先创建网络命名空间，里面有 veth-pair 和 tap 两种网络接口，eth0 属于 veth-pair 类型接口，一端接入 CNI 创建的网络命名空间，一端接入宿主机；tap0_kata 属于 tap 类型接口，一端接入 cni 创建的网络命名空间，一端接入 QEMU 创建的 hypervisor，并且在 CNI 创建的网络命名空间使用 tc 策略打通 eth0 网络接口和 tap0_kata 网络接口，相当于把 eth0 和 tap0_kata 两个网络接口连成一条线。
 
-Sandbox 环境中只有 eth0 网络接口，这个接口是 QEMU 和 tap 模拟出的接口，mac、ip、掩码都和宿主机中 CNI 创建的网络命名空间中 eth0 的配置一样。
+sandbox 环境中只有 eth0 网络接口，这个接口是 QEMU 和 tap 模拟出的接口，mac、ip、掩码都和宿主机中 CNI 创建的网络命名空间中 eth0 的配置一样。
 
-Container 运行在 Sandbox 环境中，Container 采用共享宿主机网络命名空间方式创建容器，所以在 Container 中看到的网络配置和 Sandbox 一样。
+容器运行在 sandbox 环境中，容器采用共享宿主机网络命名空间方式创建容器，所以在容器中看到的网络配置和 sandbox 一样。
 
 **网络流量走向：**
 流量进入宿主机后首先由物理网络通过网桥或者路由接入到网络命名空间，网络命名空间中在使用 tc 策略牵引流量到 tap 网络接口，然后再通过 tap 网络接口把流量送入虚拟化环境中，最后虚拟化环境中的容器共享宿主机网络命名空间后就可以在容器中拿到网络流量。
