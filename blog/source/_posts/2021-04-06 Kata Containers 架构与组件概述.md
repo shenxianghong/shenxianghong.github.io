@@ -23,15 +23,15 @@ Kata Containers 是一个开源项目，它采用轻量化虚拟机作为容器�
 
 # Assets
 
-Kata Containers 创建一个 VM，在其中运行一个或多个容器。需要通过启动 Hypervisor 创建虚拟机来实现这一点。Hypervisor 需要两个 assets 来完成这项任务：一个 Linux 内核和一个用于引导 VM 的小型根文件系统镜像。
+Kata Containers 创建一个 VM，在其中运行一个或多个容器。需要通过启动 hypervisor 创建虚拟机来实现这一点。hypervisor 需要两个 assets 来完成这项任务：一个 Linux 内核和一个用于引导 VM 的小型根文件系统镜像。
 
-## Kernel
+## kernel
 
-Guest 内核传递到 Hypervisor 用于引导虚拟机。 Kata Containers 中提供了一个对虚机启动时间和内存占用做了高度优化的默认内核，仅提供了容器工作负载所需的必要服务。该内核是基于最新的上游 Linux 内核做的定制化。
+guest 内核传递到 hypervisor 用于引导虚拟机。 Kata Containers 中提供了一个对虚机启动时间和内存占用做了高度优化的默认内核，仅提供了容器工作负载所需的必要服务。该内核是基于最新的上游 Linux 内核做的定制化。
 
-## Image
+## image
 
-Hypervisor 使用一个镜像文件，该文件提供了一个最小的根文件系统，供 Guest 内核用来启动 VM 和托管 Kata 容器。 Kata Containers 支持基于 initrd 和 rootfs 的最小 Guest 镜像（但是，并非所有的 Hypervisor 均支持）。默认包同时提供 image 和 initrd，两者都是使用 osbuilder 工具创建的。
+hypervisor 使用一个镜像文件，该文件提供了一个最小的根文件系统，供 guest 内核用来启动 VM 和托管 Kata 容器。 Kata Containers 支持基于 initrd 和 rootfs 的最小 guest 镜像（但是，并非所有的 hypervisor 均支持）。默认包同时提供 image 和 initrd，两者都是使用 osbuilder 工具创建的。
 
 ### rootfs
 
@@ -39,8 +39,8 @@ Hypervisor 使用一个镜像文件，该文件提供了一个最小的根文件
 
 使用此镜像启动 Kata 容器的背后流程为：
 
-1. 运行时将启动 Hypervisor
-2. Hypervisor 将使用 Guest 内核启动 rootfs 镜像
+1. 运行时将启动 hypervisor
+2. hypervisor 将使用 guest 内核启动 rootfs 镜像
 3. 内核将在 VM 根环境中以 PID 1（systemd）启动 init 守护进程
 4. 在 rootfs 上下文中运行的 systemd 将在 VM 的根上下文中启动 kata-agent
 5. kata-agent 将创建一个新的容器环境，将其根文件系统设置为用户请求的文件系统（例如 Ubuntu、busybox 等）
@@ -85,8 +85,8 @@ initrd 镜像是一个压缩的 cpio(1) 归档文件，它是从加载到内存�
 
 使用此镜像启动 Kata 容器的背后流程为：
 
-1. 运行时将启动 Hypervisor
-2. Hypervisor 将使用 Guest 内核启动 initrd 镜像
+1. 运行时将启动 hypervisor
+2. hypervisor 将使用 guest 内核启动 initrd 镜像
 3. 内核将在 VM 根环境中以 PID 1（kata-agent）启动 init 守护进程
 4. kata-agent 将创建一个新的容器环境，将其根文件系统设置为用户请求的文件系统（例如 Ubuntu、busybox 等）
 5. kata-agent 将在新容器内执行容器启动命令
@@ -130,11 +130,11 @@ $ ./sbin/init
 
 ## osbuilder
 
-osbuilder 本身是 Kata Containers 项目中的一个模块，主要负责构建 Guest OS 的引导镜像。
+osbuilder 本身是 Kata Containers 项目中的一个模块，主要负责构建 guest OS 的引导镜像。
 
 Kata Containers 支持两种引导镜像：rootfs 和 initrd。无论哪种方式，默认都会将 kata-agent 编译到镜像中，在对 kata-agent 有定制化需求的场景下，可以手动编译后添加到镜像中。
 
-# 虚拟化
+# Virtualization
 
 Kata 容器是在传统 namespace 隔离之上创建的以硬件虚拟化为基础的第二层隔离。 Kata 启动一个轻量级虚拟机，并使用 guest 中特供的内核来承载容器工作负载。
 
@@ -251,9 +251,9 @@ virtio-fs（VIRTIO）覆盖文件系统挂载点来共享工作负载镜像。ka
 
 对于 virtio-fs，运行时为每个创建的 VM 启动一个 virtiofsd 守护进程（在主机上下文中运行）。
 
-Kata Containers 使用轻量级虚拟机和硬件虚拟化技术来提供更强隔离，以构建安全的容器运行时。但也正是因为使用了虚拟机，容器的根文件系统无法像 runC 那样直接使用主机上构建好的目录，而需要有一种方法把 Host 上的目录共享给 Guest。
+Kata Containers 使用轻量级虚拟机和硬件虚拟化技术来提供更强隔离，以构建安全的容器运行时。但也正是因为使用了虚拟机，容器的根文件系统无法像 runC 那样直接使用主机上构建好的目录，而需要有一种方法把 host 上的目录共享给 guest。
 
-在此之前，有两种方法能够透传 Host 目录或者数据给 Guest，一种是基于 file 的方案，一个是基于 block 的方案。而这两种方案各有利弊，这里分别以 9pfs 和 devicemapper 为例来说明：
+在此之前，有两种方法能够透传 host 目录或者数据给 guest，一种是基于 file 的方案，一个是基于 block 的方案。而这两种方案各有利弊，这里分别以 9pfs 和 devicemapper 为例来说明：
 
 |      | 9pfs                                                         | devicemapper                                  |
 | ---- | ------------------------------------------------------------ | --------------------------------------------- |
@@ -262,9 +262,9 @@ Kata Containers 使用轻量级虚拟机和硬件虚拟化技术来提供更强�
 
 针对以上两个方案的痛点和优势，virtio-fs 在某种程度上做了很好的互补，在 Kata Containers 中，支持两种文件共享方式：virtio-fs 和 virtio-9p，在 Kata Containers 2.x 之后，virtio-fs 作为默认且推荐的方案选择。
 
-virtio-fs 本身采用类似于 CS 的架构，选择 FUSE 作为文件系统，而非网络文件系统协议。server 端是位于 host 上的 virtiofsd，用于向 Guest 提供 fuse 服务；client 端是把 guest kernel 抽象成一个 fuse client，用于挂载 host 上导出的目录。两者之间通过 vhost_user 建立连接。
+virtio-fs 本身采用类似于 CS 的架构，选择 FUSE 作为文件系统，而非网络文件系统协议。server 端是位于 host 上的 virtiofsd，用于向 guest 提供 fuse 服务；client 端是把 guest kernel 抽象成一个 fuse client，用于挂载 host 上导出的目录。两者之间通过 vhost_user 建立连接。
 
-最大的特点是利用了 VM 和 VMM 同时部署在一个 host 上的，数据的共享访问都是通过共享内存的方式，避免了 VM 和 VMM 之间的网络通讯，共享内存访问比基于网络文件系统协议访问要更轻量级也有更好的本地文件系统语义和一致性。在面对多 Guest 要 mmap 同一个文件的时候，virtio-fs 会将该文件 mmap 到 QEMU 的进程空间里，其余的 guest 通过 DAX 直接访问。
+最大的特点是利用了 VM 和 VMM 同时部署在一个 host 上的，数据的共享访问都是通过共享内存的方式，避免了 VM 和 VMM 之间的网络通讯，共享内存访问比基于网络文件系统协议访问要更轻量级也有更好的本地文件系统语义和一致性。在面对多 guest 要 mmap 同一个文件的时候，virtio-fs 会将该文件 mmap 到 QEMU 的进程空间里，其余的 guest 通过 DAX 直接访问。
 
 <div align=center><img width="400" style="border: 0px" src="/gallery/kata-containers/virtiofs.png"></div>
 
@@ -347,7 +347,7 @@ Kata Containers 具有热插拔添加和热插拔移除块设备的能力。这�
 - 使用串口，虚拟机中的进程可以在串口设备读/写数据，主机中的进程可以从在 Unix socket 读/写数据。但是，串行链接一次限制对一个进程的读/写访问
 - 更新、更简单的方法是 VSOCK，它可以接受来自多个客户端的连接
 
-在 Kata Containers 2.x 中实现默认采用 Vsock 的方式（依赖 4.8 以上版本内核和 vhost_vsock 内核模块）
+在 Kata Containers 2.x 中实现默认采用 VSOCK 的方式（依赖 4.8 以上版本内核和 vhost_vsock 内核模块）
 
 ```
 .----------------------.
@@ -524,13 +524,13 @@ kata-shim 的出现主要是考虑了 VM 内有多个容器的情况。在此之
 2. Container Manager 守护进程启动 Kata 运行时的单个实例，即 containerd-shim-kata-v2
 3. Kata 运行时加载配置文件
 4. Container Manager 调用一组 shimv2 的 API
-5. Kata 运行时启动配置好的 Hypervisor
-6. Hypervisor 使用 Guest 资源配置创建并启动（引导）VM
-   1. Hypervisor DAX 将 Guest 镜像共享到 VM 中成为 VM rootfs（安装在 /dev/pmem* 设备上），即 VM 根环境
-   2. Hypervisor 使用 virtio FS 将 OCI bundle 安装到 VM 的 rootfs 内的容器特定目录中（这个容器特定目录将成为容器 rootfs，称为容器环境）
-7. kata-agent 作为 VM 启动的一部分
-8. 运行时调用 kata-agent 的 CreateSandbox API 来请求 agent 创建容器
-   1. kata-agent 在包含容器 rootfs 的特定目录中创建容器环境（容器环境在容器 rootfs 目录中托管工作负载）（agent 创建的容器环境相当于 runc OCI 运行时创建的容器环境；Linux cgroups 和命名空间由 Guest 内核在 VM 内创建，用于将工作负载与创建容器的 VM 环境隔离开来）
-   2. kata-agent 在容器环境中生成工作负载
+5. Kata 运行时启动配置好的 hypervisor
+6. hypervisor 使用 guest 资源配置创建并启动（引导）VM
+   1. hypervisor DAX 将 guest 镜像共享到 VM 中成为 VM rootfs（安装在 /dev/pmem* 设备上），即 VM 根环境
+   2. hypervisor 使用 virtio FS 将 OCI bundle 安装到 VM 的 rootfs 内的容器特定目录中（这个容器特定目录将成为容器 rootfs，称为容器环境）
+7. Kata agent 作为 VM 启动的一部分
+8. 运行时调用 Kata agent 的 CreateSandbox API 来请求 agent 创建容器
+   1. Kata agent 在包含容器 rootfs 的特定目录中创建容器环境（容器环境在容器 rootfs 目录中托管工作负载）（agent 创建的容器环境相当于 runc OCI 运行时创建的容器环境；Linux cgroups 和命名空间由 guest 内核在 VM 内创建，用于将工作负载与创建容器的 VM 环境隔离开来）
+   2. Kata agent 在容器环境中生成工作负载
 9. Container Manager 将容器的控制权返回给运行 ctr 命令的用户
 
