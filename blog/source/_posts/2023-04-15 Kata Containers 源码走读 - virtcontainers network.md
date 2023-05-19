@@ -455,7 +455,6 @@ Network 中声明的 **NetworkID**、**NetworkCreated**、**Endpoints** 和 **Se
        inet6 fe80::c4f1:6ff:feac:4653/64 scope link 
           valid_lft forever preferred_lft forever
    
-   
    # 网络模型为 tcfilter 时
    $ ip netns exec cni-d7e932c4-51a6-53e0-e73c-662aa84b4653 ethtool -i tap0_kata
    driver: tun
