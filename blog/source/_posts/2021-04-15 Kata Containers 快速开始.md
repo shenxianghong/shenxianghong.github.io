@@ -1348,7 +1348,7 @@ vm factory destroyed
 
 如果不想手动调用 kata-runtime factory init，默认创建的第一个 Kata 容器将自动创建一个 VM 模板。
 
-# Kata Runtime
+# kata-runtime
 
 ## check (kata-check)
 
@@ -1594,7 +1594,7 @@ $ kata-runtime iptables set --sandbox-id xxx --v6 ./iptables
 | --sandbox-id | 待操作的 Sandbox ID   |
 | --v6         | 设置 IPV6 的 iptables |
 
-# Kata Monitor
+# kata-monitor
 
 ```shell
 $ kata-monitor
