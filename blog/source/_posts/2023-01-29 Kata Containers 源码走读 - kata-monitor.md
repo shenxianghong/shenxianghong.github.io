@@ -28,7 +28,7 @@ Kata monitor 是一个守护进程，能够收集和暴露在同一 host 上运�
 - Firecracker 指标
 - Kata monitor 指标
 
-kata-monitor 提供的指标均采用 Prometheus 格式。虽然 kata-monitor 可以在任何运行 Kata Containers 工作负载的主机上用作独立守护进程，并且可以用于从正在运行的 Kata 运行时检索分析数据，但它的主要预期用途是作为 DaemonSet 部署在 Kubernetes 集群上。
+Kata monitor 提供的指标均采用 Prometheus 格式。虽然 Kata monitor 可以在任何运行 Kata Containers 工作负载的主机上用作独立守护进程，并且可以用于从正在运行的 Kata 运行时检索分析数据，但它的主要预期用途是作为 DaemonSet 部署在 Kubernetes 集群上。
 
 ****
 

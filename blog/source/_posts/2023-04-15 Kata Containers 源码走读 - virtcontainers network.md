@@ -410,7 +410,7 @@ Network 中声明的 **NetworkID**、**NetworkCreated**、**Endpoints** 和 **Se
      
      综上所述，tcfilter 网络模式下，仅仅是在 veth 和 tap 设备之间配置 tc 规则，实现容器网络流量和 VM 网络流量的互通。
    
-   ***网络模型效果示例***
+   ***效果示例***
    
    ```shell
    # 网络模型为 macvtap 时
@@ -565,7 +565,7 @@ Network 中声明的 **NetworkID**、**NetworkCreated**、**Endpoints** 和 **Se
      5. 为待限速设备添加过滤器规则，将其入站流量重定向到 ifb 设备进行出站处理
      6. 使用 HTB（Hierarchical Token Bucket）qdisc traffic shaping 方案来控制 ifb 网口流量，设置 class 的 rate 和 ceil 均为 [hypervisor].tx_rate_limiter_max_rate
    
-   ***veth endpoint 限速示例***
+   ***限速示例（veth endpoint）***
    
    ```shell
    # inbound 限速为 1024，outbound 限速为 2048

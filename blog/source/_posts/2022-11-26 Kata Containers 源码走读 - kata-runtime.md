@@ -55,10 +55,10 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
    ***amd64***
 
    1. 根据 /proc/cpuinfo 文件中字符串匹配 GenuineIntel 或 AuthenticAMD 获得其 CPU 类型，x86 架构下支持  Intel 和 AMD 类型
-   2. 如果 CPU 类型为 Intel 时：
+   2. 当 CPU 类型为 Intel 时：
       1. 根据 CPU flags 中是否含有 "hypervisor" 判断是否运行在 VM 环境中，如果没运行在 VM 中，则需要支持 [VMX Unrestricted](https://communities.vmware.com/t5/VMware-Workstation-Pro/What-is-VMX-Unrestricted-Guest/td-p/2748822) 模式（用于判断系统环境是否足够新，用以满足运行 Kata Containers，至少是 [Westmere](https://en.wikipedia.org/wiki/Westmere_(microarchitecture))）
       2. 如果 hypervisor 为 QEMU、Cloud hypervisor、Firecracker 和 Dragonball 时，则要求 CPU 具有 vmx、lm 和 sse4_1 的 flag 特性以及内核模块中 kvm、kvm_intel、vhost、vhost_net 和 vhost_vsock 应启动；如果 hypervisor 为 acrn 时，则要求 CPU 具有 lm 和 sse4_1 的 flag 特性以及内核模块中 vhm_dev、vhost 和 vhost_net 应启动；如果 hypervisor 为 mock 时，则要求 CPU 具有 vmx、lm 和 sse4_1 的 flag 特性
-   3. 如果 CPU 类型为 AMD 时：
+   3. 当 CPU 类型为 AMD 时：
       1. 无论 hypervisor 的类型，要求 CPU 具有 svm、lm、sse4_1 的 flag 特性以及内核模块中 kvm、kvm_amd、vhost、vhost_net 和 vhost_vsock 应启动
       1. 记录以上依赖要求至全局变量中，后续会作为运行环境监测的依据
 
@@ -71,7 +71,7 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
 
    ***amd64***
 
-   1. 如果 hypervisor 为 QEMU、Cloud Hypervisor、Firecracker 时，验证流程参考：[kvmIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_amd64.go#L234)；hypervisor 为 ACRN 时，验证流程参考：[acrnIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_amd64.go#L240)。满足要求时输出 System can currently create Kata Containers
+   1. 当 hypervisor 为 QEMU、Cloud Hypervisor、Firecracker 时，验证流程参考：[kvmIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_amd64.go#L234)；hypervisor 为 ACRN 时，验证流程参考：[acrnIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_amd64.go#L240)。满足要求时输出 System can currently create Kata Containers
 
    ***arm64***
 
