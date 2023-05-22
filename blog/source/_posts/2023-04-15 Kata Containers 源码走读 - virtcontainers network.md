@@ -29,16 +29,16 @@ type VethEndpoint struct {
 	// 固定为 virtual
 	EndpointType       EndpointType
 
-    // idx 为 VM 中设备的递增序号
+	// idx 为 VM 中设备的递增序号
 	// NetPair.TapInterface.Name 为 br<idx>_kata
 	// NetPair.TapInterface.TAPIface.Name 为 tap<idx>_kata
-	// NetPair.VirtIface.Name 为初始化入参指定，默认为 eth<idx>
+	// NetPair.VirtIface.Name 为 endpoint 设备名称，默认为 eth<idx>
 	// NetPair.VirtIface.HardAddr 为随机生成
-	// NetPair.NetInterworkingModel 为初始化入参指定
+	// NetPair.NetInterworkingModel 为 [runtime].internetworking_model，可选有 macvtap 和 tcfilter（默认）
 	NetPair            NetworkInterfacePair
 
-    // 接口流程中赋值维护
-    PCIPath            vcTypes.PciPath
+	// 初始为空
+	PCIPath            vcTypes.PciPath
 	EndpointProperties NetworkInfo
 	RxRateLimiter      bool
 	TxRateLimiter      bool
@@ -54,14 +54,14 @@ type IPVlanEndpoint struct {
 	// idx 为 VM 中设备的递增序号
 	// NetPair.TapInterface.Name 为 br<idx>_kata
 	// NetPair.TapInterface.TAPIface.Name 为 tap<idx>_kata
-	// NetPair.VirtIface.Name 为初始化入参指定，默认为 eth<idx>
+	// NetPair.VirtIface.Name 为 endpoint 设备名称，默认为 eth<idx>
 	// NetPair.VirtIface.HardAddr 为随机生成
 	// NetPair.NetInterworkingModel 为 tcfilter
 	NetPair            NetworkInterfacePair
 
-	// 接口流程中赋值维护
-    PCIPath            vcTypes.PciPath
-    EndpointProperties NetworkInfo
+	// 初始为空
+	PCIPath            vcTypes.PciPath
+	EndpointProperties NetworkInfo
 	RxRateLimiter      bool
 	TxRateLimiter      bool
 }
@@ -76,13 +76,13 @@ type MacvlanEndpoint struct {
 	// idx 为 VM 中设备的递增序号
 	// NetPair.TapInterface.Name 为 br<idx>_kata
 	// NetPair.TapInterface.TAPIface.Name 为 tap<idx>_kata
-	// NetPair.VirtIface.Name 为初始化入参指定，默认为 eth<idx>
+	// NetPair.VirtIface.Name 为 endpoint 设备名称，默认为 eth<idx>
 	// NetPair.VirtIface.HardAddr 为随机生成
-	// NetPair.NetInterworkingModel 为初始化入参指定
+	// NetPair.NetInterworkingModel 为 [runtime].internetworking_model，可选有 macvtap 和 tcfilter（默认）
 	NetPair            NetworkInterfacePair
 
-	// 接口流程中赋值维护
-    PCIPath            vcTypes.PciPath
+	// 初始为空
+	PCIPath            vcTypes.PciPath
 	EndpointProperties NetworkInfo
 	RxRateLimiter      bool
 	TxRateLimiter      bool
@@ -95,11 +95,11 @@ type MacvtapEndpoint struct {
 	// 固定为 macvtap
 	EndpointType       EndpointType
 
-    // 初始化入参
+	// 初始化入参
 	EndpointProperties NetworkInfo
 
-    // 接口流程中赋值维护
-    VMFds              []*os.File
+	// 初始为空
+	VMFds              []*os.File
 	VhostFds           []*os.File
 	PCIPath            vcTypes.PciPath
 	RxRateLimiter      bool
@@ -386,20 +386,19 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 ```go
 // LinuxNetwork represents a sandbox networking setup.
 type LinuxNetwork struct {
-	// 初始化入参。OCI spec 中 network 类型的 linux.Namespace 中指定
+	// OCI spec 中类型为 network 的 linux.namespace.path
 	netNSPath         string
 
-	// 接口流程中赋值维护
+	// 初始为空，用于维护当前 netns 中的 endpoint 设备 
 	eps               []Endpoint
 
-	// [runtime].internetworking_model，默认为 tcfilter
-	// Kata 网络模型，支持 macvtap 和 tcfilter
+	// [runtime].internetworking_model，可选有 macvtap 和 tcfilter（默认）
 	interworkingModel NetInterworkingModel
 
-	// 当前 netns 是否为 Kata Containers 创建
-	// Kata Containers 的 netns 可以有两种创建方式：
-	// - 事先准备好 netns，创建 Kata 容器时，在 OCI spec 中传递该 netns（network 类型的 linux.Namespace）。例如 Kubernetes 场景下，netns 由 CNI 创建
-	// - 由 Kata Containers 创建，Kata Containers 发现 OCI spec 中不存在 network 类型的 linux.Namespace，则会手动创建一个 netns（以 cnitest 开头）。例如 Containerd 场景下，运行 single_container
+	// 表示当前 netns 是否为 Kata Containers 创建
+	// Kata 容器的 netns 可以有两种创建方式：
+	// - 事先准备好 netns，创建 Kata 容器时，在 OCI spec 中传递该 netns（network 类型的 linux.namespace）。例如 Kubernetes 场景下，netns 由 CNI 创建
+	// - 由 Kata Containers 创建，Kata Containers 发现 OCI spec 中不存在 network 类型的 linux.namespace，则会手动创建一个 netns（以 cnitest 开头）。例如 Containerd 场景下，运行 single_container
 	netNSCreated      bool
 }
 ```
