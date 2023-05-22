@@ -23,53 +23,7 @@ DeviceReceiver 是一组相对而言较底层的接口声明，其直接调用 h
 
 *<u>src/runtime/pkg/device/api/interface.go</u>*
 
-DeviceReceiver 声明了一组接受设备对象的接口，用于调用 hypervisor 的设备管理接口，执行设备的热插拔等操作。
-
 DeviceReceiver 的实现由 Sandbox 接口完成。
-
-```go
-// Sandbox is composed of a set of containers and a runtime environment.
-// A Sandbox can be created, deleted, started, paused, stopped, listed, entered, and restored.
-type Sandbox struct {
-	ctx        context.Context
-	devManager api.DeviceManager
-	factory    Factory
-	hypervisor Hypervisor
-	agent      agent
-	store      persistapi.PersistDriver
-	fsShare    FilesystemSharer
-
-	swapDevices []*config.BlockDrive
-	volumes     []types.Volume
-
-	monitor         *monitor
-	config          *SandboxConfig
-	annotationsLock *sync.RWMutex
-	wg              *sync.WaitGroup
-	cw              *consoleWatcher
-
-	sandboxController  resCtrl.ResourceController
-	overheadController resCtrl.ResourceController
-
-	containers map[string]*Container
-
-	id string
-
-	network Network
-
-	state types.SandboxState
-
-	sync.Mutex
-
-	swapSizeBytes int64
-	shmSize       uint64
-	swapDeviceNum uint
-
-	sharePidNs        bool
-	seccompSupported  bool
-	disableVMShutdown bool
-}
-```
 
 *工厂函数参考 virtcontainers 部分。*
 
@@ -148,12 +102,65 @@ DeviceReceiver 中声明的 **GetHypervisorType** 为参数获取，无复杂逻
 Device 有以下实现方式：GenericDevice、VFIODevice、BlockDevice、VhostUserBlkDevice、VhostUserFSDevice、VhostUserNetDevice 和 VhostUserSCSIDevice，其中均以 GenericDevice 为基础，扩展部分方法。
 
 ```go
-// GenericDevice refers to a device that is neither a VFIO device, block device or VhostUserDevice.
-type GenericDevice struct {
-	DeviceInfo *config.DeviceInfo
+// DeviceInfo is an embedded type that contains device data common to all types of devices.
+type DeviceInfo struct {
+	// DriverOptions is specific options for each device driver
+	// for example, for BlockDevice, we can set DriverOptions["block-driver"]="virtio-blk"
+	DriverOptions map[string]string
 
+	// Hostpath is device path on host
+	HostPath string
+
+	// ContainerPath is device path inside container
+	ContainerPath string `json:"-"`
+
+	// Type of device: c, b, u or p
+	// c , u - character(unbuffered)
+	// p - FIFO
+	// b - block(buffered) special file
+	// More info in mknod(1).
+	DevType string
+
+	// ID for the device that is passed to the hypervisor.
 	ID string
 
+	// Major, minor numbers for device.
+	Major int64
+	Minor int64
+
+	// FileMode permission bits for the device.
+	FileMode os.FileMode
+
+	// id of the device owner.
+	UID uint32
+
+	// id of the device group.
+	GID uint32
+
+	// Pmem enabled persistent memory. Use HostPath as backing file
+	// for a nvdimm device in the guest.
+	Pmem bool
+
+	// If applicable, should this device be considered RO
+	ReadOnly bool
+
+	// ColdPlug specifies whether the device must be cold plugged (true)
+	// or hot plugged (false).
+	// 如果 endpoint 类型为 physical，则为 true
+	ColdPlug bool
+}
+```
+
+DeviceInfo 描述了设备的属性信息。
+
+```go
+// GenericDevice refers to a device that is neither a VFIO device, block device or VhostUserDevice.
+type GenericDevice struct {
+	// 初始化入参
+	DeviceInfo *config.DeviceInfo
+	ID string
+	
+    // 接口流程中赋值维护
 	RefCount    uint
 	AttachCount uint
 }
@@ -164,6 +171,8 @@ type GenericDevice struct {
 // to be used by the Virtual Machine.
 type VFIODevice struct {
 	*GenericDevice
+    
+	// 接口流程中赋值维护
 	VfioDevs []*config.VFIODev
 }
 ```
@@ -174,6 +183,8 @@ type VFIODevice struct {
 // BlockDevice refers to a block storage device implementation.
 type BlockDevice struct {
 	*GenericDevice
+
+	// 接口流程中赋值维护
 	BlockDrive *config.BlockDrive
 }
 ```
@@ -182,6 +193,8 @@ type BlockDevice struct {
 // VhostUserBlkDevice is a block vhost-user based device
 type VhostUserBlkDevice struct {
 	*GenericDevice
+
+	// 接口流程中赋值维护
 	VhostUserDeviceAttrs *config.VhostUserDeviceAttrs
 }
 ```
@@ -190,6 +203,8 @@ type VhostUserBlkDevice struct {
 // VhostUserFSDevice is a virtio-fs vhost-user device
 type VhostUserFSDevice struct {
 	*GenericDevice
+
+	// 接口流程中赋值维护
 	config.VhostUserDeviceAttrs
 }
 ```
@@ -198,6 +213,8 @@ type VhostUserFSDevice struct {
 // VhostUserNetDevice is a network vhost-user based device
 type VhostUserNetDevice struct {
 	*GenericDevice
+
+	// 接口流程中赋值维护
 	*config.VhostUserDeviceAttrs
 }
 ```
@@ -206,6 +223,8 @@ type VhostUserNetDevice struct {
 // VhostUserSCSIDevice is a SCSI vhost-user based device
 type VhostUserSCSIDevice struct {
 	*GenericDevice
+
+	// 接口流程中赋值维护
 	*config.VhostUserDeviceAttrs
 }
 ```
@@ -252,7 +271,7 @@ type VFIODev struct {
 }
 ```
 
-VFIODev 为 vfio 设备属性。
+VFIODev 描述了 vfio 设备特有的属性信息。
 
 ```go
 // BlockDrive represents a block storage drive which may be used in case the storage
@@ -304,7 +323,7 @@ type BlockDrive struct {
 }
 ```
 
-BlockDrive 为 block 设备属性。
+BlockDrive 描述了 block 设备特有的属性信息。
 
 ```go
 // VhostUserDeviceAttrs represents data shared by most vhost-user devices
@@ -334,55 +353,11 @@ type VhostUserDeviceAttrs struct {
 }
 ```
 
-VhostUserDeviceAttrs 为 VhostUserBlkDevice、VhostUserFSDevice、VhostUserNetDevice 和 VhostUserSCSIDevice 的 vhost-user 设备属性。
+VhostUserDeviceAttrs 描述 VhostUserBlkDevice、VhostUserFSDevice、VhostUserNetDevice 和 VhostUserSCSIDevice 的 vhost-user 设备特有的属性信息。
 
-```go
-// DeviceState is a structure which represents host devices
-// plugged to a hypervisor, one Device can be shared among containers in POD
-// Refs: pkg/device/drivers/generic.go:GenericDevice
-type DeviceState struct {
-	// DriverOptions is specific options for each device driver
-	// for example, for BlockDevice, we can set DriverOptions["block-driver"]="virtio-blk"
-	DriverOptions map[string]string
+*各 device 实现的工厂函数均为简单的赋值操作，具体参考 DeviceManager.NewDevice。*
 
-	// VhostUserDeviceAttrs is specific for vhost-user device driver
-	VhostUserDev *VhostUserDeviceAttrs `json:",omitempty"`
-
-	// BlockDrive is specific for block device driver
-	BlockDrive *BlockDrive `json:",omitempty"`
-
-	ID string
-
-	// Type is used to specify driver type
-	// Refs: pkg/device/config/config.go:DeviceType
-	Type string
-
-	// Type of device: c, b, u or p
-	// c , u - character(unbuffered)
-	// p - FIFO
-	// b - block(buffered) special file
-	// More info in mknod(1).
-	DevType string
-
-	// VFIODev is specific VFIO device driver
-	VFIODevs []*VFIODev `json:",omitempty"`
-
-	RefCount    uint
-	AttachCount uint
-
-	// Major, minor numbers for device.
-	Major int64
-	Minor int64
-
-	// ColdPlug specifies whether the device must be cold plugged (true)
-	// or hot plugged (false).
-	ColdPlug bool
-}
-```
-
-*工厂函数为简单的赋值操作，具体参考 DeviceManager.NewDevice。*
-
-Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **GetMajorMinor** 均为参数获取与赋值，无复杂逻辑，不作详述。<br>此外，**DeviceType** 返回各自 Device 实现的类型（如 generic、vfio、vhost-user-blk-pci、vhost-user-fs-pci、virtio-net-pci 和 vhost-user-scsi-pci）；**GetDeviceInfo** 返回各自 Device 实现的属性信息；**Reference** 和 **Dereference** 用于维护设备的引用计数，未达到最多（^uint(0)，即 2 的 64 次方减一）和最少引用时，则计数加一或减一并返回；**Save** 和 **Load** 用于 Device 和 DeviceState 之间转换，不同的实现额外赋值其各自的属性信息。
+Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **GetMajorMinor** 均为参数获取与赋值，无复杂逻辑，不作详述。<br>此外，**DeviceType** 返回各自 Device 实现的类型（如 generic、vfio、vhost-user-blk-pci、vhost-user-fs-pci、virtio-net-pci 和 vhost-user-scsi-pci）；**GetDeviceInfo** 返回各自 Device 实现的属性信息；**Reference** 和 **Dereference** 用于维护设备的引用计数，未达到最多（^uint(0)，即 2 的 64 次方减一）和最少引用时，则计数加一或减一并返回；**Save** 和 **Load** 用于 Device 和 DeviceState（结构类似，用于描述状态数据）之间转换，不同的实现额外赋值其各自的属性信息。
 
 ## bumpAttachCount
 
@@ -492,24 +467,24 @@ Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **Ge
 
 *<u>src/runtime/pkg/device/api/interface.go</u>*
 
-DeviceManager 用于创建新设备，可用作单个设备管理对象。
-
 ```go
 type deviceManager struct {
+	// 接口流程中赋值维护
 	devices map[string]api.Device
 	
-	// [hypervisor].block_device_driver
+	// [hypervisor].block_device_driver，默认为 virtio-scsi
+	// rootfs 块设备驱动，可选有 virtio-scsi、virtio-blk 和 nvdimm
 	blockDriver        string
-	// [hypervisor].vhost_user_store_path
+
+	// [hypervisor].vhost_user_store_path，默认为 /var/run/kata-containers/vhost-user
 	// Its sub-path "block" is used for block devices; "block/sockets" is
 	// where we expect vhost-user sockets to live; "block/devices" is where
 	// simulated block device nodes for vhost-user devices to live.
-	// 默认为：/var/run/kata-containers/vhost-user
 	vhostUserStorePath string
 
 	sync.RWMutex
-	
-	// [hypervisor].enable_vhost_user_store
+
+	// [hypervisor].enable_vhost_user_store，默认为 false
 	// Enabling this will result in some Linux reserved block type
 	// major range 240-254 being chosen to represent vhost-user devices.
 	vhostUserStoreEnabled bool
@@ -519,55 +494,6 @@ type deviceManager struct {
 *工厂函数是简单的根据配置文件中 hypervisor 配置项参数的初始化。*
 
 Device 中声明的 **IsDeviceAttached**、**GetDeviceByID** 和 **GetAllDevices** 为参数获取，无复杂逻辑，不作详述。<br>
-
-```go
-// DeviceInfo is an embedded type that contains device data common to all types of devices.
-type DeviceInfo struct {
-	// DriverOptions is specific options for each device driver
-	// for example, for BlockDevice, we can set DriverOptions["block-driver"]="virtio-blk"
-	DriverOptions map[string]string
-
-	// Hostpath is device path on host
-	HostPath string
-
-	// ContainerPath is device path inside container
-	ContainerPath string `json:"-"`
-
-	// Type of device: c, b, u or p
-	// c , u - character(unbuffered)
-	// p - FIFO
-	// b - block(buffered) special file
-	// More info in mknod(1).
-	DevType string
-
-	// ID for the device that is passed to the hypervisor.
-	ID string
-
-	// Major, minor numbers for device.
-	Major int64
-	Minor int64
-
-	// FileMode permission bits for the device.
-	FileMode os.FileMode
-
-	// id of the device owner.
-	UID uint32
-
-	// id of the device group.
-	GID uint32
-
-	// Pmem enabled persistent memory. Use HostPath as backing file
-	// for a nvdimm device in the guest.
-	Pmem bool
-
-	// If applicable, should this device be considered RO
-	ReadOnly bool
-
-	// ColdPlug specifies whether the device must be cold plugged (true)
-	// or hot plugged (false).
-	ColdPlug bool
-}
-```
 
 ## NewDevice
 

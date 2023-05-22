@@ -28,14 +28,18 @@ Endpoint 代表了某一个物理或虚拟网络设备的基础结构，具体�
 type VethEndpoint struct {
 	// 固定为 virtual
 	EndpointType       EndpointType
-	PCIPath            vcTypes.PciPath
-	EndpointProperties NetworkInfo
+
+    // idx 为 VM 中设备的递增序号
 	// NetPair.TapInterface.Name 为 br<idx>_kata
 	// NetPair.TapInterface.TAPIface.Name 为 tap<idx>_kata
-	// NetPair.VirtIface.Name 为初始化入参指定，缺省为 eth<idx>
+	// NetPair.VirtIface.Name 为初始化入参指定，默认为 eth<idx>
 	// NetPair.VirtIface.HardAddr 为随机生成
 	// NetPair.NetInterworkingModel 为初始化入参指定
 	NetPair            NetworkInterfacePair
+
+    // 接口流程中赋值维护
+    PCIPath            vcTypes.PciPath
+	EndpointProperties NetworkInfo
 	RxRateLimiter      bool
 	TxRateLimiter      bool
 }
@@ -46,14 +50,18 @@ type VethEndpoint struct {
 type IPVlanEndpoint struct {
 	// 固定为 ipvlan
 	EndpointType       EndpointType
-	PCIPath            vcTypes.PciPath
-	EndpointProperties NetworkInfo
+
+	// idx 为 VM 中设备的递增序号
 	// NetPair.TapInterface.Name 为 br<idx>_kata
 	// NetPair.TapInterface.TAPIface.Name 为 tap<idx>_kata
-	// NetPair.VirtIface.Name 为初始化入参指定，缺省为 eth<idx>
+	// NetPair.VirtIface.Name 为初始化入参指定，默认为 eth<idx>
 	// NetPair.VirtIface.HardAddr 为随机生成
-	// NetPair.NetInterworkingModel 为 NetXConnectTCFilterModel
+	// NetPair.NetInterworkingModel 为 tcfilter
 	NetPair            NetworkInterfacePair
+
+	// 接口流程中赋值维护
+    PCIPath            vcTypes.PciPath
+    EndpointProperties NetworkInfo
 	RxRateLimiter      bool
 	TxRateLimiter      bool
 }
@@ -64,14 +72,18 @@ type IPVlanEndpoint struct {
 type MacvlanEndpoint struct {
 	// 固定为 macvlan
 	EndpointType       EndpointType
-	PCIPath            vcTypes.PciPath
-	EndpointProperties NetworkInfo
+
+	// idx 为 VM 中设备的递增序号
 	// NetPair.TapInterface.Name 为 br<idx>_kata
 	// NetPair.TapInterface.TAPIface.Name 为 tap<idx>_kata
-	// NetPair.VirtIface.Name 为初始化入参指定，缺省为 eth<idx>
+	// NetPair.VirtIface.Name 为初始化入参指定，默认为 eth<idx>
 	// NetPair.VirtIface.HardAddr 为随机生成
 	// NetPair.NetInterworkingModel 为初始化入参指定
 	NetPair            NetworkInterfacePair
+
+	// 接口流程中赋值维护
+    PCIPath            vcTypes.PciPath
+	EndpointProperties NetworkInfo
 	RxRateLimiter      bool
 	TxRateLimiter      bool
 }
@@ -80,11 +92,14 @@ type MacvlanEndpoint struct {
 ```go
 // MacvtapEndpoint represents a macvtap endpoint
 type MacvtapEndpoint struct {
-	// 初始化入参
-	EndpointProperties NetworkInfo
 	// 固定为 macvtap
 	EndpointType       EndpointType
-	VMFds              []*os.File
+
+    // 初始化入参
+	EndpointProperties NetworkInfo
+
+    // 接口流程中赋值维护
+    VMFds              []*os.File
 	VhostFds           []*os.File
 	PCIPath            vcTypes.PciPath
 	RxRateLimiter      bool
@@ -95,51 +110,58 @@ type MacvtapEndpoint struct {
 ```go
 // PhysicalEndpoint gathers a physical network interface and its properties
 type PhysicalEndpoint struct {
-	// 初始化入参 netInfo.Iface.Name
-	IfaceName          string
-	// 初始化入参 netInfo.Iface.HardwareAddr
-	HardAddr           string
-	EndpointProperties NetworkInfo
-	// 固定为 physical
+    // 固定为 physical
 	EndpointType       EndpointType
-	// 根据初始化入参 netInfo.Iface.Name 获取
+    
+	// 初始化入参
+	IfaceName          string
+	HardAddr           string
+	// 根据 IfaceName 解析获得，类比于 ethtool -i <IfaceName> 结果中的 bus-info
 	BDF                string
+
 	// 软链接 /sys/bus/pci/devices/<BDF>/driver 指向实体文件路径的基础
 	Driver             string
+
 	// 由 /sys/bus/pci/devices/<BDF>/vendor 和 /sys/bus/pci/devices/<BDF>/device 文件内容拼接而成
 	VendorDeviceID     string
+    
+    // 接口流程中赋值维护
 	PCIPath            vcTypes.PciPath
+    EndpointProperties NetworkInfo
 }
 ```
 
 ```go
 // VhostUserEndpoint represents a vhost-user socket based network interface
 type VhostUserEndpoint struct {
-	// Path to the vhost-user socket on the host system
-	// 初始化入惨
-	SocketPath string
-	// MAC address of the interface
-	// 初始化入参 netInfo.Iface.HardwareAddr
-	HardAddr           string
-	// 初始化入参 netInfo.Iface.Name
-	IfaceName          string
-	EndpointProperties NetworkInfo
-	// 固定为 vhost-user
+    // 固定为 vhost-user
 	EndpointType       EndpointType
+
+	// 初始化入参
+	HardAddr           string
+	IfaceName          string
+    // Path to the vhost-user socket on the host system
+	SocketPath string
+	
+    // 接口流程中赋值维护
 	PCIPath            vcTypes.PciPath
+    EndpointProperties NetworkInfo
 }
 ```
 
 ```go
 // TapEndpoint represents just a tap endpoint
 type TapEndpoint struct {
-	// TapInterface.Name 为初始化入参指定，缺省为 eth<idx>
+    // 固定为 tap
+	EndpointType       EndpointType
+    
+	// TapInterface.Name 为初始化入参指定，默认为 eth<idx>
 	// TapInterface.TAPIface.Name 为 tap<idx>_kata
 	TapInterface       TapInterface
-	EndpointProperties NetworkInfo
-	// 固定为 tap
-	EndpointType       EndpointType
+	
+    // 接口流程中赋值维护
 	PCIPath            vcTypes.PciPath
+    EndpointProperties NetworkInfo
 	RxRateLimiter      bool
 	TxRateLimiter      bool
 }
@@ -150,17 +172,23 @@ type TapEndpoint struct {
 type TuntapEndpoint struct {
 	// 固定为 tuntap
 	EndpointType       EndpointType
-	PCIPath            vcTypes.PciPath
-	// TuntapInterface.Name 为初始化入参指定，缺省为 eth<idx>
+	
+    // idx 为 VM 中设备的递增序号
+	// TuntapInterface.Name 为初始化入参指定，默认为 eth<idx>
 	// TuntapInterface.TAPIface.Name 为 tap<idx>_kata
 	// TuntapInterface.TAPIface.HardAddr 为初始化入参指定
 	TuntapInterface    TuntapInterface
-	EndpointProperties NetworkInfo
+	
+	// idx 为 VM 中设备的递增序号
 	// NetPair.TapInterface.Name 为 br<idx>_kata
 	// NetPair.TapInterface.TAPIface.Name 为 tap<idx>_kata
-	// NetPair.VirtIface.Name 为初始化入参指定，缺省为 eth<idx>
+	// NetPair.VirtIface.Name 为初始化入参指定，默认为 eth<idx>
 	// NetPair.NetInterworkingModel 为初始化入参指定
 	NetPair            NetworkInterfacePair
+
+	// 接口流程中赋值维护
+    PCIPath            vcTypes.PciPath
+    EndpointProperties NetworkInfo
 	RxRateLimiter      bool
 	TxRateLimiter      bool
 }
@@ -169,9 +197,12 @@ type TuntapEndpoint struct {
 ```go
 // NetworkInterfacePair defines a pair between VM and virtual network interfaces.
 type NetworkInterfacePair struct {
+    // 取决于具体 endpoint 实现，内容有所不同
 	TapInterface
 	VirtIface NetworkInterface
-	// [runtime].internetworking_model。Kata 网络模型，支持 macvtap 和 tcfilter（默认）
+
+	// [runtime].internetworking_model，默认为 tcfilter
+	// Kata 网络模型，支持 macvtap 和 tcfilter
 	NetInterworkingModel
 }
 ```
@@ -182,6 +213,7 @@ NetworkInterfacePair 即 netpair（例如 br0_kata），描述了 tap 设备（T
 // NetworkInfo gathers all information related to a network interface.
 // It can be used to store the description of the underlying network.
 type NetworkInfo struct {
+	// endpoint 设备的底层属性信息
 	Iface     NetlinkIface
 	DNS       DNSInfo
 	Link      netlink.Link
@@ -191,7 +223,7 @@ type NetworkInfo struct {
 }
 ```
 
-NetworkInfo 描述 endpoint 设备的属性信息。
+NetworkInfo 描述 endpoint 设备的属性信息，在初始化 endpoint 时，会作为入参传递。
 
 *工厂函数为简单的赋值操作，具体参考 Network。*
 
@@ -354,14 +386,20 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 ```go
 // LinuxNetwork represents a sandbox networking setup.
 type LinuxNetwork struct {
+	// 初始化入参。OCI spec 中 network 类型的 linux.Namespace 中指定
 	netNSPath         string
+
+	// 接口流程中赋值维护
 	eps               []Endpoint
-	// [runtime].internetworking_model。Kata 网络模型，支持 macvtap 和 tcfilter（默认）
+
+	// [runtime].internetworking_model，默认为 tcfilter
+	// Kata 网络模型，支持 macvtap 和 tcfilter
 	interworkingModel NetInterworkingModel
+
 	// 当前 netns 是否为 Kata Containers 创建
 	// Kata Containers 的 netns 可以有两种创建方式：
-	// - 事先准备好 netns，创建 Kata 容器时，在 oci spec 中传递该 netns（network 类型的 linux.Namespace）。例如 Kubernetes 场景下，netns 由 CNI 创建
-	// - 由 Kata Containers 创建，Kata Containers 发现 oci spec 中不存在 network 类型的 linux.Namespace，则会手动创建一个 netns（以 cnitest 开头）。例如 Containerd 场景下，运行 single_container
+	// - 事先准备好 netns，创建 Kata 容器时，在 OCI spec 中传递该 netns（network 类型的 linux.Namespace）。例如 Kubernetes 场景下，netns 由 CNI 创建
+	// - 由 Kata Containers 创建，Kata Containers 发现 OCI spec 中不存在 network 类型的 linux.Namespace，则会手动创建一个 netns（以 cnitest 开头）。例如 Containerd 场景下，运行 single_container
 	netNSCreated      bool
 }
 ```

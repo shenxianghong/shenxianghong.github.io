@@ -60,6 +60,87 @@ type qemu struct {
 ```
 
 ```go
+type qemuArchBase struct {
+	// 固定为 /usr/bin/qemu-system-x86_64
+	qemuExePath          string
+
+    // type: [hypervisor].machine_type，默认为 q35
+    // options: 默认为 accel=kvm,kernel_irqchip=on
+    // 如果 sgxEPCSize 大于 0，则追加 sgx-epc.0.memdev=epc0,sgx-epc.0.node=0
+	// 如果镜像类型为 [hypervisor].image 且 disableNvdimm 为 false，则追加 nvdimm=on
+	// 如果启用 [hypervisor].confidential_guest，则覆盖 options 为 accel=kvm,kernel_irqchip=split
+	// - 如果 protection 为 tdxProtection，则追加 kvm-type=tdx,confidential-guest-support=tdx
+	// - 如果 protection 为 sevProtection，则追加 confidential-guest-support=sev
+	qemuMachine          govmmQemu.Machine
+
+	PFlash               []string
+
+    // 默认为 quiet
+    // 如果镜像类型为 [hypervisor].image，则追加 systemd.show_status=false
+	kernelParamsNonDebug []Param
+
+    // 默认为 debug
+	// 如果镜像类型为 [hypervisor].image，则追加 systemd.show_status=true，systemd.log_level=debug
+	kernelParamsDebug    []Param
+
+    // 默认为 tsc=reliable,no_timer_check,rcupdate.rcu_expedited=1,i8042.direct=1,i8042.dumbkbd=1,i8042.nopnp=1,i8042.noaux=1 noreplace-smp,reboot=k,cryptomgr.notests,net.ifnames=0,pci=lastbus=0
+	// 如果启用 [hypervisor].enable_iommu，则追加 intel_iommu=on,iommu=pt
+	// 如果镜像类型为 [hypervisor].image：
+	// - 如果 disableNvdimm 为 true，则追加 root=/dev/vda1,rootflags=data=ordered,errors=remount-ro ro,rootfstype=ext4
+	// - 如果 disableNvdimm 为 false：
+	// -- 如果 dax 为 false，则追加 root=/dev/pmem0p1,rootflags=data=ordered,errors=remount-ro ro,rootfstype=ext4
+	// -- 如果 dax 为 true，则追加 root=/dev/pmem0p1,rootflags=dax,data=ordered,errors=remount-ro ro,rootfstype=ext4
+	kernelParams         []Param
+
+	Bridges              []types.Bridge
+
+	// [hypervisor].memory_offset，默认为 0
+	// 内存偏移量会追加到 hypervisor 最大内存，用于描述 NVDIMM 设备的内存空间大小
+	// 如果 [hypervisor].block_device_driver 为 nvdimm，则需要设置 [hypervisor].memory_offset 为 NVDIMM 设备的内存空间大小
+	memoryOffset         uint64
+
+	networkIndex         int
+
+    // 默认为 noneProtection，可选的有：
+	// - tdxProtection (Intel Trust Domain Extensions)
+	// - sevProtection (AMD Secure Encrypted Virtualization)
+	// - pefProtection (IBM POWER 9 Protected Execution Facility)
+	// - seProtection  (IBM Secure Execution (IBM Z & LinuxONE))
+	// 如果启用 [hypervisor].confidential_guest，则进一步判断：如果 host 上 /sys/firmware/tdx_seam/ 文件夹存在或者 CPU flags 中包含 tdx，则为 tdxProtection；如果 host 上 /sys/module/kvm_amd/parameters/sev 文件存在且内容为 1 或者 Y 则为 sevProtection；否则，均为 noneProtection（表示在 host 不支持机密容器场景下，却启用 [hypervisor].confidential_guest，则报错返回）
+	protection    guestProtection
+
+	nestedRun     bool
+
+	vhost         bool
+
+	// [hypervisor].disable_image_nvdimm，默认为 false
+	// 如果未禁用且支持 nvdimm，则使用 nvdimm 设备加载 guest 镜像，否则使用 virtio-block 设备
+	// 在机器容器场景下不支持此特性，如果启用 [hypervisor].confidential_guest，则该参数会被强制设置为 false
+	disableNvdimm bool
+
+	// 固定为 true
+	dax           bool
+
+	// [hypervisor].use_legacy_serial，默认为 false
+	// 是否为 guest console 启用传统的串行终端，否则使用 virtio-console
+	legacySerial  bool
+}
+
+type qemuAmd64 struct {
+	// inherit from qemuArchBase, overwrite methods if needed
+	qemuArchBase
+
+	// 是否为 factory 场景，包含两种：BootToBeTemplate 和 BootFromTemplate，两者均为视为 factory 场景
+	vmFactory bool
+
+	devLoadersCount uint32
+
+    // 通过上层 annotation 传递 sgx.intel.com/epc，默认为 0
+	sgxEPCSize int64
+}
+```
+
+```go
 type cloudHypervisor struct {
 	console         console.Console
 	virtiofsDaemon  VirtiofsDaemon
@@ -121,5 +202,15 @@ type Acrn struct {
 }
 ```
 
-*工厂函数是根据 [hypervisor.\<type\>] 中的类型，初始化对应的 hypervisor 空结构体。*
+*工厂函数根据 [hypervisor.\<type\>] 中的类型，返回对应的 hypervisor 空结构体，后续会在流程中初始化。*
+
+## CreateVM
+
+**创建 VM**
+
+### QEMU
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L490)
+
+1. 
 
