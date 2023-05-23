@@ -35,11 +35,10 @@ virtcontainers 库的入口模块，VC 初始化 VCSandbox 模块管理 sandbox�
 
 ```go
 type VCImpl struct {
+	// factory 的具体实现，不为空时表示为 VM factory 场景
 	factory Factory
 }
 ```
-
-*工厂函数为参数赋值初始化，无复杂逻辑，不作详述。*
 
 VC 中声明的 **SetLogger** 和 **SetFactory** 均为参数赋值，无复杂逻辑，不作详述。
 
@@ -101,43 +100,61 @@ VC 中声明的 **SetLogger** 和 **SetFactory** 均为参数赋值，无复杂�
 virtcontainers 库中用于管理 sandbox 的模块，同时调用 VCContainer 模块间接管理容器。
 
 ```go
+// Sandbox is composed of a set of containers and a runtime environment.
+// A Sandbox can be created, deleted, started, paused, stopped, listed, entered, and restored.
 type Sandbox struct {
-	ctx        context.Context
+	ctx             context.Context
+	id 		        string
+	sync.Mutex
+	annotationsLock *sync.RWMutex
+	wg              *sync.WaitGroup
+	monitor         *monitor
+	config          *SandboxConfig
+    
+	// virtcontainers 中的各类子模块
 	devManager api.DeviceManager
 	factory    Factory
 	hypervisor Hypervisor
 	agent      agent
 	store      persistapi.PersistDriver
 	fsShare    FilesystemSharer
+	network    Network
+	
+	// sandbox 中的 SWAP 设备
+	swapDevices   []*config.BlockDrive
+	// sandbox 中的 SWAP 设备总大小
+	swapSizeBytes int64
+	// sandbox 中的 SWAP 设备数量
+	swapDeviceNum uint
+    
+	// host 和 sandbox 的共享卷
+	volumes []types.Volume
 
-	swapDevices []*config.BlockDrive
-	volumes     []types.Volume
+	// 是否所有容器共享相同的 sandbox 级别的 PID 命名空间
+	sharePidNs bool
 
-	monitor         *monitor
-	config          *SandboxConfig
-	annotationsLock *sync.RWMutex
-	wg              *sync.WaitGroup
-	cw              *consoleWatcher
-
+	// 用于监视 guest console 输出流
+	cw *consoleWatcher
+	
+	// [runtime].sandbox_cgroup_only]，默认为 false
+	// - false：sandboxController 和 overheadController 同时存在
+	// - true：仅有 sandboxController，overheadController 为 nil
 	sandboxController  resCtrl.ResourceController
 	overheadController resCtrl.ResourceController
-
+	
+	// sandbox 中的容器，Key 为 containerID
 	containers map[string]*Container
-
-	id string
-
-	network Network
-
+	
+	// sandbox 状态信息，包括 cgroup 路径、块设备索引记录等
 	state types.SandboxState
+	
+	// destination 为 /dev/shm，type 为 bind 的挂载点的 source 大小
+	shmSize uint64
 
-	sync.Mutex
-
-	swapSizeBytes int64
-	shmSize       uint64
-	swapDeviceNum uint
-
-	sharePidNs        bool
+	// guest 特性，需要调用 agent 接口获得
+	// guest 是否支持 seccomp 特性
 	seccompSupported  bool
+	// 是否禁止 VM 关机
 	disableVMShutdown bool
 }
 ```
@@ -566,27 +583,36 @@ VCSandbox 中声明的 **Annotations**、**GetNetNs**、**GetAllContainers**、*
 virtcontainers 库中用于管理容器的模块。
 
 ```go
+// Container is composed of a set of containers and a runtime environment.
+// A Container can be created, deleted, started, stopped, listed, entered, paused and restored.
 type Container struct {
-	ctx context.Context
-
-	config  *ContainerConfig
-	sandbox *Sandbox
-
+	ctx           context.Context
+	config        *ContainerConfig
+	sandbox       *Sandbox
 	id            string
 	sandboxID     string
+	// <sandboxID>/<id>
 	containerPath string
+	// 固定为 rootfs
 	rootfsSuffix  string
-
+	
+	// 容器挂载信息，包括 source、destination、type、options 等
 	mounts []Mount
-
+	
+	// 容器设备信息，包括设备 ID、容器中的设备路径、文件模式等信息
 	devices []ContainerDevice
-
+	
+	// 容器状态信息，包括运行状态（ready、running、paused、stopped 以及 creating）、rootfs 的块设备 ID（DeviceMapper 场景下，rootfs 为热添加的块设备）、rootfs 的文件系统类型（rootfs 为块设备时）以及 sandbox 进程所在的 cgroup 路径
 	state types.ContainerState
 
+	// 容器进程信息，包括 PID（本质上就是 shimID）、Token 以及启动时间等
 	process Process
-
+	
+ 	// 容器 rootfs 基本信息，包括 source、target、type、options 等
 	rootFs RootFs
-
+	
+	// systemMountsInfo.BindMountDev 表示是否将 host 的 /dev 目录以 bind 形式挂载到容器的 /dev 中
+	// systemMountsInfo.DevShmSize 表示 host 的 /dev/shm 大小
 	systemMountsInfo SystemMountsInfo
 }
 ```

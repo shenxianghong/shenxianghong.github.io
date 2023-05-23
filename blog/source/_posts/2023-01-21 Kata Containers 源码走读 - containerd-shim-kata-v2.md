@@ -26,38 +26,34 @@ tag:
 ```go
 // service is the shim implementation of a remote shim over GRPC
 type service struct {
-	sandbox vc.VCSandbox
-
 	ctx      context.Context
 	rootCtx  context.Context // root context for tracing
 	rootSpan otelTrace.Span
+	sandbox  vc.VCSandbox
+	monitor  chan error
+	ec       chan exit
+    mu       sync.Mutex
 
-	containers map[string]*container
-
+	// 配置文件信息
 	config *oci.RuntimeConfig
 
-	monitor chan error
-	ec      chan exit
+	// 当前 shim service 中的容器信息
+	containers map[string]*container
 
-	events chan interface{}
-
-	cancel func()
-
-	id string
-
-	// Namespace from upper container engine
-	namespace string
-
-	mu          sync.Mutex
+	// 事件消费队列（TaskCreate、TaskStart、TaskDelete、TaskPaused、TaskResumed、TaskOOM、TaskExecAdded 和 TaskExecStarted）
+	events      chan interface{}
 	eventSendMu sync.Mutex
+	
+	// 由 container engine 触发的关停函数
+	cancel    func()
+	// 由 container engine 传入的信息
+	namespace string
+	id 	      string
 
-	// hypervisor pid, Since this shimv2 cannot get the container processes pid from VM,
-	// thus for the returned values needed pid, just return the hypervisor's
-	// pid directly.
+	// 原语义为 VM 中的容器 PID，但是在 kata 模型中 shimv2 无法获得，因此这里为 hypervisor 的 PID
 	hpid uint32
-
-	// shim's pid
-	pid uint32
+	// shimv2 的 PID
+	pid  uint32
 }
 ```
 

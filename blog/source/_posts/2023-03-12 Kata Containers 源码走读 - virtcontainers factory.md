@@ -40,9 +40,10 @@ type grpccache struct {
 
 ```go
 type template struct {
-	// [factory].template_path
+	// [factory].template_path，默认为 /run/vc/vm/template
 	statePath string
-	config    vc.VMConfig
+
+	config vc.VMConfig
 }
 ```
 
@@ -50,14 +51,28 @@ type template struct {
 type cache struct {
 	// cache factory 的初始化必须基于 template factory 或者 direct factory。
 	base base.FactoryBase
-	cacheCh chan *vc.VM
-	closed  chan<- int
+
+	// 用于维护创建的 VM 模板
 	vmm map[*vc.VM]interface{}
+
+	cacheCh   chan *vc.VM
+	closed    chan<- int
 	wg        sync.WaitGroup
 	closeOnce sync.Once
-	vmmLock sync.RWMutex
+	vmmLock   sync.RWMutex
 }
 ```
+
+```go
+// VMConfig is a collection of all info that a new blackbox VM needs.
+type VMConfig struct {
+	HypervisorType   HypervisorType
+	AgentConfig      KataAgentConfig
+	HypervisorConfig HypervisorConfig
+}
+```
+
+VMConfig 针对 VM factory 场景下，聚合的配置文件中的相关信息。
 
 ```go
 type factory struct {
@@ -206,7 +221,7 @@ type cacheServer struct {
 }
 ```
 
-**工厂函数**
+**启动函数**
 
  [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/factory.go#L148)
 

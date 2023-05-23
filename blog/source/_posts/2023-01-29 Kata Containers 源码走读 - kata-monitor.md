@@ -36,7 +36,10 @@ Kata monitor 提供的指标均采用 Prometheus 格式。虽然 Kata monitor �
 
 ```go
 type KataMonitor struct {
-	sandboxCache    *sandboxCache
+	// 维护 /run/vc/sbs 目录下的 sandbox 的基础信息，包括 uid、name 和 namespace
+	sandboxCache *sandboxCache
+    
+	// --runtime-endpoint 参数指定，默认为 /run/containerd/containerd.sock
 	runtimeEndpoint string
 }
 ```

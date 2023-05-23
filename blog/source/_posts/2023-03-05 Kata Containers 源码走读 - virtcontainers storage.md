@@ -21,32 +21,29 @@ tag:
 
 *<u>src/runtime/virtcontainers/persist/api/interface.go</u>*
 
-PersistDriver（也称 store）的实现有两类：fs 和 rootless。
+PersistDriver（也称 store）的实现有两类：fs 和 rootless，其中 rootlessfs driver 完全继承 fs driver。
 
 ```go
 type FS struct {
-	sandboxState    *persistapi.SandboxState
-	containerState  map[string]persistapi.ContainerState
+	// 包括两种，fs 和 rootless，区别在于当前是否为 root 用户权限
+	driverName string
+    
+	// - fs：/run/vc
+	// - rootless：<XDG_RUNTIME_DIR>/run/vc（XDG_RUNTIME_DIR 默认为 /run/user/<UID>
+	// 用于保存 sandbox（sbs，其中容器信息以子目录形式保存）和 VM（vm）相关状态信息
 	storageRootPath string
-	driverName      string
+	
+	// 内存状态数据，用于内存数据和文件数据的持久化转换
+	sandboxState   *persistapi.SandboxState
+	containerState map[string]persistapi.ContainerState
 }
 ```
-
-在 fs driver 中，storageRootPath 为 /run/vc，用于保存 sandbox（sbs，其中容器信息以子目录形式保存）和 VM（vm）相关状态信息。
 
 ```go
 type RootlessFS struct {
 	*FS
 }
 ```
-
-rootlessfs driver 完全继承 fs driver，唯一的区别在于 rootlessfs driver 的 storageRootPath 为 \<XDG_RUNTIME_DIR\>/run/vc（当环境变量 XDG_RUNTIME_DIR 缺省时为 /run/user/\<UID\>）。
-
-**工厂函数**
-
-[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/manager.go#L49)
-
-1. 根据当前是否为 root 用户权限，返回对应的 fs 实现
 
 *以下接口 fs 和 rootlessfs 实现方式完全一样。*
 
@@ -136,11 +133,11 @@ FilesystemSharer（也称 fsSharer）仅有 linux 操作系统下的实现。
 type FilesystemShare struct {
 	sandbox *Sandbox
 	sync.Mutex
+    
+	// 表示文件系统是否准备就绪，在调用 Prepare 后，设置为 true
 	prepared bool
 }
 ```
-
-*工厂函数为参数赋值初始化，无复杂逻辑，不作详述。*
 
 ## bindMount
 

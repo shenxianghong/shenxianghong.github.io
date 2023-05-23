@@ -25,8 +25,6 @@ DeviceReceiver 是一组相对而言较底层的接口声明，其直接调用 h
 
 DeviceReceiver 的实现由 Sandbox 接口完成。
 
-*工厂函数参考 virtcontainers 部分。*
-
 DeviceReceiver 中声明的 **GetHypervisorType** 为参数获取，无复杂逻辑，不作详述。
 
 ## HotplugAddDevice
@@ -146,25 +144,11 @@ type DeviceInfo struct {
 
 	// ColdPlug specifies whether the device must be cold plugged (true)
 	// or hot plugged (false).
-	// 如果 endpoint 类型为 physical，则为 true
 	ColdPlug bool
 }
 ```
 
-DeviceInfo 描述了设备的属性信息。
-
-```go
-// GenericDevice refers to a device that is neither a VFIO device, block device or VhostUserDevice.
-type GenericDevice struct {
-	// 初始化入参
-	DeviceInfo *config.DeviceInfo
-	ID string
-	
-    // 接口流程中赋值维护
-	RefCount    uint
-	AttachCount uint
-}
-```
+DeviceInfo 描述了设备的属性信息，通常是根据 OCI spec 中获得，并根据具体的实际设备类型覆盖。
 
 ```go
 // VFIODevice is a vfio device meant to be passed to the hypervisor
@@ -172,19 +156,17 @@ type GenericDevice struct {
 type VFIODevice struct {
 	*GenericDevice
     
-	// 接口流程中赋值维护
+	// 元素为 /sys/kernel/iommu_groups/<DeviceInfo.HostPath>/devices 目录下的所有子设备（IOMMU）详情
 	VfioDevs []*config.VFIODev
 }
 ```
 
-一个 VFIO 设备也就是一组 iommu 设备。
+一个 VFIO 设备也就是一组 IOMMU 设备。
 
 ```go
 // BlockDevice refers to a block storage device implementation.
 type BlockDevice struct {
 	*GenericDevice
-
-	// 接口流程中赋值维护
 	BlockDrive *config.BlockDrive
 }
 ```
@@ -193,8 +175,6 @@ type BlockDevice struct {
 // VhostUserBlkDevice is a block vhost-user based device
 type VhostUserBlkDevice struct {
 	*GenericDevice
-
-	// 接口流程中赋值维护
 	VhostUserDeviceAttrs *config.VhostUserDeviceAttrs
 }
 ```
@@ -203,8 +183,6 @@ type VhostUserBlkDevice struct {
 // VhostUserFSDevice is a virtio-fs vhost-user device
 type VhostUserFSDevice struct {
 	*GenericDevice
-
-	// 接口流程中赋值维护
 	config.VhostUserDeviceAttrs
 }
 ```
@@ -213,8 +191,6 @@ type VhostUserFSDevice struct {
 // VhostUserNetDevice is a network vhost-user based device
 type VhostUserNetDevice struct {
 	*GenericDevice
-
-	// 接口流程中赋值维护
 	*config.VhostUserDeviceAttrs
 }
 ```
@@ -223,67 +199,91 @@ type VhostUserNetDevice struct {
 // VhostUserSCSIDevice is a SCSI vhost-user based device
 type VhostUserSCSIDevice struct {
 	*GenericDevice
-
-	// 接口流程中赋值维护
 	*config.VhostUserDeviceAttrs
 }
 ```
 
 ```go
+// GenericDevice refers to a device that is neither a VFIO device, block device or VhostUserDevice.
+type GenericDevice struct {
+	// 设备的通用属性信息
+	ID         string
+	DeviceInfo *config.DeviceInfo
+	
+	// 设备引用与 Attach 计数
+	RefCount    uint
+	AttachCount uint
+}
+```
+
+```go
 // VFIODev represents a VFIO drive used for hotplugging
+// /sys/kernel/iommu_groups/<DeviceInfo.HostPath>/devices 目录下的所有文件均视为一个 VFIODev
 type VFIODev struct {
 	// ID is used to identify this drive in the hypervisor options.
+	// 格式为 vfio-<DeviceInfo.ID><idx>，最长保留 31 位，其中 idx 为遍历文件的递增索引
 	ID string
 
+	// Type of VFIO device
+	// VFIO 设备进一步分为两种类型，可以通过文件名区别：
+	// - 常规类型，例如 0000:04:00.0
+	// - mediated 类型，例如 f79944e4-5a3d-11e8-99ce-479cbab002e4
+	Type VFIODeviceType
+    
 	// BDF (Bus:Device.Function) of the PCI address
-	// 从设备文件名称和路径中解析，例如 04:00.0
+	// - 常规类型，例如 0000:04:00.0 -> 04:00.0
+	// - mediated 类型，例如 f79944e4-5a3d-11e8-99ce-479cbab002e4 -> /sys/kernel/iommu_groups/<DeviceInfo.HostPath>/devices/f79944e4-5a3d-11e8-99ce-479cbab002e4 -> /sys/devices/pci0000:00/0000:00:02.0/f79944e4-5a3d-11e8-99ce-479cbab002e4（软链接关系）-> 0000:00:02.0 -> 00:02.0
 	BDF string
 
 	// sysfsdev of VFIO mediated device
-	// 常规类型下，例如 /sys/bus/pci/devices/0000:04:00.0
-	// mediated 类型下，例如 /sys/devices/pci0000:00/0000:04:00.0/f79944e4-5a3d-11e8-99ce-479cbab002e4（软链接为 /sys/kernel/iommu_groups/0/devices/f79944e4-5a3d-11e8-99ce-479cbab002e4）
+	// - 常规类型，例如 0000:04:00.0 -> /sys/bus/pci/devices/0000:04:00.0
+	// - mediated 类型，例如 f79944e4-5a3d-11e8-99ce-479cbab002e4 -> /sys/kernel/iommu_groups/<DeviceInfo.HostPath>/devices/f79944e4-5a3d-11e8-99ce-479cbab002e4 -> /sys/devices/pci0000:00/0000:00:02.0/f79944e4-5a3d-11e8-99ce-479cbab002e4（软链接关系）
 	SysfsDev string
-
+	
+	// IsPCIe specifies device is PCIe or PCI
+	// 根据 /sys/bus/pci/devices/0000:<BDF>/config 文件大小判断是否为 PCI 设备
+	// - PCI 设备，大小为 256
+	// - PCIe 设备，大小为 4096
+	IsPCIe bool
+    
+	// PCI Class Code
+	// /sys/bus/pci/devices/0000:<BDF>/class 文件内容
+	Class string
+	
+	// Bus of VFIO PCIe device
+	// 如果为 PCIe 设备，则记录名称为 rp<idx>，其中 idx 为当前记录的 PCIe 总设备数量
+	Bus string
+    
 	// VendorID specifies vendor id
 	VendorID string
 
 	// DeviceID specifies device id
 	DeviceID string
 
-	// PCI Class Code
-	// /sys/bus/pci/devices/0000:<BDF>/class 文件内容
-	Class string
-
-	// Bus of VFIO PCIe device
-	// rp0,rp1...，取决于当前所有的 PCIe 设备数量
-	Bus string
-
 	// Guest PCI path of device
 	GuestPciPath vcTypes.PciPath
-
-	// Type of VFIO device
-	// VFIO 设备进一步分为两种类型，可以通过名称区别：一种为常规类型（例如 0000:04:00.0），一种为 mediated 类型（例如 f79944e4-5a3d-11e8-99ce-479cbab002e4）
-	Type VFIODeviceType
-
-	// IsPCIe specifies device is PCIe or PCI
-	// /sys/bus/pci/devices/0000:<BDF>/config 文件大小如果为 256 则为 PCI 设备，如果为 4096 则为 PCIe 设备
-	IsPCIe bool
 }
 ```
 
-VFIODev 描述了 vfio 设备特有的属性信息。
+VFIODev 描述了 VFIODevice 设备特有的属性信息，也可以理解为 IOMMU 设备的信息。
 
 ```go
 // BlockDrive represents a block storage drive which may be used in case the storage
 // driver has an underlying block storage device.
 type BlockDrive struct {
 	// File is the path to the disk-image/device which will be used with this drive
+	// - BlockDevice：<DeviceInfo.HostPath>
+	// - SWAP：<XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/swap<idx>，其中 idx 为 sandbox 中 SWAP 文件递增索引
 	File string
 
 	// Format of the drive
+	// - BlockDevice：DeviceInfo.DriverOptions["fstype"] 指定，默认为 raw
+	// - SWAP：固定为 raw
 	Format string
 
 	// ID is used to identify this drive in the hypervisor options.
+	// - BlockDevice：格式为 drive-<DeviceInfo.ID><idx>，最长保留 31 位
+	// - SWAP：sandbox 中 SWAP 文件递增索引
 	ID string
 
 	// MmioAddr is used to identify the slot at which the drive is attached (order?).
@@ -291,12 +291,17 @@ type BlockDrive struct {
 
 	// SCSI Address of the block device, in case the device is attached using SCSI driver
 	// SCSI address is in the format SCSI-Id:LUN
+	// - BlockDevice：如果 DeviceInfo.DriverOptions["block-driver"] 为 virtio-scsi（不指定默认也为 virtio-scsi），则根据 Index 获取 SCSI-Id（Index / 256）以及 LUN（Index % 256），最终的 SCSI 地址为 <SCSI-Id>:<LUN>
 	SCSIAddr string
 
 	// NvdimmID is the nvdimm id inside the VM
 	NvdimmID string
 
 	// VirtPath at which the device appears inside the VM, outside of the container mount namespace
+	// - BlockDevice：如果 DeviceInfo.DriverOptions["block-driver"] 不为 virtio-scsi 或者 nvdimm，则进一步判断
+	// -- 如果 block-driver 为 virtio-blk 或 virtio-blk-ccw，则索引为 Index
+	// -- 如果 block-driver 为 virtio-mmio，则索引为 Index + 1
+	//    根据索引计算出设备路径，例如 0 -> /dev/vda，25 -> /dev/vdz，27 -> /dev/vdab
 	VirtPath string
 
 	// DevNo identifies the css bus id for virtio-blk-ccw
@@ -306,16 +311,19 @@ type BlockDrive struct {
 	PCIPath vcTypes.PciPath
 
 	// Index assigned to the drive. In case of virtio-scsi, this is used as SCSI LUN index
+	// - BlockDevice：调用 DeviceReceiver.GetAndSetSandboxBlockIndex 获取
 	Index int
 
 	// ShareRW enables multiple qemu instances to share the File
 	ShareRW bool
 
 	// ReadOnly sets the device file readonly
+	// - BlockDevice：<DeviceInfo.ReadOnly>
 	ReadOnly bool
 
 	// Pmem enables persistent memory. Use File as backing file
 	// for a nvdimm device in the guest
+	// - BlockDevice：<DeviceInfo.Pmem>
 	Pmem bool
 
 	// This block device is for swap
@@ -323,14 +331,17 @@ type BlockDrive struct {
 }
 ```
 
-BlockDrive 描述了 block 设备特有的属性信息。
+BlockDrive 描述了 BlockDevice 设备特有的属性信息，除了在 BlockDevice 中使用，SWAP 和 VM 镜像也是由 BlockDrive 构建。
 
 ```go
 // VhostUserDeviceAttrs represents data shared by most vhost-user devices
 type VhostUserDeviceAttrs struct {
-	DevID      string
-	// vhost-user-blk 类型下为 device.DeviceInfo.HostPath
+	// VhostUserBlkDevice：格式为 blk-<DeviceInfo.ID><idx>，最长保留 31 位
+	DevID string
+
+	// VhostUserBlkDevice：<DeviceInfo.HostPath>
 	SocketPath string
+
 	// MacAddress is only meaningful for vhost user net device
 	MacAddress string
 
@@ -338,7 +349,8 @@ type VhostUserDeviceAttrs struct {
 	Tag string
 
 	Cache string
-	// vhost-user-blk 类型下为 vhost-user-blk-pci
+
+	// VhostUserBlkDevice：固定为 vhost-user-blk-pci
 	Type DeviceType
 
 	// PCIPath is the PCI path used to identify the slot at which
@@ -347,15 +359,14 @@ type VhostUserDeviceAttrs struct {
 	PCIPath vcTypes.PciPath
 
 	// Block index of the device if assigned
+	// 默认为 -1，如果 DeviceInfo.DriverOptions["block-driver"] 为 virtio-blk、virtio-blk-ccw 或 virtio-mmio，调用 DeviceReceiver.GetAndSetSandboxBlockIndex 获取
 	Index int
 
 	CacheSize uint32
 }
 ```
 
-VhostUserDeviceAttrs 描述 VhostUserBlkDevice、VhostUserFSDevice、VhostUserNetDevice 和 VhostUserSCSIDevice 的 vhost-user 设备特有的属性信息。
-
-*各 device 实现的工厂函数均为简单的赋值操作，具体参考 DeviceManager.NewDevice。*
+VhostUserDeviceAttrs 描述了 VhostUserBlkDevice、VhostUserFSDevice、VhostUserNetDevice 和 VhostUserSCSIDevice 设备特有的属性信息。
 
 Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **GetMajorMinor** 均为参数获取与赋值，无复杂逻辑，不作详述。<br>此外，**DeviceType** 返回各自 Device 实现的类型（如 generic、vfio、vhost-user-blk-pci、vhost-user-fs-pci、virtio-net-pci 和 vhost-user-scsi-pci）；**GetDeviceInfo** 返回各自 Device 实现的属性信息；**Reference** 和 **Dereference** 用于维护设备的引用计数，未达到最多（^uint(0)，即 2 的 64 次方减一）和最少引用时，则计数加一或减一并返回；**Save** 和 **Load** 用于 Device 和 DeviceState（结构类似，用于描述状态数据）之间转换，不同的实现额外赋值其各自的属性信息。
 
@@ -402,7 +413,7 @@ Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **Ge
 
 1. 调用 **bumpAttachCount**，维护 attach 计数，判断是否执行后续实际操作
 2. 调用 devReceiver 的 **GetAndSetSandboxBlockIndex**，设置并返回可用的索引 ID
-3. 根据 device.DeviceInfo.DriverOptions 中 block-driver key，回写对应的字段（SCSIAddr 和 VirtPath）
+3. 根据 device.DeviceInfo.DriverOptions["block-driver"]，回写对应的字段（SCSIAddr 和 VirtPath）
    1. 如果未指定则视为 virtio-scsi，根据索引 ID 计算出 SCSIAddr，格式为 \<index / 256\>:\<index % 256\><br>*qemu 代码建议 scsi-id 可以取值从 0 到 255（含），而 lun 可以取值从 0 到 16383（含）。 但是超过 255 的 lun 值似乎不遵循一致的 SCSI 寻址。 因此限制为 255*
    2. 如果指定不为 nvdimm，则根据索引 ID 计算出 VirtPath，例如 /dev/vda<br>*其中，索引 0 对应 vda，25 对应 vdz，27 对应 vdab，704 对应 vdaac，18277 对应 vdzzz*
 4. 调用 devReceiver 的 **HotplugAddDevice**，热添加设备
@@ -412,7 +423,7 @@ Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **Ge
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/device/drivers/vhost_user_blk.go#L40)
 
 1. 调用 **bumpAttachCount**，维护 attach 计数，判断是否执行后续实际操作
-2. 根据 device.DeviceInfo.DriverOptions 中 block-driver key，判断 block-driver 是否是 virtio-blk<br>*如果未指定则视为 virtio-scsi；如果指定为 virtio-blk、virtio-blk-ccw 或 virtio-mmio 则视为 virtio-blk*
+2. 根据 device.DeviceInfo.DriverOptions["block-driver"]，判断 block-driver 是否是 virtio-blk<br>*如果未指定则视为 virtio-scsi；如果指定为 virtio-blk、virtio-blk-ccw 或 virtio-mmio 则视为 virtio-blk*
 3. 如果是 virtio-blk，则调用 devReceiver 的 **GetAndSetSandboxBlockIndex**，获取未被使用的块索引；否则，索引默认为 -1
 4. 调用 devReceiver 的 **HotplugAddDevice**，热添加设备
 
@@ -459,7 +470,7 @@ Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **Ge
 
 1. 调用 **bumpAttachCount**，维护 attach 计数，判断是否执行后续实际操作
 2. 调用 devReceiver 的 **HotplugRemoveDevice**，热移除设备
-3. 根据 device.DeviceInfo.DriverOptions 中 block-driver key，判断 block-driver 是否是 virtio-blk。如果是 virtio-blk，则调用 devReceiver 的 **UnsetSandboxBlockIndex**，释放记录的 virtio-block 索引<br>*如果未指定则视为 virtio-scsi；如果指定为 virtio-blk、virtio-blk-ccw 或 virtio-mmio 则视为 virtio-blk*
+3. 根据 device.DeviceInfo.DriverOptions["block-driver"]，判断 block-driver 是否是 virtio-blk。如果是 virtio-blk，则调用 devReceiver 的 **UnsetSandboxBlockIndex**，释放记录的 virtio-block 索引<br>*如果未指定则视为 virtio-scsi；如果指定为 virtio-blk、virtio-blk-ccw 或 virtio-mmio 则视为 virtio-blk*
 
 ****
 
@@ -469,20 +480,19 @@ Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **Ge
 
 ```go
 type deviceManager struct {
-	// 接口流程中赋值维护
+	sync.RWMutex
+    
+	// VM 中的设备
 	devices map[string]api.Device
 	
-	// [hypervisor].block_device_driver，默认为 virtio-scsi
-	// rootfs 块设备驱动，可选有 virtio-scsi、virtio-blk 和 nvdimm
-	blockDriver        string
+	// [hypervisor].block_device_driver，rootfs 块设备驱动，可选有 virtio-scsi、virtio-blk 和 nvdimm
+	blockDriver string
 
 	// [hypervisor].vhost_user_store_path，默认为 /var/run/kata-containers/vhost-user
 	// Its sub-path "block" is used for block devices; "block/sockets" is
 	// where we expect vhost-user sockets to live; "block/devices" is where
 	// simulated block device nodes for vhost-user devices to live.
 	vhostUserStorePath string
-
-	sync.RWMutex
 
 	// [hypervisor].enable_vhost_user_store，默认为 false
 	// Enabling this will result in some Linux reserved block type
@@ -491,9 +501,7 @@ type deviceManager struct {
 }
 ```
 
-*工厂函数是简单的根据配置文件中 hypervisor 配置项参数的初始化。*
-
-Device 中声明的 **IsDeviceAttached**、**GetDeviceByID** 和 **GetAllDevices** 为参数获取，无复杂逻辑，不作详述。<br>
+Device 中声明的 **IsDeviceAttached**、**GetDeviceByID** 和 **GetAllDevices** 为参数获取，无复杂逻辑，不作详述。
 
 ## NewDevice
 
