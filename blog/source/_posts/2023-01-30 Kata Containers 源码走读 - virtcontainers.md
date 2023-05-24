@@ -63,7 +63,7 @@ VC 中声明的 **SetLogger** 和 **SetFactory** 均为参数赋值，无复杂�
    3. 如果为 VM factory 场景，则调用 network 的 **AddEndpoints**，热添加 netns 中的所有网卡到 VM 中
    4. 如果启用 [hypervisor].enable_debug，实时读取 VM console 地址获取其实时内容，并以 debug 级别日志形式输出
    5. 调用 agent 的 **startSandbox**
-5. 调用 network 的 **Endpoints**，获取 VM 所有的 endpoint 网络设备，调用 endpoint 的 **NetworkPair**，关闭位于 host 侧的 vhost_net 句柄（即 /dev/vhost-net）<br>*截至 Kata 3.0，目前仅对 macvtap 类型的 endpoint 生效*
+5. 调用 network 的 **Endpoints**，获取 VM 所有的网卡设备，调用 endpoint 的 **NetworkPair**，关闭位于 host 侧的 vhost_net 句柄（即 /dev/vhost-net）<br>*截至 Kata 3.0，目前仅对 macvtap 类型的 endpoint 生效*
 6. 调用 agent 的 **getGuestDetails**，获取如 seccompSupported 等 guest 信息详情，更新至 sandbox 中
 7. 创建 sandbox 中的每一个容器（其实，此时 sandbox 中仅有一个容器，就是 pod_sandbox 容器本身）
    1. 初始化 VCContainer，准备容器所需环境
@@ -104,7 +104,7 @@ virtcontainers 库中用于管理 sandbox 的模块，同时调用 VCContainer �
 // A Sandbox can be created, deleted, started, paused, stopped, listed, entered, and restored.
 type Sandbox struct {
 	ctx             context.Context
-	id 		        string
+	id							string
 	sync.Mutex
 	annotationsLock *sync.RWMutex
 	wg              *sync.WaitGroup
@@ -450,7 +450,7 @@ VCSandbox 中声明的 **Annotations**、**GetNetNs**、**GetAllContainers**、*
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L918)
 
 1. 将 rpc 请求体转换成网卡信息结构
-2. 调用 network 的 **AddEndpoints**，添加该网卡
+2. 调用 network 的 **AddEndpoints**，热添加该网卡
 3. 获取网卡 PCI 地址，调用 agent 的 **updateInterface**，更新网卡信息
 4. 调用 store 的 **ToDisk**，保存状态数据到文件中
 
@@ -460,8 +460,9 @@ VCSandbox 中声明的 **Annotations**、**GetNetNs**、**GetAllContainers**、*
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L956)
 
-1. 调用 network 的 **RemoveEndpoints**，移除指定网卡
-2. 调用 store 的 **ToDisk**，保存状态数据到文件中
+1. 调用 network 的 **Endpoints**，根据 MAC 地址匹配所有网卡中待移除的网卡
+2. 调用 network 的 **RemoveEndpoints**，移除该网卡
+3. 调用 store 的 **ToDisk**，保存状态数据到文件中
 
 ## ListInterfaces
 
