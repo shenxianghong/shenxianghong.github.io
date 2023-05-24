@@ -64,12 +64,12 @@ VC 中声明的 **SetLogger** 和 **SetFactory** 均为参数赋值，无复杂�
    4. 如果启用 [hypervisor].enable_debug，实时读取 VM console 地址获取其实时内容，并以 debug 级别日志形式输出
    5. 调用 agent 的 **startSandbox**
 5. 调用 network 的 **Endpoints**，获取 VM 所有的 endpoint 网络设备，调用 endpoint 的 **NetworkPair**，关闭位于 host 侧的 vhost_net 句柄（即 /dev/vhost-net）<br>*截至 Kata 3.0，目前仅对 macvtap 类型的 endpoint 生效*
-6. 调用 agent 的 **getGuestDetails**，获取 guest 信息详情，更新至 sandbox 中
+6. 调用 agent 的 **getGuestDetails**，获取如 seccompSupported 等 guest 信息详情，更新至 sandbox 中
 7. 创建 sandbox 中的每一个容器（其实，此时 sandbox 中仅有一个容器，就是 pod_sandbox 容器本身）
    1. 初始化 VCContainer，准备容器所需环境
    1. 根据 [hypervisor].disable_block_device_use、agent 是否具备使用块设备能力以及 hypervisor 是否允许块设备热插拔，判断是否当前支持块设备，并且容器的 rootfs 类型不是 fuse.nydus-overlayfs，也就是 rootfs 是基于块设备创建的
       1. 通过 /sys/dev/block/\<major\>-\<minor\>/dm 的存在性，判断是否为 devicemapper 块设备
-      1. 如果是 devicemapper 块设备，则调用 devManager **NewDevice**，初始化设备，并调用 devManager 的 **AttachDevice**，热插到 VM 中 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/containers/\<sandboxID\> 路径
+      1. 如果是 devicemapper 块设备，则调用 devManager 的 **NewDevice**，初始化设备，并调用 devManager 的 **AttachDevice**，热插到 VM 中 \<XDG_RUNTIME_DIR\>/run/kata-containers/shared/containers/\<sandboxID\> 路径
    1. 针对容器中的每一个设备，调用 devManager 的 **AttachDevice**，attach 到 VM 中
    1. 调用 agent 的 **createContainer**，创建 pod_sandbox 容器
    1. 设置容器状态为 ready
@@ -164,7 +164,7 @@ type Sandbox struct {
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox.go#L527)
 
 1. 校验 [runtime].experimental 是否为可支持的特性
-2. 初始化 hypervisor、agent、store、fsSharer、devManager 等
+2. 初始化 hypervisor、agent、store、fsSharer、devManager 等 virtcontainers 子模块
 3. 初始化 resourceController（[runtime].sandbox_cgroup_only 为 true 表示 Pod 所有的线程全部由 sandboxController 管理；反之，仅 vCPU 线程由 sandboxController 管理，而其余的由 overheadController 管理）
    1. 获取到 spec.Linux.CgroupsPath（缺省为 /vc），如果 cgroup 不是由 systemd 纳管（通过 cgroupPath 格式判断），则最后一级路径新增 kata_ 前缀
    2. 获取 spec.Linux.Resources.Devices 中 /dev/null 和 /dev/urandom 设备信息（如果未声明，则构建）
@@ -596,7 +596,7 @@ type Container struct {
 	// 固定为 rootfs
 	rootfsSuffix  string
 	
-	// 容器挂载信息，包括 source、destination、type、options 等
+	// 容器挂载信息，包括 source、destination、type、options 等。从 OCI spec 解析获得
 	mounts []Mount
 	
 	// 容器设备信息，包括设备 ID、容器中的设备路径、文件模式等信息
@@ -622,19 +622,18 @@ type Container struct {
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/container.go#L714)
 
 1. 检验 containerConfig 配置是否合法（containerConfig 取自于 sandboxConfig 中的相关配置）
-3. 校验 annotation 中 SWAP 资源声明是否合法（io.katacontainers.container.resource.swappiness 必须小于 200），并透传设置（区别于 CPU 和内存等资源，SWAP 无法通过 spec.Containers.Resources 的方式声明，而需要通过 annotation 声明）
-4. 调用 store 的 **FromDisk**，获取 sandbox 和容器的状态信息。如果成功获取则表明不是新创建的容器，无需后续动作，仅用于状态更新维护，直接返回容器实例即可
-5. 如果挂载点是块设备，则需要交由 device manager 维护
-   1. 根据 hypervisor 配置项是否允许使用块设备，agent 是否具备使用块设备能力以及 hypervisor 是否允许块设备热插拔判断是否当前支持块设备
-   2. 遍历容器中的所有挂载信息，执行后续步骤
-      1. 如果 mount.BlockDeviceID 已经存在，则表明已经有一个设备和挂载点相关联，因此不需要创建设备，跳过即可
+2. 校验 annotation 中 SWAP 资源声明是否合法（io.katacontainers.container.resource.swappiness 必须小于 200），并透传设置（区别于 CPU 和内存等资源，SWAP 无法通过 spec.Containers.Resources 的方式声明，而需要通过 annotation 声明）
+3. 调用 store 的 **FromDisk**，获取 sandbox 和容器的状态信息。如果成功获取则表明不是新创建的容器，无需后续动作，仅用于状态更新维护，直接返回容器实例即可
+4. 处理容器挂载信息，即 container.mounts<br>*除了借助 virtcontainers/kata-agent 的共享目录挂载之外，块设备类型的挂载还可以通过 hypervisor 热添加到 VM。这里仅处理挂载源为块设备类型的挂载信息，常规共享目录挂载仍然由 virtcontainers/kata-agent 处理*
+   1. 如果未禁用 [hypervisor].disable_block_device_use，则调用 agent 的 **capabilities** 和 hypervisor 的 **Capabilities**，根据 agent 是否具备使用块设备能力以及 hypervisor 是否允许块设备热插拔判断是否当前支持块设备<br>*默认场景下，rootfs 由 virtio-fs 传递共享；在未禁用 [hypervisor].disable_block_device_use 时，rootfs 基于块设备创建，并热插到 VM 中使用，以提高性能。例如 devicemapper 场景下 rootfs 必须是基于块设备创建的*
+   2. 针对容器中的所有挂载信息
+      1. 如果 mounts.BlockDeviceID 已经存在，则表明已经有一个设备和挂载点相关联，因此不需要创建设备，跳过即可
       2. 如果挂载类型不是 bind，跳过即可
-      3. 获取 /run/kata-containers/shared/direct-volumes/\<base64 mount.Source\>/mountInfo.json 文件，如果存在，表明当前挂载设备需要以直通卷的方式处理
-         *mount.Source 格式为 /var/lib/kubelet/pods/\<podUID\>/volumes/kubernetes.io~csi/\<pvName\>/mount<br>mountInfo.json 中 device 字段的格式为 /dev/sda（取决于 host 上的具体设备）*
-      4. 创建 /run/kata-containers/shared/direct-volumes/\<base64 mount.Source\>/\<sandboxID\> 文件
-      5. 替换 mount.Source、mount.Type、mount.Options、mount.FSGroup 和 mount.FSGroupChangePolicy 为 mountInfo.json 的对应字段
-   3. 针对挂载信息中的块设备类型（传统块设备和 PMEM 设备），调用 devManager 的  **NewDevice**，初始化设备，回写 mount.BlockDeviceID 字段信息
-6. 过滤容器中的 CDROM 和 floppy 类型的设备，回写至 container.devices 中
+      3. 获取 /run/kata-containers/shared/direct-volumes/\<base64 mounts.Source\>/mountInfo.json 文件，如果文件存在，表明当前挂载设备需要以直通卷的方式处理，即创建 /run/kata-containers/shared/direct-volumes/\<base64 mounts.Source\>/\<sandboxID\> 文件，并替换原本 mounts 中 Source、Type、Options、ReadOnly、FSGroup（取自 mountInfo.Metadata["FSGroup"]）、FSGroupChangePolicy（取自 mountInfo.Metadata["FSGroupChangePolicy"]） 等信息为 mountInfo.json 的对应字段，后续支持直通卷的 CSI 会根据此文件与信息与 Kata 交互<br>*mounts.Source 格式为 /var/lib/kubelet/pods/\<podUID\>/volumes/kubernetes.io~csi/\<pvName\>/mount；<br>mountInfo.json 中 device 字段的格式为 /dev/sda（取决于 host 上的具体设备）*
+      4. 如果挂载源为块设备类型或 PMEM 设备，则调用 devManager 的 **NewDevice**，初始化挂载块设备信息，回写 mounts.BlockDeviceID 字段信息<br>*块设备 DeviceInfo 的 HostPath、ContainerPath 等信息均为 mounts 中信息；<br>PMEM 设备 DeviceInfo 的 HostPath 处理方式比较特殊：如果 DevType 为 c 或者 u，则 backingFile 路径为 /sys/dev/char/\<major:minor\>/loop/backing_file；如果 DevType 为 b，则 backingFile 路径为 /sys/dev/block/\<major:minor\>/loop/backing_file。读取 backingFile 文件内容作为 HostPath。此外，判断 HostPath 签名是否合法（当使用 PMEM 设备和 DAX 技术时，需要确保文件或设备路径具有正确的 PFN 签名，以便内核可以正确地管理 PMEM 设备和启用 DAX 技术）以及通过 /proc/mounts 获取 PMEM 的挂载源的文件系统类型 fstype*
+5. 准备容器设备信息，即 container.devices<br>*设备均通过 hypervisor 热添加到 VM 中*
+   1. 针对容器中所有的设备信息，调用 devManager 的 **NewDevice**，初始化设备信息，并过滤类型为 CDROM 和 floppy 的设备
+
 
 VCContainer 中声明的 **GetAnnotations**、**GetPid**、**GetToken**、**ID**、**Sandbox** 以及 **Process** 均为参数获取与赋值，无复杂逻辑，不作详述。
 
