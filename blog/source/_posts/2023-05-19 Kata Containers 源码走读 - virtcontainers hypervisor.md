@@ -70,7 +70,6 @@ type qemuArchBase struct {
 	// - arm64：固定为 /usr/bin/qemu-system-aarch64
 	qemuExePath string
 
-	// 用于传递给 qemu-system 的 -machine 启动参数
 	// type: [hypervisor].machine_type
     // - amd64：默认为 q35
     // - arm64：固定为 virt
