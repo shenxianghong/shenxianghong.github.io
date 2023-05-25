@@ -91,16 +91,16 @@ type qemuArchBase struct {
 	kernelParamsNonDebug []Param
 
 	// 默认为 debug
-	// 如果镜像类型为 [hypervisor].image，则追加 systemd.show_status=true，systemd.log_level=debug
+	// 如果镜像类型为 [hypervisor].image，则追加 systemd.show_status=true systemd.log_level=debug
 	kernelParamsDebug []Param
 
-	// - amd64：默认为 tsc=reliable,no_timer_check,rcupdate.rcu_expedited=1,i8042.direct=1,i8042.dumbkbd=1,i8042.nopnp=1,i8042.noaux=1 noreplace-smp,reboot=k,cryptomgr.notests,net.ifnames=0,pci=lastbus=0
-	//   如果启用 [hypervisor].enable_iommu，则追加 intel_iommu=on,iommu=pt
+	// - amd64：默认为 tsc=reliable no_timer_check rcupdate.rcu_expedited=1 i8042.direct=1 i8042.dumbkbd=1 i8042.nopnp=1 i8042.noaux=1 noreplace-smp reboot=k cryptomgr.notests net.ifnames=0 pci=lastbus=0
+	//   如果启用 [hypervisor].enable_iommu，则追加 intel_iommu=on iommu=pt
 	//   如果镜像类型为 [hypervisor].image：
-	//   - 如果 disableNvdimm 为 true，则追加 root=/dev/vda1,rootflags=data=ordered,errors=remount-ro ro,rootfstype=ext4
+	//   - 如果 disableNvdimm 为 true，则追加 root=/dev/vda1 rootflags=data=ordered errors=remount-ro ro rootfstype=ext4
 	//   - 如果 disableNvdimm 为 false：
-	//   -- 如果 dax 为 false，则追加 root=/dev/pmem0p1,rootflags=data=ordered,errors=remount-ro ro,rootfstype=ext4
-	//   -- 如果 dax 为 true，则追加 root=/dev/pmem0p1,rootflags=dax,data=ordered,errors=remount-ro ro,rootfstype=ext4
+	//   -- 如果 dax 为 false，则追加 root=/dev/pmem0p1 rootflags=data=ordered errors=remount-ro ro rootfstype=ext4
+	//   -- 如果 dax 为 true，则追加 root=/dev/pmem0p1 rootflags=dax data=ordered errors=remount-ro ro rootfstype=ext4
 	// - arm64：固定为 iommu.passthrough=0
 	kernelParams []Param
 
@@ -169,6 +169,7 @@ type qemuArm64 struct {
 // nolint: govet
 type Config struct {
 	// Path is the qemu binary path.
+	// qemuArchBase.qemuExePath
 	Path string
 
 	// Ctx is the context used when launching qemu.
@@ -182,18 +183,28 @@ type Config struct {
 	Groups []uint32
 
 	// Name is the qemu guest name
+	// -name 参数，例如 -name sandbox-9eb37cc9720909714f4bbcedf109b43515b1a4fc7ab7d7e02788f7343f073676
+	// sandbox-<qemuID>
 	Name string
 
 	// UUID is the qemu process UUID.
+	// -uuid 参数，-uuid 42f0c7b9-7aa9-4581-a26c-2d84b40f1190
+	// 随机生成
 	UUID string
 
 	// CPUModel is the CPU model to be used by qemu.
+	// -cpu 参数，例如 -cpu host,pmu=off
+	// host，追加 [hypervisor].cpu_features，默认为 pmu=off
 	CPUModel string
 
 	// SeccompSandbox is the qemu function which enables the seccomp feature
+	// [hypervisor].seccompsandbox
+	// 如果不为空，则会检查 /proc/sys/net/core/bpf_jit_enable 文件内容是否为 1（非强校验，推荐为 1，用以弥补 QEMU seccomp 对于性能的影响）
 	SeccompSandbox string
 
 	// Machine
+	// -machine 参数，例如 -machine q35,accel=kvm,kernel_irqchip=on,nvdimm=on
+	// qemuArchBase.qemuMachine，如果指定 [hypervisor].machine_accelerators，则追加到 qemuArchBase.qemuMachine.Options 中
 	Machine Machine
 
 	// QMPSockets is a slice of QMP socket description.
@@ -203,33 +214,74 @@ type Config struct {
 	Devices []Device
 
 	// RTC is the qemu Real Time Clock configuration
+	// -rtc 参数，例如 -rtc base=utc,driftfix=slew,clock=host
+	// Base：固定为 utc
+	// Clock：固定为 host
+	// DriftFix：固定为 slew
 	RTC RTC
 
 	// VGA is the qemu VGA mode.
+	// -vga 参数，固定为 none
 	VGA string
 
 	// Kernel is the guest kernel configuration.
+	// -kernel 参数，例如 -kernel /opt/kata/share/kata-containers/vmlinux-5.19.2-96
+	// -initrd 参数，例如 -initrd /opt/kata/share/kata-containers/kata-alpine-3.15.initrd
+ 	// -append 参数，例如 -append tsc=reliable no_timer_check rcupdate.rcu_expedited=1 i8042.direct=1 i8042.dumbkbd=1 i8042.nopnp=1 i8042.noaux=1 noreplace-smp reboot=k cryptomgr.notests net.ifnames=0 pci=lastbus=0 console=hvc0 console=hvc1 debug panic=1 nr_cpus=8 scsi_mod.scan=none agent.log=debug agent.debug_console agent.debug_console_vport=1026
+    // Path：[hypervisor].kernel
+	// InitrdPath：[hypervisor].initrd，当镜像格式为 [hypervisor].image 时，没有 -initrd 参数
+	// Params：qemuArchBase.kernelParams + qemuArchBase.kernelParamsDebug/qemuArchBase.kernelParamsNonDebug（根据 [hypervisor].enable_debug 判断是否追加 debug 内核参数），追加 panic=1 nr_cpus=<[hypervisor].default_maxvcpus> <[hypervisor].kernel_params>
 	Kernel Kernel
 
 	// Memory is the guest memory configuration.
+	// -m 参数，例如 -m 2048M,slots=10,maxmem=12799M
+    // Size：[hypervisor].default_memory，默认为 2048
+    // Slots：[hypervisor].memory_slots，默认为 10
+    // MaxMem：
+    // - amd64：[hypervisor].memory_offset + [hypervisor].default_maxmemory, [hypervisor].default_maxmemory 默认为当前环境所有的内存
+    // - arm64：[hypervisor].default_maxmemory，[hypervisor].default_maxmemory 默认为当前环境所有的内存
+    // Path：
+	// - 如果为 VM factory 场景，则为 <[factory].template_path>/memory
+	// - 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 OCI spec annotations 中没有传递 io.katacontainers.config.hypervisor.file_mem_backend，则为 /dev/shm（如果 annotations 传递，则以 annotations 为准）
 	Memory Memory
 
 	// SMP is the quest multi processors configuration.
+	// -smp 参数，例如 -smp 1,cores=1,threads=1,sockets=8,maxcpus=8
+    // CPUs：[hypervisor].default_vcpus，默认为 1
+    // Cores：固定为 1
+    // Threads：固定为 1
+	// Sockets：[hypervisor].default_maxvcpus，默认为当前环境所有的 CPU/vCPU
+	// MaxCPUs：[hypervisor].default_maxvcpus，默认为当前环境所有的 CPU/vCPU
 	SMP SMP
 
 	// GlobalParam is the -global parameter.
 	GlobalParam string
 
 	// Knobs is a set of qemu boolean settings.
+	// NoUserConfig、NoDefaults、NoGraphic、NoReboot、Daemonize：固定为 true
+	// MemPrealloc：默认为 [hypervisor].enable_mem_prealloc，如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 或者 OCI spec annotations 中没有传递 io.katacontainers.config.hypervisor.file_mem_backend，并且启用 [hypervisor].enable_hugepages，则为 true
+    // HugePages：[hypervisor].enable_hugepages
+    // IOMMUPlatform：[hypervisor].enable_iommu_platform
+    // FileBackedMem：
+	// - 如果为 VM template 场景，则为 true
+	// - 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 OCI spec annotations 中没有传递 io.katacontainers.config.hypervisor.file_mem_backend，则为 true
+	// MemShared：
+	// - 如果为 VM template 中的启动为 template 场景，则为 true
+	// - 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 OCI spec annotations 中没有传递 io.katacontainers.config.hypervisor.file_mem_backend，则为 true
+	// - 如果指定了 [hypervisor].vhost_user_store_path，则为 true
 	Knobs Knobs
 
 	// Bios is the -bios parameter
+	// [hypervisor].firmware
 	Bios string
 
 	// PFlash specifies the parallel flash images (-pflash parameter)
+	// -pflash 参数，
+	// qemuArchBase.PFlash 参数
 	PFlash []string
 
 	// Incoming controls migration source preparation
+    // MigrationType：如果为 VM template 中的从 template 启动场景，则为 3
 	Incoming Incoming
 
 	// fds is a list of open file descriptors to be passed to the spawned qemu process
@@ -249,6 +301,8 @@ type Config struct {
 	qemuParams []string
 }
 ```
+
+补充说明：当前 Kata Containers 实现中，不支持 VM template 和 virtio-fs（含 virtio-fs-nydus）以及基于文件的内存一起使用，是因为 VM template 构建第一个 VM 时是基于文件并且内存参数 shared 为 on，基于模板之后创建的 VM 内存参数 shared 为 off，然而 virtio-fs 要求内存参数 shared 必须为 on。
 
 ```go
 type virtiofsd struct {
