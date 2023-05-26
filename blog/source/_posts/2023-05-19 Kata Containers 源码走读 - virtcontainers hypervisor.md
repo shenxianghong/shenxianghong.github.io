@@ -178,7 +178,7 @@ type Config struct {
 	// =========== Image（当镜像类型为 [hypervisor].image） ===========
 	// - 禁用 [hypervisor].disable_image_nvdimm
 	//   例如 -drive id=image-199896efe4d8ad3b,file=/opt/kata/share/kata-containers/kata-clearlinux-latest.image,aio=threads,format=raw,if=none,readonly=on
-	//   BlockDrive：
+	//   BlockDrive
 	//     File：[hypervisor].image
 	//	   Format：raw
 	//	   ID：image-<随机字符串>
@@ -186,7 +186,7 @@ type Config struct {
 	//	   ReadOnly：true
 	// - 启用 [hypervisor].disable_image_nvdimm
 	//   例如 -device nvdimm,id=nv0,memdev=mem0,unarmed=on -object memory-backend-file,id=mem0,mem-path=/opt/kata/share/kata-containers/kata-clearlinux-latest.image,size=134217728,readonly=on
-	//   Object：
+	//   Object
 	//     Driver：nvdimm
 	//     Type：memory-backend-file
 	//     DeviceID：nv0
