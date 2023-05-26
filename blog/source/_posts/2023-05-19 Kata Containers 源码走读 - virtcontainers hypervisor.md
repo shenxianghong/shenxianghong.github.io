@@ -26,7 +26,6 @@ Kata Containers 支持的 hypervisor 有 QEMU、Cloud Hypervisor、Firecracker�
 
 ```go
 // qemu is an Hypervisor interface implementation for the Linux qemu hypervisor.
-// nolint: govet
 type qemu struct {
 	arch qemuArch
 
@@ -40,10 +39,8 @@ type qemu struct {
 
 	id string
 
-    // HotplugVFIOOnRootBus：[hypervisor].hotplug_vfio_on_root_bus，默认为 false
-	//   默认情况下，VFIO 设备在网桥上热插拔。启用此特性后，将在 root bus 上热插拔。对于具有大 PCI bar 的设备可能是必需的，当前在网桥上热插拔具有限制。
-	// PCIeRootPort：[hypervisor].pcie_root_port，默认为 0
-	//   表示 pcie_root_port 设备的数量。在热插拔 PCIe 设备之前，需要添加一个 pcie_root_port 设备。当使用具有大的 PCI bar 设备时会使用到这个参数，比如 Nvidia GPU。仅当启用 hotplug_vfio_on_root_bus 并且 machine_type 为 q35 时，该值有效
+    // HotplugVFIOOnRootBus：[hypervisor].hotplug_vfio_on_root_bus
+	// PCIeRootPort：[hypervisor].pcie_root_port
 	state QemuState
 
 	qmpMonitorCh qmpChannel
@@ -55,7 +52,7 @@ type qemu struct {
 	// if in memory dump progress
 	memoryDumpFlag sync.Mutex
 
-	// 如果镜像类型为 [hypervisor].image，并且未禁用 [hypervisor].disable_image_nvdimm，表示 guest 镜像由 nvdimm 设备引导，则为 1，否则为 0
+	// 如果镜像类型为 [hypervisor].image 且未禁用 [hypervisor].disable_image_nvdimm，表示 guest 镜像由 nvdimm 设备引导，则为 1，否则为 0
 	nvdimmCount int
 
 	stopped bool
@@ -65,116 +62,17 @@ type qemu struct {
 ```
 
 ```go
-type qemuArchBase struct {
-	// - amd64：固定为 /usr/bin/qemu-system-x86_64
-	// - arm64：固定为 /usr/bin/qemu-system-aarch64
-	qemuExePath string
-
-	// type: [hypervisor].machine_type
-    // - amd64：默认为 q35
-    // - arm64：固定为 virt
-	// options：
-    // - amd64：默认为 accel=kvm,kernel_irqchip=on
-	//   如果 sgxEPCSize 大于 0，则追加 sgx-epc.0.memdev=epc0,sgx-epc.0.node=0
-	//   如果镜像类型为 [hypervisor].image 且 disableNvdimm 为 false，则追加 nvdimm=on
-	//   如果启用 [hypervisor].confidential_guest，则覆盖 options 为 accel=kvm,kernel_irqchip=split
-	//   - 如果 protection 为 tdxProtection，则追加 kvm-type=tdx,confidential-guest-support=tdx
-	//   - 如果 protection 为 sevProtection，则追加 confidential-guest-support=sev
-    // - arm64：固定为 usb=off,accel=kvm,gic-version=host
-	qemuMachine govmmQemu.Machine
-
-	// [hypervisor].pflashes
-	PFlash []string
-
-	// 默认为 quiet
-	// 如果镜像类型为 [hypervisor].image，则追加 systemd.show_status=false
-	kernelParamsNonDebug []Param
-
-	// 默认为 debug
-	// 如果镜像类型为 [hypervisor].image，则追加 systemd.show_status=true systemd.log_level=debug
-	kernelParamsDebug []Param
-
-	// - amd64：默认为 tsc=reliable no_timer_check rcupdate.rcu_expedited=1 i8042.direct=1 i8042.dumbkbd=1 i8042.nopnp=1 i8042.noaux=1 noreplace-smp reboot=k cryptomgr.notests net.ifnames=0 pci=lastbus=0
-	//   如果启用 [hypervisor].enable_iommu，则追加 intel_iommu=on iommu=pt
-	//   如果镜像类型为 [hypervisor].image：
-	//   - 如果 disableNvdimm 为 true，则追加 root=/dev/vda1 rootflags=data=ordered errors=remount-ro ro rootfstype=ext4
-	//   - 如果 disableNvdimm 为 false：
-	//   -- 如果 dax 为 false，则追加 root=/dev/pmem0p1 rootflags=data=ordered errors=remount-ro ro rootfstype=ext4
-	//   -- 如果 dax 为 true，则追加 root=/dev/pmem0p1 rootflags=dax data=ordered errors=remount-ro ro rootfstype=ext4
-	// - arm64：固定为 iommu.passthrough=0
-	kernelParams []Param
-
-	// ID 为 <bt>-bridge-<idx>，其中 idx 为 0 ~ [hypervisor].default_bridges 的递增索引，如果 qemuMachine.type 为 q35、virt 和 pseries，则 bt 为 pci，容量为 30；如果 qemuMachine.type 为 s390-ccw-virtio，则 bt 为 ccw，容量为 65535
-	Bridges []types.Bridge
-
-	// [hypervisor].memory_offset，默认为 0
-	// 内存偏移量会追加到 hypervisor 最大内存，用于描述 NVDIMM 设备的内存空间大小
-	// 如果 [hypervisor].block_device_driver 为 nvdimm，则需要设置 [hypervisor].memory_offset 为 NVDIMM 设备的内存空间大小
-	memoryOffset uint64
-
-	networkIndex int
-
-	// - amd64：默认为 noneProtection，可选的有：
-	//   - tdxProtection (Intel Trust Domain Extensions)
-	//   - sevProtection (AMD Secure Encrypted Virtualization)
-	//   - pefProtection (IBM POWER 9 Protected Execution Facility)
-	//   - seProtection  (IBM Secure Execution (IBM Z & LinuxONE))
-	//   如果启用 [hypervisor].confidential_guest，则进一步判断：如果 host 上 /sys/firmware/tdx_seam/ 文件夹存在或者 CPU flags 中包含 tdx，则为 tdxProtection；如果 host 上 /sys/module/kvm_amd/parameters/sev 文件存在且内容为 1 或者 Y 则为 sevProtection；否则，均为 noneProtection（表示在 host 不支持机密容器场景下，却启用 [hypervisor].confidential_guest，则报错返回）
-	// - arm64：固定为 noneProtection
-	protection guestProtection
-
-	// - amd64：当未禁用 [hypervisor].disable_nesting_checks，且 CPU flags 中有 hypervisor，视为 true；否则，为 false
-	// - arm64：固定为 false
-	nestedRun bool
-
-	// [hypervisor].disable_vhost_net，默认为 false
-	// 是否使用 vhost-net 作为 virtio-net 的后端，使用 vhost-net 时意味着在提高网络 I/O 性能的同时，会牺牲一定的安全性（因为 vhost-net 运行在 ring0 模式下，具有最高的权限和特权）
-	vhost bool
-
-	// [hypervisor].disable_image_nvdimm，默认为 false
-	// 如果未禁用且支持 nvdimm，则使用 nvdimm 设备加载 guest 镜像，否则使用 virtio-block 设备
-	// 在机器容器场景下不支持此特性，如果启用 [hypervisor].confidential_guest，则该参数会被强制设置为 false
-	disableNvdimm bool
-
-	// 固定为 true
-	dax bool
-
-	// [hypervisor].use_legacy_serial，默认为 false
-	// 是否为 guest console 启用传统的串行终端，否则使用 virtio-console
-	legacySerial bool
-}
-
-type qemuAmd64 struct {
-	// inherit from qemuArchBase, overwrite methods if needed
-	qemuArchBase
-
-	// 是否为 factory 场景，包含两种：BootToBeTemplate 和 BootFromTemplate，两者均为视为 factory 场景
-	vmFactory bool
-
-	devLoadersCount uint32
-
-	// 通过上层传递 sgx.intel.com/epc annotation，默认为 0
-	sgxEPCSize int64
-}
-
-type qemuArm64 struct {
-	// inherit from qemuArchBase, overwrite methods if needed
-	qemuArchBase
-}
-```
-
-```go
 // Config is the qemu configuration structure.
 // It allows for passing custom settings and parameters to the qemu API.
 // nolint: govet
 type Config struct {
 	// Path is the qemu binary path.
-	// qemuArchBase.qemuExePath
+	// - amd64：固定为 /usr/bin/qemu-system-x86_64
+	// - arm64：固定为 /usr/bin/qemu-system-aarch64
 	Path string
 
 	// Ctx is the context used when launching qemu.
 	Ctx context.Context
-
 	// User ID.
 	Uid uint32
 	// Group ID.
@@ -183,34 +81,137 @@ type Config struct {
 	Groups []uint32
 
 	// Name is the qemu guest name
-	// -name 参数，例如 -name sandbox-9eb37cc9720909714f4bbcedf109b43515b1a4fc7ab7d7e02788f7343f073676
+	// -name 参数，例如 sandbox-<qemuID>
 	// sandbox-<qemuID>
 	Name string
 
 	// UUID is the qemu process UUID.
-	// -uuid 参数，-uuid 42f0c7b9-7aa9-4581-a26c-2d84b40f1190
+	// -uuid 参数，例如 -uuid 42f0c7b9-7aa9-4581-a26c-2d84b40f1190
 	// 随机生成
 	UUID string
 
 	// CPUModel is the CPU model to be used by qemu.
 	// -cpu 参数，例如 -cpu host,pmu=off
-	// host，追加 [hypervisor].cpu_features，默认为 pmu=off
+	// 默认为 host，如果指定 [hypervisor].cpu_features 则继续追加
 	CPUModel string
 
 	// SeccompSandbox is the qemu function which enables the seccomp feature
 	// [hypervisor].seccompsandbox
-	// 如果不为空，则会检查 /proc/sys/net/core/bpf_jit_enable 文件内容是否为 1（非强校验，推荐为 1，用以弥补 QEMU seccomp 对于性能的影响）
 	SeccompSandbox string
 
 	// Machine
 	// -machine 参数，例如 -machine q35,accel=kvm,kernel_irqchip=on,nvdimm=on
-	// qemuArchBase.qemuMachine，如果指定 [hypervisor].machine_accelerators，则追加到 qemuArchBase.qemuMachine.Options 中
+	// Type：[hypervisor].machine_type
+	// - amd64：默认为 q35
+	// - arm64：固定为 virt
+	// Options：
+	// - amd64：默认为 accel=kvm,kernel_irqchip=on
+	//   如果启用 [hypervisor].confidential_guest 或者启用 hypervisor[enable_iommu]，则覆盖 Options 为 accel=kvm,kernel_irqchip=split
+	//   如果 sgxEPCSize 不为 0，则追加 sgx-epc.0.memdev=epc0,sgx-epc.0.node=0
+	//   如果启用 [hypervisor].confidential_guest：
+	//   - 如果 protection 为 tdxProtection，则追加 kvm-type=tdx,confidential-guest-support=tdx
+	//   - 如果 protection 为 sevProtection，则追加 confidential-guest-support=sev
+	//   如果镜像类型为 [hypervisor].image 且 disableNvdimm 为 false，则追加 nvdimm=on
+	// - arm64：固定为 usb=off,accel=kvm,gic-version=host
+	// 如果指定 [hypervisor].machine_accelerators，则继续追加
 	Machine Machine
 
 	// QMPSockets is a slice of QMP socket description.
+	// -qmp 参数，例如 -qmp unix:/run/vc/vm/<qemuid>/qmp.sock,server=on,wait=off
+	// Type：固定为 unix
+	// Name：
+	// - root 权限：/run/vc/vm/<qemuID>/qmp.sock
+	// - rootless 权限：<XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/qmp.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	// Server：固定为 true
+	// NoWait：固定为 true
 	QMPSockets []QMPSocket
 
 	// Devices is a list of devices for qemu to create and drive.
+	// -device 参数
+	// 
+	// =========== Bridge ===========
+	// 例如 -device pci-bridge,bus=pcie.0,id=pci-bridge-0,chassis_nr=1,shpc=off,addr=2,io-reserve=4k,mem-reserve=1m,pref64-reserve=1m
+	// BridgeDevice
+	//   Type：默认为 0，即 PCI，如果 bridge 类型为 PCIe，则为 PCIe
+	//   Bus：默认为 pci.0，如果 Machine.Type 为 q35 或者 virt，则为 pcie.0
+	//   ID：<bt>-bridge-<idx>，其中 idx 为 0 ~ [hypervisor].default_bridges 的递增索引
+	//   - 如果 Machine.Type 为 q35、virt 和 pseries，则 bt 为 pci，容量为 30
+	//   - 如果 Machine.Type 为 s390-ccw-virtio，则 bt 为 ccw，容量为 65535
+	//   Chassis：idx + 1，其中 idx 为 bridge 列表的索引
+	// 	 SHPC：固定为 false
+	//   Addr：idx + 2，其中 idx 为 bridge 列表的索引
+	//   IOReserve：固定为 4k
+	//   MemReserve：固定为 1m
+	//   Pref64Reserve：固定为 1m
+	// 
+	// =========== Console ===========
+	// - 禁用 [hypervisor].use_legacy_serial
+	//   例如 -device virtio-serial-pci,disable-modern=true,id=serial0 -device virtconsole,chardev=charconsole0,id=console0 -chardev socket,id=charconsole0,path=/run/vc/vm/<qemuid>/console.sock,server=on,wait=off
+	//   CharDevice
+	//     Driver：固定为 virtconsole
+	//     Backend：固定为 socket
+	//     DeviceID：固定为 console0
+	//     ID：固定为 charconsole0
+	//     Path：
+	//     - root 权限：/run/vc/vm/<qemuID>/console.sock
+	//     - rootless 权限：<XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/console.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	//   SerialDevice
+	//     Driver：固定为 virtio-serial
+	//     ID：固定为 serial0
+	//     DisableModern：
+	//     - amd64：当未禁用 [hypervisor].disable_nesting_checks，且 CPU flags 中有 hypervisor，视为 true；否则，为 false
+	//     - arm64：固定为 false
+	//     MaxPorts：固定为 2
+	// - 启用 [hypervisor].use_legacy_serial
+	//   例如 -serial chardev:charconsole0 -chardev socket,id=charconsole0,path=/run/vc/vm/<qemuid>/console.sock,server=on,wait=off
+	//   CharDevice
+	//     Driver：固定为 serial
+	//     Backend：固定为 socket
+	//     DeviceID：固定为 console0
+	//     ID：固定为 charconsole0
+	//     Path：
+	//     - root 权限：/run/vc/vm/<qemuID>/console.sock
+	//     - rootless 权限：<XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/console.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	//   LegacySerialDevice
+	//     Chardev：固定为 charconsole0
+	// 
+	// =========== Image（当镜像类型为 [hypervisor].image） ===========
+	// - 禁用 [hypervisor].disable_image_nvdimm：
+	//   BlockDrive：
+	//     File：[hypervisor].image
+	//	   Format：固定为 raw
+	//	   ID：随机生成
+	//	   ShareRW：固定为 true
+	//	   ReadOnly：固定为 true
+	// - 启用 [hypervisor].disable_image_nvdimm，例如 -device nvdimm,id=nv0,memdev=mem0,unarmed=on -object memory-backend-file,id=mem0,mem-path=/opt/kata/share/kata-containers/kata-clearlinux-latest.image,size=134217728,readonly=on
+	//   Object：
+	//     Driver：固定为 nvdimm
+	//     Type：固定为 memory-backend-file
+	//     DeviceID：固定为 nv0
+	//     ID：固定为 mem0
+	//     MemPath：[hypervisor].image
+	//     Size：[hypervisor].image 大小
+	//     ReadOnly：固定为 true
+	// 
+	// =========== IOMMU（当启用 [hypervisor].enable_iommu） ===========
+	// IommuDev
+	//   Intremap：固定为 true
+	//   DeviceIotlb：固定为 true
+	//   CachingMode：固定为 true
+	// 
+	// =========== PVPanic（当指定 [hypervisor].guest_memory_dump_path） ===========
+	// PVPanicDevice
+	//   NoShutdown：固定为 true
+	// 
+	// =========== BlockDeviceDriver（当 [hypervisor].block_device_driver 为 virtio-scsi） ===========	
+	// 例如 -device virtio-scsi-pci,id=scsi0,disable-modern=true
+	// SCSIController
+	//   ID：固定为 scsi0
+	//   DisableModern：
+	//   - amd64：当未禁用 [hypervisor].disable_nesting_checks，且 CPU flags 中有 hypervisor，视为 true；否则，为 false
+	//   - arm64：固定为 false
+	//   IOThread：（当启用 [hypervisor].enable_iothreads）
+	//     ID：iothread-<随机 8 位字符串>
 	Devices []Device
 
 	// RTC is the qemu Real Time Clock configuration
@@ -221,7 +222,8 @@ type Config struct {
 	RTC RTC
 
 	// VGA is the qemu VGA mode.
-	// -vga 参数，固定为 none
+	// -vga 参数，例如 -vga none
+	// 固定为 none
 	VGA string
 
 	// Kernel is the guest kernel configuration.
@@ -229,59 +231,76 @@ type Config struct {
 	// -initrd 参数，例如 -initrd /opt/kata/share/kata-containers/kata-alpine-3.15.initrd
  	// -append 参数，例如 -append tsc=reliable no_timer_check rcupdate.rcu_expedited=1 i8042.direct=1 i8042.dumbkbd=1 i8042.nopnp=1 i8042.noaux=1 noreplace-smp reboot=k cryptomgr.notests net.ifnames=0 pci=lastbus=0 console=hvc0 console=hvc1 debug panic=1 nr_cpus=8 scsi_mod.scan=none agent.log=debug agent.debug_console agent.debug_console_vport=1026
     // Path：[hypervisor].kernel
-	// InitrdPath：[hypervisor].initrd，当镜像格式为 [hypervisor].image 时，没有 -initrd 参数
-	// Params：qemuArchBase.kernelParams + qemuArchBase.kernelParamsDebug/qemuArchBase.kernelParamsNonDebug（根据 [hypervisor].enable_debug 判断是否追加 debug 内核参数），追加 panic=1 nr_cpus=<[hypervisor].default_maxvcpus> <[hypervisor].kernel_params>
+	// InitrdPath：[hypervisor].initrd，当镜像类型为 [hypervisor].image 时，没有 -initrd 参数
+	// Params：
+    // - kernelParams：
+	//   - amd64：默认为 tsc=reliable no_timer_check rcupdate.rcu_expedited=1 i8042.direct=1 i8042.dumbkbd=1 i8042.nopnp=1 i8042.noaux=1 noreplace-smp reboot=k cryptomgr.notests net.ifnames=0 pci=lastbus=0 panic=1 nr_cpus=[hypervisor].default_maxvcpus
+    //     如果启用 [hypervisor].enable_iommu，则追加 intel_iommu=on iommu=pt
+    //     如果镜像类型为 [hypervisor].image：
+    //     - 如果 disableNvdimm 为 true，则追加 root=/dev/vda1 rootflags=data=ordered errors=remount-ro ro rootfstype=ext4
+    //     - 如果 disableNvdimm 为 false：
+    //       - 如果 dax 为 false，则追加 root=/dev/pmem0p1 rootflags=data=ordered errors=remount-ro ro rootfstype=ext4
+    //       - 如果 dax 为 true，则追加 root=/dev/pmem0p1 rootflags=dax data=ordered errors=remount-ro ro rootfstype=ext4
+	//     如果启用 [hypervisor].use_legacy_serial，则追加 console=ttyS0，否则，则追加 console=hvc0 console=hvc1
+    //   - arm64：固定为 iommu.passthrough=0 panic=1 nr_cpus=[hypervisor].default_maxvcpus
+	// - kernelParamsDebug：默认为 debug，如果镜像类型为 [hypervisor].image，则追加 systemd.show_status=true systemd.log_level=debug
+    // - kernelParamsNonDebug：默认为 quiet，如果镜像类型为 [hypervisor].image，则追加 systemd.show_status=false
+    // 由以上三个参数组成，具体为 kernelParams + kernelParamsDebug/kernelParamsNonDebug（取决于 [hypervisor].enable_debug），如果指定 [hypervisor].kernel_params，则继续追加
 	Kernel Kernel
 
 	// Memory is the guest memory configuration.
 	// -m 参数，例如 -m 2048M,slots=10,maxmem=12799M
-    // Size：[hypervisor].default_memory，默认为 2048
-    // Slots：[hypervisor].memory_slots，默认为 10
+    // Size：[hypervisor].default_memory
+    // Slots：[hypervisor].memory_slots
     // MaxMem：
-    // - amd64：[hypervisor].memory_offset + [hypervisor].default_maxmemory, [hypervisor].default_maxmemory 默认为当前环境所有的内存
-    // - arm64：[hypervisor].default_maxmemory，[hypervisor].default_maxmemory 默认为当前环境所有的内存
+    // - amd64：[hypervisor].memory_offset + [hypervisor].default_maxmemory
+    // - arm64：[hypervisor].default_maxmemory
     // Path：
-	// - 如果为 VM factory 场景，则为 <[factory].template_path>/memory
-	// - 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 OCI spec annotations 中没有传递 io.katacontainers.config.hypervisor.file_mem_backend，则为 /dev/shm（如果 annotations 传递，则以 annotations 为准）
+	// - 如果为 VM factory 场景，则为 [factory].template_path/memory
+	// - 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 annotations["io.katacontainers.config.hypervisor.file_mem_backend"] 不为空，则为 /dev/shm（如果 annotations 传递，则以 annotations 为准）
 	Memory Memory
 
 	// SMP is the quest multi processors configuration.
 	// -smp 参数，例如 -smp 1,cores=1,threads=1,sockets=8,maxcpus=8
-    // CPUs：[hypervisor].default_vcpus，默认为 1
+    // CPUs：[hypervisor].default_vcpus
     // Cores：固定为 1
     // Threads：固定为 1
-	// Sockets：[hypervisor].default_maxvcpus，默认为当前环境所有的 CPU/vCPU
-	// MaxCPUs：[hypervisor].default_maxvcpus，默认为当前环境所有的 CPU/vCPU
+	// Sockets：[hypervisor].default_maxvcpus
+	// MaxCPUs：[hypervisor].default_maxvcpus
 	SMP SMP
 
 	// GlobalParam is the -global parameter.
+	// -global 参数，例如 -global kvm-pit.lost_tick_policy=discard
+	// 固定为：kvm-pit.lost_tick_policy=discard
 	GlobalParam string
 
 	// Knobs is a set of qemu boolean settings.
+	// -no-user-config -nodefaults -nographic --no-reboot -daemonize 参数
 	// NoUserConfig、NoDefaults、NoGraphic、NoReboot、Daemonize：固定为 true
-	// MemPrealloc：默认为 [hypervisor].enable_mem_prealloc，如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 或者 OCI spec annotations 中没有传递 io.katacontainers.config.hypervisor.file_mem_backend，并且启用 [hypervisor].enable_hugepages，则为 true
+	// MemPrealloc：默认为 [hypervisor].enable_mem_prealloc，如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 annotations["io.katacontainers.config.hypervisor.file_mem_backend"] 不为空，并且启用 [hypervisor].enable_hugepages，则为 true
     // HugePages：[hypervisor].enable_hugepages
     // IOMMUPlatform：[hypervisor].enable_iommu_platform
     // FileBackedMem：
-	// - 如果为 VM template 场景，则为 true
-	// - 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 OCI spec annotations 中没有传递 io.katacontainers.config.hypervisor.file_mem_backend，则为 true
+	// - 如果为 VM factory 场景，则为 true
+	// - 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 annotations["io.katacontainers.config.hypervisor.file_mem_backend"] 不为空，则为 true
 	// MemShared：
-	// - 如果为 VM template 中的启动为 template 场景，则为 true
-	// - 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 OCI spec annotations 中没有传递 io.katacontainers.config.hypervisor.file_mem_backend，则为 true
+	// - 如果为 VM factory 中的启动为模板场景，则为 true
+	// - 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 annotations["io.katacontainers.config.hypervisor.file_mem_backend"] 不为空，则为 true
 	// - 如果指定了 [hypervisor].vhost_user_store_path，则为 true
 	Knobs Knobs
 
 	// Bios is the -bios parameter
+	// -bios 参数
 	// [hypervisor].firmware
 	Bios string
 
 	// PFlash specifies the parallel flash images (-pflash parameter)
-	// -pflash 参数，
-	// qemuArchBase.PFlash 参数
+	// -pflash 参数
+	// [hypervisor].pflashes
 	PFlash []string
 
 	// Incoming controls migration source preparation
-    // MigrationType：如果为 VM template 中的从 template 启动场景，则为 3
+    // MigrationType：如果为 VM factory 中的从模板启动场景，则为 3
 	Incoming Incoming
 
 	// fds is a list of open file descriptors to be passed to the spawned qemu process
@@ -293,16 +312,20 @@ type Config struct {
 	IOThreads []IOThread
 
 	// PidFile is the -pidfile parameter
+	// -pidfile 参数，例如 -pidfile /run/vc/vm/50f316d8373ac0b8f17aee7a6f546cbaaa1c67490a6a36eca28e9bfc5de3c30e/pid
+	// - root 权限：/run/vc/vm/<qemuID>/pid
+	// - rootless 权限：<XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/pid（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
 	PidFile string
 
 	// LogFile is the -D parameter
+	// -D 参数，例如 -D /run/vc/vm/50f316d8373ac0b8f17aee7a6f546cbaaa1c67490a6a36eca28e9bfc5de3c30e/qemu.log
+	// - root 权限：/run/vc/vm/<qemuID>/qemu.log
+	// - rootless 权限：<XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/qemu.log（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
 	LogFile string
 
 	qemuParams []string
 }
 ```
-
-补充说明：当前 Kata Containers 实现中，不支持 VM template 和 virtio-fs（含 virtio-fs-nydus）以及基于文件的内存一起使用，是因为 VM template 构建第一个 VM 时是基于文件并且内存参数 shared 为 on，基于模板之后创建的 VM 内存参数 shared 为 off，然而 virtio-fs 要求内存参数 shared 必须为 on。
 
 ```go
 type virtiofsd struct {
