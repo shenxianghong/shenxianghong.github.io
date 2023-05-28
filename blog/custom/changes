@@ -19,9 +19,12 @@ hexo-theme-icarus/source/js/main.js:L23-L27
 === 文章 read more 样式更改 ===
 hexo-theme-icarus/layout/common/article.jsx:L98-L105,L109-L111
 
-=== 最近阅读文章去除目录属性 ===
+=== 最新边栏去除目录属性 ===
 hexo-component-inferno/lib/view/widget/recent_posts.js:L112-L117
 hexo-component-inferno/lib/view/common/article_media.js:L57-L64
+
+=== 最新边栏以更新时间排序 ===
+hexo-component-inferno/lib/view/widget/recent_posts.js:L104,L109
 
 === 夜间模式 ===
 hexo-theme-icarus/source/css/default.styl:L2

@@ -101,11 +101,13 @@ RecentPosts.Cacheable = cacheComponent(RecentPosts, 'widget.recentposts', functi
     if (!site.posts.length) {
         return null;
     }
-    var posts = site.posts.sort('date', -1).limit(limit).map(function (post) {
+    // var posts = site.posts.sort('date', -1).limit(limit).map(function (post) {
+    var posts = site.posts.sort('updated', -1).limit(limit).map(function (post) {
         return {
             url: url_for(post.link || post.path),
             title: post.title,
-            date: date(post.date),
+            // date: date(post.date),
+            date: date(post.updated),
             dateXml: date_xml(post.date),
             thumbnail: post.thumbnail ? url_for(post.thumbnail) : null,
             categories: null,
