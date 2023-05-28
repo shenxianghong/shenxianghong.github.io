@@ -69,7 +69,7 @@ type qemu struct {
    如果启用 [hypervisor].confidential_guest，则进一步判断 protection
    - 如果 host 上 /sys/firmware/tdx_seam/ 文件夹存在或者 CPU flags 中包含 tdx，则为 tdxProtection（Intel Trust Domain Extensions）
    - 如果 host 上 /sys/module/kvm_amd/parameters/sev 文件存在且内容为 1 或者 Y 则为 sevProtection（AMD Secure Encrypted Virtualization）
-  - arm64：固定为 noneProtection 
+  - arm64：noneProtection 
 */
 
 // Config is the qemu configuration structure.
@@ -323,7 +323,7 @@ type Config struct {
 
 	// GlobalParam is the -global parameter.
 	// -global 参数，例如 -global kvm-pit.lost_tick_policy=discard
-	// 固定为: kvm-pit.lost_tick_policy=discard
+	// kvm-pit.lost_tick_policy=discard
 	GlobalParam string
 
 	// Knobs is a set of qemu boolean settings.
