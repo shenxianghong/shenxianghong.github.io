@@ -194,8 +194,8 @@ shim server 对外暴露的 gRPC 服务。
       3. 创建用户目录，并设置环境变量 XDG_RUNTIME_DIR
       4. 将 KVM GID 添加到 hypervisor 配置项中的补充组中，使 hypervisor 进程可以访问 /dev/kvm 设备
    7. 基于上述构建的 OCI spec、runtimeConfig、rootfs、bundle、containerID 等信息创建 sandbox
-      1. 将 OCI spec 和 runtimeConfig 转为 virtcontainers 所需的配置结构（即 sandboxConfig）
-         额外注明：获取目标挂载点为 /dev/shim 的大小，一般为 65536k，如果挂载类型为 bind 时，则根据 s.Bsize * s.Blocks 重新计算。此外，设置 \<XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/\<containerID\>/shared 作为 virtiofs 或 virtio9p 下的 guest 与 host 的共享目录；rootfs 目录作为 sandbox 的 rootfs
+      1. 将 OCI spec 和 runtimeConfig 转为 virtcontainers 所需的配置结构（即 sandboxConfig）<br>
+         额外注明：a. 部分参数当 OCI spec annotations 中有声明时，会以 annotations 为准，前提是 [hypervisor].enable_annotations 中声明了允许动态加载的配置项且该配置项合法；b. 当启用 [hypervisor].static_sandbox_resource_mgmt，VM 规格会被静态配置，而非启动后热插拔，因此 CPU 资源规格为 [hypervisor].default_vcpus + \<workloadCPUs\>，内存同理
       2. 当 host 启用 FIPS 时（即 /proc/sys/crypto/fips_enabled 为 1），sandboxConfig 中额外追加 kernel 参数
       3. 启动容器前优先创建 netns。当 [runtime].disable_new_netns 启用时（表示 shim 和 hypervisor 会运行在 host netns 中，而非创建新的），则直接跳过后续创建；否则，当 networkID（spec.Linux.Namespace 中 type 为 network 的 path）为空时（表示 netns 并非由 CNI 提前创建好，而是需要由 Kata Containers 创建，比如脱离 K8s 运行 Kata 的场景中），则根据具体是否为 rootless，执行对应的创建网络命名空间流程。如果为提前创建好的 netns，需要判断其是否与当前进程的 netns 不一致（当前进程可以代表 host 网络，而 Kata Containers 是不支持采用 host 网络作为容器网络的）
       4. 执行 spec.Hooks.Prestart（Prestart 是在执行容器进程之前要运行的 hook 列表，现已废弃） 中定义的动作
