@@ -124,7 +124,7 @@ Kata Containers 中配置的优先级为：动态配置项 > 静态配置项 > �
 | firmware                     | Y        |                                                              |
 | firmware_volume              | Y        |                                                              |
 | machine_accelerators         | Y        | 机器加速器参数，默认为空                                     |
-| seccompsandbox               | N        | seccomp 参数。QEMU seccomp sandbox 是 QEMU VM 中的一种安全特性，通过限制 QEMU 进程的系统调用，以提高 VM 的安全性。它使用了 Linux 内核提供的 seccomp 机制，将 QEMU 进程限制在一组安全的系统调用中，从而降低 VM 遭受攻击的风险。推荐启用 /proc/sys/net/core/bpf_jit_enable，以降低该特性带来的性能下降 |
+| seccompsandbox               | N        | seccomp 参数。QEMU seccomp sandbox 是 QEMU VM 中的一种安全特性，通过限制 QEMU 进程的系统调用，以提高 VM 的安全性。它使用了 Linux 内核提供的 seccomp 机制，将 QEMU 进程限制在一组安全的系统调用中，从而降低 VM 遭受攻击的风险。推荐设置 /proc/sys/net/core/bpf_jit_enable 文件内容为 1，以降低该特性带来的性能下降 |
 | cpu_features                 | Y        | CPU 特性参数，例如默认的 pmu=off 参数用于禁用 VM 中的性能监视器单元（Performance Monitoring Unit，PMU）。PMU 是一种硬件设备，用于监控 CPU 的性能指标，如指令执行次数、缓存命中率等。在某些情况下，PMU 可能会被用于进行侧信道攻击或窃取敏感信息 |
 | default_vcpus                | Y        | VM 默认的 CPU 数量，默认为 1，最大为 host CPU 数量           |
 | default_maxvcpus             | Y        | VM 最大的 CPU 数量，默认为 host CPU 数量，具体能否使用到 host CPU 数量，还需要视 hypervisor 限制而定。过大的 CPU 数量会影响到 VM 的性能以及内存占比 |
@@ -133,7 +133,7 @@ Kata Containers 中配置的优先级为：动态配置项 > 静态配置项 > �
 | memory_slots                 | Y        | VM 默认的内存插槽数量，默认为 10，即内存热添加次数上限为 10  |
 | default_maxmemory            | Y        | VM 最大的内存总量，默认为  host 内存总量                     |
 | memory_offset                | Y        | VM 内存偏移量，用于描述 NVDIMM 设备的内存空间，当 block_device_driver 为 nvdimm 时，需要设置此参数，最终会追加到 default_maxmemory 中 |
-| enable_virtio_mem            | Y        | 是否启用 virtio-mem 设备，默认为 false。virtio-mem 设备可以提高 VM 的内存性能。它通过在 host 和 VM 之间共享内存，使 VM 可以直接访问 host 内存，而无需通过复制或传输数据。这种直接访问可显著降低内存访问延迟和 CPU 使用率，并提高 VM 的性能和吞吐量。需要启用 /proc/sys/vm/overcommit_memory |
+| enable_virtio_mem            | Y        | 是否启用 virtio-mem 设备，默认为 false。virtio-mem 设备可以提高 VM 的内存性能。它通过在 host 和 VM 之间共享内存，使 VM 可以直接访问 host 内存，而无需通过复制或传输数据。这种直接访问可显著降低内存访问延迟和 CPU 使用率，并提高 VM 的性能和吞吐量。需要设置 /proc/sys/vm/overcommit_memory 文件内容为 1 |
 | disable_block_device_use     |          |                                                              |
 | shared_fs                    |          |                                                              |
 | virtio_fs_daemon             |          |                                                              |
