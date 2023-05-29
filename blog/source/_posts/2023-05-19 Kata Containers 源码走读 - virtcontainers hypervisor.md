@@ -237,13 +237,13 @@ type Config struct {
 	//   ID: tdx
 	//   DeviceID: fd<idx>，其中 idx 为 loader 类型 Driver 的统计数量
 	//   Debug: false
-	//   File: [hypervisor].firmware_volume
+	//   File: [hypervisor].firmware
 	//   FirmwareVolume: [hypervisor].firmware_volume
 	// Object（当 protection 为 sevProtection 时）
 	//   Type: sev-guest
 	//	 ID: sev
 	//   Debug: false
-	//   File: [hypervisor].firmware_volume
+	//   File: [hypervisor].firmware
 	//   CBitPos: ebx & 0x3F
 	//   ReducedPhysBits: (ebx >> 6) & 0x3F
 	//
