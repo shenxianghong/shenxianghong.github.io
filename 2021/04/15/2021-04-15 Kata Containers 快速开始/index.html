@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Kata Containers 」快速开始 - 🐾Corgi</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="🐾Corgi"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="🐾Corgi"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Kata Containers 在 Kubernetes 集群场景中的配置与基础使用示例"><meta property="og:type" content="blog"><meta property="og:title" content="「 Kata Containers 」快速开始"><meta property="og:url" content="http://shenxianghong.github.io/2021/04/15/2021-04-15%20Kata%20Containers%20%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B/"><meta property="og:site_name" content="🐾Corgi"><meta property="og:description" content="Kata Containers 在 Kubernetes 集群场景中的配置与基础使用示例"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://picsum.photos/0?sig=20210415"><meta property="article:published_time" content="2021-04-14T16:00:00.000Z"><meta property="article:modified_time" content="2023-05-29T09:49:40.595Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Kata Containers"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://picsum.photos/0?sig=20210415"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://shenxianghong.github.io/2021/04/15/2021-04-15%20Kata%20Containers%20%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B/"},"headline":"「 Kata Containers 」快速开始","image":[],"datePublished":"2021-04-14T16:00:00.000Z","dateModified":"2023-05-29T09:49:40.595Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"🐾Corgi","logo":{"@type":"ImageObject","url":"http://shenxianghong.github.io/img/logo.svg"}},"description":"Kata Containers 在 Kubernetes 集群场景中的配置与基础使用示例"}</script><link rel="canonical" href="http://shenxianghong.github.io/2021/04/15/2021-04-15%20Kata%20Containers%20%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B/"><link rel="alternate" href="/atom.xml" title="🐾Corgi" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/xcode.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Kata Containers 」快速开始 - 🐾Corgi</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="🐾Corgi"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="🐾Corgi"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Kata Containers 在 Kubernetes 集群场景中的配置与基础使用示例"><meta property="og:type" content="blog"><meta property="og:title" content="「 Kata Containers 」快速开始"><meta property="og:url" content="http://shenxianghong.github.io/2021/04/15/2021-04-15%20Kata%20Containers%20%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B/"><meta property="og:site_name" content="🐾Corgi"><meta property="og:description" content="Kata Containers 在 Kubernetes 集群场景中的配置与基础使用示例"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://picsum.photos/0?sig=20210415"><meta property="article:published_time" content="2021-04-14T16:00:00.000Z"><meta property="article:modified_time" content="2023-05-30T09:58:45.447Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Kata Containers"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://picsum.photos/0?sig=20210415"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://shenxianghong.github.io/2021/04/15/2021-04-15%20Kata%20Containers%20%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B/"},"headline":"「 Kata Containers 」快速开始","image":[],"datePublished":"2021-04-14T16:00:00.000Z","dateModified":"2023-05-30T09:58:45.447Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"🐾Corgi","logo":{"@type":"ImageObject","url":"http://shenxianghong.github.io/img/logo.svg"}},"description":"Kata Containers 在 Kubernetes 集群场景中的配置与基础使用示例"}</script><link rel="canonical" href="http://shenxianghong.github.io/2021/04/15/2021-04-15%20Kata%20Containers%20%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B/"><link rel="alternate" href="/atom.xml" title="🐾Corgi" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/xcode.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
   (function () {
       function switchTab() {
           if (!location.hash) {
@@ -29,7 +29,7 @@
       switchTab();
       window.addEventListener('hashchange', switchTab, false);
   })();
-  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item night" id="night-nav" title="Night Mode" href="javascript:;"><i class="fas fa-moon" id="night-icon"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="https://picsum.photos/0?sig=20210415" alt="「 Kata Containers 」快速开始"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><i class="fa fa-calendar"></i> <time dateTime="${date_xml(page.date)}" title="${date_xml(page.date)}">2021-04-15</time></span><span class="level-item"><i class="fa fa-calendar-check"></i> <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">2023-05-29</time></span><span class="level-item"><i class="far fa-folder-open"></i> <a class="link-muted" href="/categories/Container-Runtime/">Container Runtime</a></span><span class="level-item"><i class="far fa-clock"></i> an hour read (About 6874 words)</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Kata Containers 」快速开始</h1><div class="content"><div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item night" id="night-nav" title="Night Mode" href="javascript:;"><i class="fas fa-moon" id="night-icon"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="https://picsum.photos/0?sig=20210415" alt="「 Kata Containers 」快速开始"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><i class="fa fa-calendar"></i> <time dateTime="${date_xml(page.date)}" title="${date_xml(page.date)}">2021-04-15</time></span><span class="level-item"><i class="fa fa-calendar-check"></i> <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">2023-05-30</time></span><span class="level-item"><i class="far fa-folder-open"></i> <a class="link-muted" href="/categories/Container-Runtime/">Container Runtime</a></span><span class="level-item"><i class="far fa-clock"></i> an hour read (About 8448 words)</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Kata Containers 」快速开始</h1><div class="content"><div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
 
 <hr>
 <blockquote>
@@ -38,7 +38,7 @@
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>Kata Containers 社区提供了 x86 架构制品，arm64 架构制品需要手动编译。这里以 x86 架构的社区制品安装为例：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">wget https://github.com/kata-containers/kata-containers/releases/download/3.0.0/kata-static-3.0.0-x86_64.tar.xz</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">tar -xvf kata-static-3.0.0-x86_64.tar.xz</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">tree opt/kata/</span></span><br><span class="line">opt/kata/</span><br><span class="line">├── bin # 可执行的二进制文件与脚本</span><br><span class="line">│   ├── cloud-hypervisor</span><br><span class="line">│   ├── containerd-shim-kata-v2</span><br><span class="line">│   ├── firecracker</span><br><span class="line">│   ├── jailer</span><br><span class="line">│   ├── kata-collect-data.sh</span><br><span class="line">│   ├── kata-monitor</span><br><span class="line">│   ├── kata-runtime</span><br><span class="line">│   └── qemu-system-x86_64</span><br><span class="line">├── libexec # 可执行的二进制文件</span><br><span class="line">│   └── virtiofsd</span><br><span class="line">├── runtime-rs # Rust 实现下的 shimv2</span><br><span class="line">│   └── bin</span><br><span class="line">│       └── containerd-shim-kata-v2</span><br><span class="line">└── share</span><br><span class="line">    ├── bash-completion # 命令行补全脚本</span><br><span class="line">    │   └── completions</span><br><span class="line">    │       └── kata-runtime</span><br><span class="line">    ├── defaults # 不同 hypervisor 实现下的静态配置文件</span><br><span class="line">    │   └── kata-containers</span><br><span class="line">    │       ├── configuration-acrn.toml</span><br><span class="line">    │       ├── configuration-clh.toml</span><br><span class="line">    │       ├── configuration-dragonball.toml</span><br><span class="line">    │       ├── configuration-fc.toml</span><br><span class="line">    │       ├── configuration-qemu.toml</span><br><span class="line">    │       └── configuration.toml -&gt; configuration-qemu.toml</span><br><span class="line">    ├── kata-containers # 内核与 guest 镜像</span><br><span class="line">    │   ├── config-5.19.2</span><br><span class="line">    │   ├── kata-alpine-3.15.initrd</span><br><span class="line">    │   ├── kata-clearlinux-latest.image</span><br><span class="line">    │   ├── kata-containers.img -&gt; kata-clearlinux-latest.image</span><br><span class="line">    │   ├── kata-containers-initrd.img -&gt; kata-alpine-3.15.initrd</span><br><span class="line">    │   ├── vmlinux-5.19.2-96</span><br><span class="line">    │   ├── vmlinux.container -&gt; vmlinux-5.19.2-96</span><br><span class="line">    │   ├── vmlinuz-5.19.2-96</span><br><span class="line">    │   └── vmlinuz.container -&gt; vmlinuz-5.19.2-96</span><br><span class="line">    └── kata-qemu # QEMU 依赖</span><br><span class="line">        └── qemu</span><br><span class="line">            ├── bios-256k.bin</span><br><span class="line">            ├── bios.bin</span><br><span class="line">            ├── bios-microvm.bin</span><br><span class="line">            ├── edk2-aarch64-code.fd</span><br><span class="line">            ├── edk2-arm-code.fd</span><br><span class="line">            ├── edk2-arm-vars.fd</span><br><span class="line">            ├── edk2-i386-code.fd</span><br><span class="line">            ├── edk2-i386-secure-code.fd</span><br><span class="line">            ├── edk2-i386-vars.fd</span><br><span class="line">            ├── edk2-licenses.txt</span><br><span class="line">            ├── edk2-x86_64-code.fd</span><br><span class="line">            ├── edk2-x86_64-secure-code.fd</span><br><span class="line">            ├── efi-virtio.rom</span><br><span class="line">            ├── firmware</span><br><span class="line">            │   ├── 50-edk2-i386-secure.json</span><br><span class="line">            │   ├── 50-edk2-x86_64-secure.json</span><br><span class="line">            │   ├── 60-edk2-aarch64.json</span><br><span class="line">            │   ├── 60-edk2-arm.json</span><br><span class="line">            │   ├── 60-edk2-i386.json</span><br><span class="line">            │   └── 60-edk2-x86_64.json</span><br><span class="line">            ├── hppa-firmware.img</span><br><span class="line">            ├── kvmvapic.bin</span><br><span class="line">            ├── linuxboot.bin</span><br><span class="line">            ├── linuxboot_dma.bin</span><br><span class="line">            ├── multiboot_dma.bin</span><br><span class="line">            ├── pvh.bin</span><br><span class="line">            ├── qboot.rom</span><br><span class="line">            ├── qemu-nsis.bmp</span><br><span class="line">            ├── s390-ccw.img</span><br><span class="line">            └── s390-netboot.img</span><br></pre></td></tr></table></figure>
 
-<h1 id="配置参数"><a href="#配置参数" class="headerlink" title="配置参数"></a>配置参数</h1><p>Kata Containers 中配置的优先级为：动态配置项 &gt; 静态配置项 &gt; 默认值</p>
+<h1 id="Kata-Containers-配置"><a href="#Kata-Containers-配置" class="headerlink" title="Kata Containers 配置"></a>Kata Containers 配置</h1><p>Kata Containers 中配置的优先级为：动态配置项 &gt; 静态配置项 &gt; 默认值</p>
 <ul>
 <li>动态配置项是通过 OCI spec 中的 annotations 传递，主流的 CRI 实现支持将 Kubernetes Pod annotations 透传至 Kata 运行时</li>
 <li>各个动态与静态配置项支持与否视 hypervisor 具体实现的能力有所区别</li>
@@ -80,12 +80,12 @@
 <tr>
 <td>confidential_guest</td>
 <td>N</td>
-<td>是否启用机密容器特性。机密容器需要 host 支持 tdxProtection（<a target="_blank" rel="noopener" href="https://software.intel.com/content/www/us/en/develop/articles/intel-trust-domain-extensions.html">Intel Trust Domain Extensions</a>）、sevProtection（<a target="_blank" rel="noopener" href="https://developer.amd.com/sev/">AMD Secure Encrypted Virtualization</a>）、pefProtection（<a target="_blank" rel="noopener" href="https://www.kernel.org/doc/html/latest/powerpc/ultravisor.html">IBM POWER 9 Protected Execution Facility</a>）以及 seProtection（<a target="_blank" rel="noopener" href="https://www.kernel.org/doc/html/latest/virt/kvm/s390-pv.html">IBM Secure Execution (IBM Z &amp; LinuxONE)</a>）。不支持 CPU 和内存的热插拔以及 NVDIMM 设备。不支持 arm64 架构</td>
+<td>是否启用机密容器特性。机密容器需要 host 支持 tdxProtection（<a target="_blank" rel="noopener" href="https://software.intel.com/content/www/us/en/develop/articles/intel-trust-domain-extensions.html">Intel Trust Domain Extensions</a>）、sevProtection（<a target="_blank" rel="noopener" href="https://developer.amd.com/sev/">AMD Secure Encrypted Virtualization</a>）、pefProtection（<a target="_blank" rel="noopener" href="https://www.kernel.org/doc/html/latest/powerpc/ultravisor.html">IBM POWER 9 Protected Execution Facility</a>）以及 seProtection（<a target="_blank" rel="noopener" href="https://www.kernel.org/doc/html/latest/virt/kvm/s390-pv.html">IBM Secure Execution (IBM Z &amp; LinuxONE)</a>）。不支持 CPU 和内存的热插拔以及 NVDIMM 设备，不支持 arm64 架构</td>
 </tr>
 <tr>
 <td>rootless</td>
 <td>Y</td>
-<td>是否以非 root 权限的随机用户启动 QEMU VMM</td>
+<td>是否以非 root 权限的随机用户启动 QEMU VMM，默认为 false</td>
 </tr>
 <tr>
 <td>enable_annotations</td>
@@ -95,12 +95,12 @@
 <tr>
 <td>valid_hypervisor_paths</td>
 <td>N</td>
-<td>以 glob(3) 规则校验 path 参数是否合法的路径集合</td>
+<td>以 glob(3) 规则校验 path 参数是否为合法的路径集合</td>
 </tr>
 <tr>
 <td>kernel_params</td>
 <td>Y</td>
-<td>VM kernel 的附加参数</td>
+<td>VM kernel 的额外附加参数，默认为空</td>
 </tr>
 <tr>
 <td>firmware</td>
@@ -115,17 +115,17 @@
 <tr>
 <td>machine_accelerators</td>
 <td>Y</td>
-<td>机器加速器参数</td>
+<td>机器加速器参数，默认为空</td>
 </tr>
 <tr>
 <td>seccompsandbox</td>
 <td>N</td>
-<td>seccomp 参数。QEMU seccomp sandbox 是 QEMU VM 中的一种安全特性，通过限制 QEMU 进程的系统调用，以提高 VM 的安全性。它使用了 Linux 内核提供的 seccomp 机制，将 QEMU 进程限制在一组安全的系统调用中，从而降低 VM 遭受攻击的风险。推荐启用 &#x2F;proc&#x2F;sys&#x2F;net&#x2F;core&#x2F;bpf_jit_enable，以降低该特性带来的性能下降</td>
+<td>seccomp 参数。QEMU seccomp sandbox 是 QEMU VM 中的一种安全特性，通过限制 QEMU 进程的系统调用，以提高 VM 的安全性。它使用了 Linux 内核提供的 seccomp 机制，将 QEMU 进程限制在一组安全的系统调用中，从而降低 VM 遭受攻击的风险。推荐设置 &#x2F;proc&#x2F;sys&#x2F;net&#x2F;core&#x2F;bpf_jit_enable 文件内容为 1，以降低该特性带来的性能下降</td>
 </tr>
 <tr>
 <td>cpu_features</td>
 <td>Y</td>
-<td>CPU 特性参数，例如配置文件中默认的 pmu&#x3D;off 参数用于禁用 VM 中的性能监视器单元（Performance Monitoring Unit，PMU）。PMU 是一种硬件设备，用于监控 CPU 的性能指标，如指令执行次数、缓存命中率等。在某些情况下，PMU 可能会被用于进行侧信道攻击或窃取敏感信息</td>
+<td>CPU 特性参数，例如默认的 pmu&#x3D;off 参数用于禁用 VM 中的性能监视器单元（Performance Monitoring Unit，PMU）。PMU 是一种硬件设备，用于监控 CPU 的性能指标，如指令执行次数、缓存命中率等。在某些情况下，PMU 可能会被用于进行侧信道攻击或窃取敏感信息</td>
 </tr>
 <tr>
 <td>default_vcpus</td>
@@ -150,7 +150,7 @@
 <tr>
 <td>memory_slots</td>
 <td>Y</td>
-<td>VM 默认的内存插槽数量，默认为 10，即内存热添加数量的上限为 10</td>
+<td>VM 默认的内存插槽数量，默认为 10，即内存热添加次数上限为 10</td>
 </tr>
 <tr>
 <td>default_maxmemory</td>
@@ -165,230 +165,251 @@
 <tr>
 <td>enable_virtio_mem</td>
 <td>Y</td>
-<td></td>
+<td>是否启用 virtio-mem 设备，默认为 false。virtio-mem 设备可以提高 VM 的内存性能。它通过在 host 和 VM 之间共享内存，使 VM 可以直接访问 host 内存，而无需通过复制或传输数据。这种直接访问可显著降低内存访问延迟和 CPU 使用率，并提高 VM 的性能和吞吐量。推荐设置 &#x2F;proc&#x2F;sys&#x2F;vm&#x2F;overcommit_memory 文件内容为 1</td>
 </tr>
 <tr>
 <td>disable_block_device_use</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>禁止块设备用于容器的 rootfs。例如 devicemapper 之类的存储驱动程序中，容器的 rootfs 由块设备支持，出于性能原因，块设备默认直接传递给 hypervisor。 禁用传递时，会用 virtio-fs 传递 rootfs</td>
 </tr>
 <tr>
 <td>shared_fs</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>host 和 VM 之间共享文件系统类型，默认为 virtio-fs，此外支持 virtio-9p 和 virtio-fs-nydus</td>
 </tr>
 <tr>
 <td>virtio_fs_daemon</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>vhost-user-fs 可执行文件的路径</td>
 </tr>
 <tr>
 <td>valid_virtio_fs_daemon_paths</td>
-<td></td>
-<td></td>
+<td>N</td>
+<td>以 glob(3) 规则校验 virtio_fs_daemon 参数是否为合法的路径集合</td>
 </tr>
 <tr>
 <td>virtio_fs_cache_size</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>DAX 缓存大小，默认为 0 MiB。virtio_fs 支持 DAX（Direct Access）模式，这意味着 VM 可以直接访问 host 的文件系统缓存，从而提高了读取和写入数据的速度</td>
 </tr>
 <tr>
 <td>virtio_fs_extra_args</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>vhost-user-fs 的额外附加参数</td>
 </tr>
 <tr>
 <td>virtio_fs_cache</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>virtio-fs 文件系统在 VM 和 host 之间共享文件时的缓存模式，默认是 auto，此外支持 none 和 always。none 表示 VM 中不缓存文件系统的元数据、数据和路径名查找，所有这些信息都需要从 host 中获取。在这种模式下，任何对文件的修改都会立即被推送到 host；alway 则截然相反，表示 VM 中的文件系统元数据、数据和路径名查找都会被缓存，并且永不过期；而 auto 表示 VM 中的元数据和路径名查找缓存会在一定时间后过期（默认为 1 秒），而数据则会在文件打开时缓存（即 close-to-open 一致性）。在这种模式下，VM 会根据需要从 host 中获取文件信息，而不是每次都从 host 获取</td>
 </tr>
 <tr>
 <td>block_device_driver</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>hypervisor 用于管理容器 rootfs 的块存储驱动程序，默认为 virtio-scsi，此外支持 virtio-blk 和 nvdimm。virtio-scsi 是一种基于SCSI 协议的存储虚拟化技术；virtio-blk 则是一种用于块设备的存储虚拟化技术，在使用 virtio-scsi 和 virtio-blk 时，host 上的块设备可以被 VM 视为本地的块设备，从而可以在 VM 中进行读写操作；nvdimm 是一种用于非易失性内存（NVM）的存储技术。它允许将内存作为块设备使用，并提供了与传统块设备相似的可靠性和数据完整性保护</td>
 </tr>
 <tr>
 <td>block_device_aio</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>QEMU 使用的块设备异步 I&#x2F;O 机制，默认为 io_uring，此外支持 threads 和 native。threads 表示 QEMU 使用基于 pthread 的磁盘 I&#x2F;O 机制，这种机制是在用户空间实现的，可以在多个线程之间共享 CPU 时间，但是性能比较一般；native 表示 QEMU 使用本地的 Linux I&#x2F;O 机制。这种机制是在内核空间实现的，可以获得更好的性能，但是需要特权；io_uring 表示 QEMU 使用 Linux io_uring API 来实现异步 I&#x2F;O，这种机制提供了 Linux 中最快的 I&#x2F;O 操作，可以在 QEMU 5.0 及以上版本中使用，但需要 Linux 内核版本大于 5.1，io_uring 机制可以减少 CPU 的上下文切换次数，提高 I&#x2F;O 操作的效率</td>
 </tr>
 <tr>
 <td>block_device_cache_set</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否将缓存相关选项设置给块设备，默认为 false。该参数影响到 block_device_cache_direct 和 block_device_cache_noflush 是否生效</td>
 </tr>
 <tr>
 <td>block_device_cache_direct</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否启用 O_DIRECT 选项，默认为 false。O_DIRECT 是一种 Linux 系统提供的选项，可以绕过 host 页缓存，直接访问块设备，从而提高存储 I&#x2F;O 的性能。受 block_device_cache_set 参数设置影响</td>
 </tr>
 <tr>
 <td>block_device_cache_noflush</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否忽略块设备的缓存刷盘请求，默认为 false。受 block_device_cache_set 参数设置影响</td>
 </tr>
 <tr>
 <td>enable_iothreads</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否启用独立的 I&#x2F;O 线程，默认为 false。启用时，块设备的 I&#x2F;O 操作将在一个单独的 I&#x2F;O 线程中处理，而非 QEMU 的主线程中进行处理，可以减少了主线程的阻塞时间，提高 VM 的 I&#x2F;O 性能</td>
 </tr>
 <tr>
 <td>enable_mem_prealloc</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否启用 VM 内存预分配，默认为 false。启用 VM 内存的预分配可以使内存分配更加稳定和可预测，从而提高 VM 的性能。但是，预分配内存也会占用更多的系统资源，降低容器密度</td>
 </tr>
 <tr>
 <td>enable_hugepages</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否启用 VM 大页内存，默认为 false。Huge Pages 的特点是将内存分配成固定大小的页（通常为 2MB 或 1GB），从而降低了页表的大小和操作系统内核的开销，使用 Huge Pages 分配 VM 内存可以提升性能。在启用大页内存时，内存预分配（enable_mem_prealloc）会被强制设置启用</td>
 </tr>
 <tr>
 <td>enable_vhost_user_store</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否启用 vhost-user 存储设备，默认为 false。启用 vhost-user 存储设备可以将 host 上的块设备虚拟化为一种可以在 VM 中使用的设备，通过 vhost-user 协议在 host 和 VM 之间传输数据，从而提高 VM 的存储性能。在启用 vhost-user 存储设备时，Linux 中的一些保留块类型（Major Range 240-254）将被选择用于表示 vhost-user 设备</td>
 </tr>
 <tr>
 <td>vhost_user_store_path</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>vhost-user 设备的目录，默认为 &#x2F;var&#x2F;run&#x2F;kata-containers&#x2F;vhost-user。在该目录下，”block” 子目录用于存储块设备，”block&#x2F;sockets” 子目录用于存储 vhost-user sockets，”block&#x2F;devices” 子目录用于存储模拟的块设备节点</td>
 </tr>
 <tr>
 <td>enable_iommu</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否启用 vIOMMU 设备，默认为 false。vIOMMU 用于将 VM 的 I&#x2F;O 操作隔离在一个独立的内存地址空间中，以提高 VM 的安全性和性能。此外，vIOMMU 还可以提供更好的 I&#x2F;O 性能，因为它可以减少 VM 和 host 之间的数据传输次数</td>
 </tr>
 <tr>
 <td>enable_iommu_platform</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否启用 IOMMU_PLATFORM 设备，默认为 false。IOMMU_PLATFORM 用于设备 DMA（Direct Memory Access）操作隔离在一个独立的内存地址空间中，以提高系统的安全性和性能。此外，IOMMU_PLATFORM 还可以提供更好的 DMA 性能，因为它可以减少系统和设备之间的数据传输次数。</td>
 </tr>
 <tr>
 <td>valid_vhost_user_store_paths</td>
-<td></td>
-<td></td>
+<td>N</td>
+<td>以 glob(3) 规则校验 vhost_user_store_path 参数是否为合法的路径集合</td>
 </tr>
 <tr>
 <td>file_mem_backend</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>基于文件的内存支持的路径，默认为空。基于文件的 VM 内存支持是一种将 VM 内存保存在文件中的技术，而不是保存在 host 的物理内存中。此外，使用基于文件的 VM 内存还可以减少 VM 和 host 之间的数据传输，从而提高 VM 的性能。在使用 virtio-fs 时，该选项会自动启用，并使用 “&#x2F;dev&#x2F;shm” 作为后端文件</td>
 </tr>
 <tr>
 <td>valid_file_mem_backends</td>
-<td></td>
-<td></td>
+<td>N</td>
+<td>以 glob(3) 规则校验 file_mem_backend 参数是否为合法的路径集合</td>
 </tr>
 <tr>
 <td>pflashes</td>
-<td></td>
-<td></td>
+<td>N</td>
+<td>向 VM 中添加的镜像文件路径，默认为空。镜像文件通常用于模拟系统中的 BIOS 或 UEFI  固件等。例如，arm64 架构下的内存热插拔则需要提供一对 pflash</td>
 </tr>
 <tr>
 <td>enable_debug</td>
-<td></td>
-<td></td>
+<td>N</td>
+<td>是否启用 hypervisor 和内核的 debug 参数，默认为 false</td>
 </tr>
 <tr>
 <td>disable_nesting_checks</td>
-<td></td>
-<td></td>
+<td>N</td>
+<td>是否禁止嵌套虚拟化环境检查，默认为 false。禁用嵌套检查可以从运行时的行为与在裸机上相同</td>
 </tr>
 <tr>
 <td>msize_9p</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>virtio-9p 共享文件系统中描述 9p 数据包有效载荷的字节数量，默认为 8192</td>
 </tr>
 <tr>
 <td>disable_image_nvdimm</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否禁止使用 NVDIMM 设备挂载 VM 镜像，默认为 false。在未禁用且支持 NVDIMM 设备时，VM 镜像会借助 NVDIMM 设备热添加，否则，使用 virtio-block 设备</td>
 </tr>
 <tr>
 <td>hotplug_vfio_on_root_bus</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否允许 VFIO 设备在 root 总线上热插拔，默认为 true。VFIO 是一种用于虚拟化环境中的设备直通技术，它允许将物理设备直接分配给 VM，从而提高 VM 的性能和可靠性。然而，在桥接设备上进行 VFIO 设备的热插拔存在一些限制，特别是对于具有大型 PCI 条的设备。因此，通过将该选项设置为 true，可以在 root 总线上启用 VFIO 设备的热插拔，从而解决这些限制问题</td>
 </tr>
 <tr>
 <td>pcie_root_port</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>pcie_root_port 设备数量，默认为 0。在热插拔 PCIe 设备之前需要添加 pcie_root_port 设备，主要针对使用一些大型 PCI 条设备（如 Nvidia GPU）的情况。仅在启用 hotplug_vfio_on_root_bus 且 machine_type 为 q35 时生效</td>
 </tr>
 <tr>
 <td>disable_vhost_net</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否禁用 vhost-net 作为 virtio-net 的后端，默认为 false。使用 vhost-net 时意味着在提高网络 I&#x2F;O 性能的同时，会牺牲一定的安全性（因为 vhost-net 运行在 ring0 模式下，具有最高的权限和特权）</td>
 </tr>
 <tr>
 <td>entropy_source</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>熵源路径，默认为 &#x2F;dev&#x2F;urandom，用于生成随机数的来源。&#x2F;dev&#x2F;random 是一个阻塞的熵源，如果 host 的熵池用尽，VM 的启动时间会增加，可能会导致启动超时。相比之下，&#x2F;dev&#x2F;urandom 是一个非阻塞的熵源，可以适用于大多数场景</td>
 </tr>
 <tr>
 <td>valid_entropy_sources</td>
-<td></td>
-<td></td>
+<td>N</td>
+<td>以 glob(3) 规则校验 entropy_source 参数是否为合法的路径集合</td>
 </tr>
 <tr>
 <td>guest_hook_path</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>VM 中 hook 脚本路径，默认为空。hook 必须按照其 hook 类型存储在 guest_hook_path 的子目录中，例如 “guest_hook_path&#x2F;{prestart,poststart,poststop}”。Kata agent 将扫描这些目录查找可执行文件，按字母顺序将其添加到容器的生命周期中，并在 VM 运行时命名空间中执行</td>
 </tr>
 <tr>
 <td>rx_rate_limiter_max_rate</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>网络 I&#x2F;O inbound 带宽限制，默认为 0，即不作限制。在 QEMU 中，借助 HTB(Hierarchy Token Bucket) 限制管理</td>
 </tr>
 <tr>
 <td>tx_rate_limiter_max_rate</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>网络 I&#x2F;O outbound 带宽限制，默认为 0，即不作限制。在 QEMU 中，借助 HTB(Hierarchy Token Bucket) 限制管理</td>
 </tr>
 <tr>
 <td>guest_memory_dump_path</td>
-<td></td>
-<td></td>
+<td>N</td>
+<td>VM 内存转储文件路径，默认为空。在出现 GUEST_PANICKED 事件时，VM 的内存将被转储到 host 文件系统下的指定目录中（如果该目录不存在，会自动创建）。被转储的文件（也称为 vmcore 文件）可以使用 crash 或 gdb 等工具进行处理。注意，转储 VM 内存可能需要很长时间，具体取决于 VM 内存的大小，并且会占用大量磁盘空间</td>
 </tr>
 <tr>
 <td>guest_memory_dump_paging</td>
-<td></td>
-<td></td>
+<td>N</td>
+<td>是否启用 VM 内存分页，默认为 false。在 VM 内存转储时，将使用分页机制来处理虚拟地址和物理地址之间的映射关系。如果禁用该选项，则将使用物理地址而不是虚拟地址来进行转储。比如，如果希望使用 gdb 工具而不是 crash 工具，或者需要在 ELF vmcore 中使用VM 的虚拟地址，那么则需要启用内存分页功能</td>
 </tr>
 <tr>
 <td>enable_guest_swap</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否启用 VM 中的交换空间，默认为 false。启用时，会将一个 raw 格式的设备添加到 VM 中作为 SWAP 设备。如果 annotations[“io.katacontainers.container.resource.swappiness”] 大于 0，则根据 annotations[“io.katacontainers.container.resource.swap_in_bytes”] 计算 SWAP 设备大小：默认为 swap_in_bytes - memory_limit_in_bytes；如果 swap_in_bytes 未设置，则为 memory_limit_in_bytes，如果均未设置，则为 default_memory</td>
 </tr>
 <tr>
 <td>use_legacy_serial</td>
-<td></td>
-<td></td>
+<td>Y</td>
+<td>是否使用传统的串行接口作为 VM 控制台设备，默认为 false</td>
 </tr>
 <tr>
 <td>disable_selinux</td>
-<td></td>
-<td></td>
+<td>N</td>
+<td>是否禁用在 hypervisor 上应用 SELinux，默认为 false</td>
 </tr>
 </tbody></table>
-<h1 id="CRI-配置"><a href="#CRI-配置" class="headerlink" title="CRI 配置"></a>CRI 配置</h1><p>Kata Containers 在与 Kubernetes 集成时，默认支持 Containerd 和 CRI-O 作为 CRI，不支持使用 docker-shim 作为 CRI。</p>
-<h2 id="Containerd"><a href="#Containerd" class="headerlink" title="Containerd"></a>Containerd</h2><p><em>&#x2F;etc&#x2F;containerd&#x2F;config.toml</em></p>
-<p>在 Docker（docker-shim）作为 CRI 的场景下，Containerd 本身也是 Docker 的组件之一，但是禁用了 Containerd 作为 CRI。</p>
-<p><strong>非 CRI</strong></p>
-<p>默认安装 Docker 服务时，会自动安装 Containerd，配置文件如下：</p>
-<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#   Copyright 2018-2022 Docker Inc.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#   Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span></span><br><span class="line"><span class="comment">#   you may not use this file except in compliance with the License.</span></span><br><span class="line"><span class="comment">#   You may obtain a copy of the License at</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#       http://www.apache.org/licenses/LICENSE-2.0</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#   Unless required by applicable law or agreed to in writing, software</span></span><br><span class="line"><span class="comment">#   distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span></span><br><span class="line"><span class="comment">#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span></span><br><span class="line"><span class="comment">#   See the License for the specific language governing permissions and</span></span><br><span class="line"><span class="comment">#   limitations under the License.</span></span><br><span class="line"></span><br><span class="line"><span class="attr">disabled_plugins</span> = [<span class="string">&quot;cri&quot;</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment">#root = &quot;/var/lib/containerd&quot;</span></span><br><span class="line"><span class="comment">#state = &quot;/run/containerd&quot;</span></span><br><span class="line"><span class="comment">#subreaper = true</span></span><br><span class="line"><span class="comment">#oom_score = 0</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#[grpc]</span></span><br><span class="line"><span class="comment">#  address = &quot;/run/containerd/containerd.sock&quot;</span></span><br><span class="line"><span class="comment">#  uid = 0</span></span><br><span class="line"><span class="comment">#  gid = 0</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#[debug]</span></span><br><span class="line"><span class="comment">#  address = &quot;/run/containerd/debug.sock&quot;</span></span><br><span class="line"><span class="comment">#  uid = 0</span></span><br><span class="line"><span class="comment">#  gid = 0</span></span><br><span class="line"><span class="comment">#  level = &quot;info&quot;</span></span><br></pre></td></tr></table></figure>
+<h2 id="factory"><a href="#factory" class="headerlink" title="factory"></a>factory</h2><p>不支持动态配置项</p>
+<table>
+<thead>
+<tr>
+<th>静态配置项</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>enable_template</td>
+<td>是否启用 VM 模板，默认为 false。 启用后，从模板克隆创建新的 VM。 它们将通过只读映射共享相同的内核、initramfs 和 Kata agent 内存。 如果在同一 host 上运行许多 Kata 容器，VM 模板有助于加快容器的创建并节省大量内存。仅支持镜像类型为 initrd</td>
+</tr>
+<tr>
+<td>template_path</td>
+<td>VM 模板保存的路径，默认为 &#x2F;run&#x2F;vc&#x2F;vm&#x2F;template</td>
+</tr>
+<tr>
+<td>vm_cache_number</td>
+<td>VMCache 的数量，默认为 0，表示禁用 VMCache。VMCache 是一种在使用之前将 VM 创建为缓存的功能，有助于加快容器的创建。 该功能由服务器和通过 Unix socket 进行通信的客户端组成，服务器将创建一些 VM 并缓存起来。如果启用了 VMCache 功能，kata-runtime 在创建新的 sandbox 时会向 VMCache 服务器请求 VM</td>
+</tr>
+<tr>
+<td>vm_cache_endpoint</td>
+<td>VMCache 服务器的 socket 地址，默认为 &#x2F;var&#x2F;run&#x2F;kata-containers&#x2F;cache.sock</td>
+</tr>
+</tbody></table>
+<h1 id="Container-Engine-集成"><a href="#Container-Engine-集成" class="headerlink" title="Container Engine 集成"></a>Container Engine 集成</h1><h2 id="Docker"><a href="#Docker" class="headerlink" title="Docker"></a>Docker</h2><p><em>TODO：Docker 23.0.0 版本，新增了运行时 shim 的支持，也就支持了 Kata Containers</em></p>
+<h2 id="Containerd"><a href="#Containerd" class="headerlink" title="Containerd"></a>Containerd</h2><p>在 Docker（本质为 docker-shim）作为 CRI 的场景下，Containerd 本身也是 Docker 的组件之一，但是禁用了 Containerd 作为 CRI 的能力，因此也无法集成使用 Kata Containers：</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">disabled_plugins</span> = [<span class="string">&quot;cri&quot;</span>]</span><br></pre></td></tr></table></figure>
 
-<p><strong>CRI</strong></p>
-<p>借助 Containerd 自带的配置生成能力，创建其作为 CRI 的配置文件：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sudo <span class="built_in">mkdir</span> -p /etc/containerd</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">containerd config default | sudo <span class="built_in">tee</span> /etc/containerd/config.toml</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">生成 Containerd 默认的配置文件</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sudo <span class="built_in">mkdir</span> -p /etc/containerd</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">containerd config default | sudo <span class="built_in">tee</span> /etc/containerd/config.toml</span></span><br></pre></td></tr></table></figure>
 
-<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">disabled_plugins</span> = []</span><br><span class="line"><span class="attr">imports</span> = []</span><br><span class="line"><span class="attr">oom_score</span> = <span class="number">0</span></span><br><span class="line"><span class="attr">plugin_dir</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"><span class="attr">required_plugins</span> = []</span><br><span class="line"><span class="attr">root</span> = <span class="string">&quot;/var/lib/containerd&quot;</span></span><br><span class="line"><span class="attr">state</span> = <span class="string">&quot;/run/containerd&quot;</span></span><br><span class="line"><span class="attr">temp</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"><span class="attr">version</span> = <span class="number">2</span></span><br><span class="line"></span><br><span class="line"><span class="section">[cgroup]</span></span><br><span class="line">  <span class="attr">path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="section">[debug]</span></span><br><span class="line">  <span class="attr">address</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  <span class="attr">format</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  <span class="attr">gid</span> = <span class="number">0</span></span><br><span class="line">  <span class="attr">level</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  <span class="attr">uid</span> = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="section">[grpc]</span></span><br><span class="line">  <span class="attr">address</span> = <span class="string">&quot;/run/containerd/containerd.sock&quot;</span></span><br><span class="line">  <span class="attr">gid</span> = <span class="number">0</span></span><br><span class="line">  <span class="attr">max_recv_message_size</span> = <span class="number">16777216</span></span><br><span class="line">  <span class="attr">max_send_message_size</span> = <span class="number">16777216</span></span><br><span class="line">  <span class="attr">tcp_address</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  <span class="attr">tcp_tls_ca</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  <span class="attr">tcp_tls_cert</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  <span class="attr">tcp_tls_key</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  <span class="attr">uid</span> = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="section">[metrics]</span></span><br><span class="line">  <span class="attr">address</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  <span class="attr">grpc_histogram</span> = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line"><span class="section">[plugins]</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.gc.v1.scheduler&quot;]</span></span><br><span class="line">    <span class="attr">deletion_threshold</span> = <span class="number">0</span></span><br><span class="line">    <span class="attr">mutation_threshold</span> = <span class="number">100</span></span><br><span class="line">    <span class="attr">pause_threshold</span> = <span class="number">0.02</span></span><br><span class="line">    <span class="attr">schedule_delay</span> = <span class="string">&quot;0s&quot;</span></span><br><span class="line">    <span class="attr">startup_delay</span> = <span class="string">&quot;100ms&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;]</span></span><br><span class="line">    <span class="attr">device_ownership_from_security_context</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">disable_apparmor</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">disable_cgroup</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">disable_hugetlb_controller</span> = <span class="literal">true</span></span><br><span class="line">    <span class="attr">disable_proc_mount</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">disable_tcp_service</span> = <span class="literal">true</span></span><br><span class="line">    <span class="attr">enable_selinux</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">enable_tls_streaming</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">enable_unprivileged_icmp</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">enable_unprivileged_ports</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">ignore_image_defined_volumes</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">max_concurrent_downloads</span> = <span class="number">3</span></span><br><span class="line">    <span class="attr">max_container_log_line_size</span> = <span class="number">16384</span></span><br><span class="line">    <span class="attr">netns_mounts_under_state_dir</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">restrict_oom_score_adj</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">sandbox_image</span> = <span class="string">&quot;registry.k8s.io/pause:3.6&quot;</span></span><br><span class="line">    <span class="attr">selinux_category_range</span> = <span class="number">1024</span></span><br><span class="line">    <span class="attr">stats_collect_period</span> = <span class="number">10</span></span><br><span class="line">    <span class="attr">stream_idle_timeout</span> = <span class="string">&quot;4h0m0s&quot;</span></span><br><span class="line">    <span class="attr">stream_server_address</span> = <span class="string">&quot;127.0.0.1&quot;</span></span><br><span class="line">    <span class="attr">stream_server_port</span> = <span class="string">&quot;0&quot;</span></span><br><span class="line">    <span class="attr">systemd_cgroup</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">tolerate_missing_hugetlb_controller</span> = <span class="literal">true</span></span><br><span class="line">    <span class="attr">unset_seccomp_profile</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.cni]</span></span><br><span class="line">      <span class="attr">bin_dir</span> = <span class="string">&quot;/opt/cni/bin&quot;</span></span><br><span class="line">      <span class="attr">conf_dir</span> = <span class="string">&quot;/etc/cni/net.d&quot;</span></span><br><span class="line">      <span class="attr">conf_template</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">      <span class="attr">ip_pref</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">      <span class="attr">max_conf_num</span> = <span class="number">1</span></span><br><span class="line"></span><br><span class="line">    <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd]</span></span><br><span class="line">      <span class="attr">default_runtime_name</span> = <span class="string">&quot;runc&quot;</span></span><br><span class="line">      <span class="attr">disable_snapshot_annotations</span> = <span class="literal">true</span></span><br><span class="line">      <span class="attr">discard_unpacked_layers</span> = <span class="literal">false</span></span><br><span class="line">      <span class="attr">ignore_rdt_not_enabled_errors</span> = <span class="literal">false</span></span><br><span class="line">      <span class="attr">no_pivot</span> = <span class="literal">false</span></span><br><span class="line">      <span class="attr">snapshotter</span> = <span class="string">&quot;overlayfs&quot;</span></span><br><span class="line"></span><br><span class="line">      <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.default_runtime]</span></span><br><span class="line">        <span class="attr">base_runtime_spec</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">cni_conf_dir</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">cni_max_conf_num</span> = <span class="number">0</span></span><br><span class="line">        <span class="attr">container_annotations</span> = []</span><br><span class="line">        <span class="attr">pod_annotations</span> = []</span><br><span class="line">        <span class="attr">privileged_without_host_devices</span> = <span class="literal">false</span></span><br><span class="line">        <span class="attr">runtime_engine</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">runtime_path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">runtime_root</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">runtime_type</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">        <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.default_runtime.options]</span></span><br><span class="line"></span><br><span class="line">      <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes]</span></span><br><span class="line"></span><br><span class="line">        <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes.runc]</span></span><br><span class="line">          <span class="attr">base_runtime_spec</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">          <span class="attr">cni_conf_dir</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">          <span class="attr">cni_max_conf_num</span> = <span class="number">0</span></span><br><span class="line">          <span class="attr">container_annotations</span> = []</span><br><span class="line">          <span class="attr">pod_annotations</span> = []</span><br><span class="line">          <span class="attr">privileged_without_host_devices</span> = <span class="literal">false</span></span><br><span class="line">          <span class="attr">runtime_engine</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">          <span class="attr">runtime_path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">          <span class="attr">runtime_root</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">          <span class="attr">runtime_type</span> = <span class="string">&quot;io.containerd.runc.v2&quot;</span></span><br><span class="line"></span><br><span class="line">          <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes.runc.options]</span></span><br><span class="line">            <span class="attr">BinaryName</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">            <span class="attr">CriuImagePath</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">            <span class="attr">CriuPath</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">            <span class="attr">CriuWorkPath</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">            <span class="attr">IoGid</span> = <span class="number">0</span></span><br><span class="line">            <span class="attr">IoUid</span> = <span class="number">0</span></span><br><span class="line">            <span class="attr">NoNewKeyring</span> = <span class="literal">false</span></span><br><span class="line">            <span class="attr">NoPivotRoot</span> = <span class="literal">false</span></span><br><span class="line">            <span class="attr">Root</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">            <span class="attr">ShimCgroup</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">            <span class="attr">SystemdCgroup</span> = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">      <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.untrusted_workload_runtime]</span></span><br><span class="line">        <span class="attr">base_runtime_spec</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">cni_conf_dir</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">cni_max_conf_num</span> = <span class="number">0</span></span><br><span class="line">        <span class="attr">container_annotations</span> = []</span><br><span class="line">        <span class="attr">pod_annotations</span> = []</span><br><span class="line">        <span class="attr">privileged_without_host_devices</span> = <span class="literal">false</span></span><br><span class="line">        <span class="attr">runtime_engine</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">runtime_path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">runtime_root</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">runtime_type</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">        <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.untrusted_workload_runtime.options]</span></span><br><span class="line"></span><br><span class="line">    <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.image_decryption]</span></span><br><span class="line">      <span class="attr">key_model</span> = <span class="string">&quot;node&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.registry]</span></span><br><span class="line">      <span class="attr">config_path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">      <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.registry.auths]</span></span><br><span class="line"></span><br><span class="line">      <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.registry.configs]</span></span><br><span class="line"></span><br><span class="line">      <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.registry.headers]</span></span><br><span class="line"></span><br><span class="line">      <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.registry.mirrors]</span></span><br><span class="line"></span><br><span class="line">    <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.x509_key_pair_streaming]</span></span><br><span class="line">      <span class="attr">tls_cert_file</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">      <span class="attr">tls_key_file</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.internal.v1.opt&quot;]</span></span><br><span class="line">    <span class="attr">path</span> = <span class="string">&quot;/opt/containerd&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.internal.v1.restart&quot;]</span></span><br><span class="line">    <span class="attr">interval</span> = <span class="string">&quot;10s&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.internal.v1.tracing&quot;]</span></span><br><span class="line">    <span class="attr">sampling_ratio</span> = <span class="number">1.0</span></span><br><span class="line">    <span class="attr">service_name</span> = <span class="string">&quot;containerd&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.metadata.v1.bolt&quot;]</span></span><br><span class="line">    <span class="attr">content_sharing_policy</span> = <span class="string">&quot;shared&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.monitor.v1.cgroups&quot;]</span></span><br><span class="line">    <span class="attr">no_prometheus</span> = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.runtime.v1.linux&quot;]</span></span><br><span class="line">    <span class="attr">no_shim</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">runtime</span> = <span class="string">&quot;runc&quot;</span></span><br><span class="line">    <span class="attr">runtime_root</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">shim</span> = <span class="string">&quot;containerd-shim&quot;</span></span><br><span class="line">    <span class="attr">shim_debug</span> = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.runtime.v2.task&quot;]</span></span><br><span class="line">    <span class="attr">platforms</span> = [<span class="string">&quot;linux/amd64&quot;</span>]</span><br><span class="line">    <span class="attr">sched_core</span> = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.service.v1.diff-service&quot;]</span></span><br><span class="line">    <span class="attr">default</span> = [<span class="string">&quot;walking&quot;</span>]</span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.service.v1.tasks-service&quot;]</span></span><br><span class="line">    <span class="attr">rdt_config_file</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.snapshotter.v1.aufs&quot;]</span></span><br><span class="line">    <span class="attr">root_path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.snapshotter.v1.btrfs&quot;]</span></span><br><span class="line">    <span class="attr">root_path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.snapshotter.v1.devmapper&quot;]</span></span><br><span class="line">    <span class="attr">async_remove</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">base_image_size</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">discard_blocks</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">fs_options</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">fs_type</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">pool_name</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">root_path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.snapshotter.v1.native&quot;]</span></span><br><span class="line">    <span class="attr">root_path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.snapshotter.v1.overlayfs&quot;]</span></span><br><span class="line">    <span class="attr">root_path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">upperdir_label</span> = <span class="literal">false</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.snapshotter.v1.zfs&quot;]</span></span><br><span class="line">    <span class="attr">root_path</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[plugins.&quot;io.containerd.tracing.processor.v1.otlp&quot;]</span></span><br><span class="line">    <span class="attr">endpoint</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">insecure</span> = <span class="literal">false</span></span><br><span class="line">    <span class="attr">protocol</span> = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="section">[proxy_plugins]</span></span><br><span class="line"></span><br><span class="line"><span class="section">[stream_processors]</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[stream_processors.&quot;io.containerd.ocicrypt.decoder.v1.tar&quot;]</span></span><br><span class="line">    <span class="attr">accepts</span> = [<span class="string">&quot;application/vnd.oci.image.layer.v1.tar+encrypted&quot;</span>]</span><br><span class="line">    <span class="attr">args</span> = [<span class="string">&quot;--decryption-keys-path&quot;</span>, <span class="string">&quot;/etc/containerd/ocicrypt/keys&quot;</span>]</span><br><span class="line">    <span class="attr">env</span> = [<span class="string">&quot;OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf&quot;</span>]</span><br><span class="line">    <span class="attr">path</span> = <span class="string">&quot;ctd-decoder&quot;</span></span><br><span class="line">    <span class="attr">returns</span> = <span class="string">&quot;application/vnd.oci.image.layer.v1.tar&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="section">[stream_processors.&quot;io.containerd.ocicrypt.decoder.v1.tar.gzip&quot;]</span></span><br><span class="line">    <span class="attr">accepts</span> = [<span class="string">&quot;application/vnd.oci.image.layer.v1.tar+gzip+encrypted&quot;</span>]</span><br><span class="line">    <span class="attr">args</span> = [<span class="string">&quot;--decryption-keys-path&quot;</span>, <span class="string">&quot;/etc/containerd/ocicrypt/keys&quot;</span>]</span><br><span class="line">    <span class="attr">env</span> = [<span class="string">&quot;OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf&quot;</span>]</span><br><span class="line">    <span class="attr">path</span> = <span class="string">&quot;ctd-decoder&quot;</span></span><br><span class="line">    <span class="attr">returns</span> = <span class="string">&quot;application/vnd.oci.image.layer.v1.tar+gzip&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="section">[timeouts]</span></span><br><span class="line">  <span class="attr">&quot;io.containerd.timeout.bolt.open&quot;</span> = <span class="string">&quot;0s&quot;</span></span><br><span class="line">  <span class="attr">&quot;io.containerd.timeout.shim.cleanup&quot;</span> = <span class="string">&quot;5s&quot;</span></span><br><span class="line">  <span class="attr">&quot;io.containerd.timeout.shim.load&quot;</span> = <span class="string">&quot;5s&quot;</span></span><br><span class="line">  <span class="attr">&quot;io.containerd.timeout.shim.shutdown&quot;</span> = <span class="string">&quot;3s&quot;</span></span><br><span class="line">  <span class="attr">&quot;io.containerd.timeout.task.state&quot;</span> = <span class="string">&quot;2s&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="section">[ttrpc]</span></span><br><span class="line">  <span class="attr">address</span> = <span class="string">&quot;&quot;</span></span><br><span class="line">  <span class="attr">gid</span> = <span class="number">0</span></span><br><span class="line">  <span class="attr">uid</span> = <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>可以看到，Containerd 的默认 OCI 运行时为 runC，可以通过新增以下内容，新增对 Kata Containers 的支持：</p>
+<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes]</span></span><br><span class="line">   <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes.kata]</span></span><br><span class="line">       <span class="attr">runtime_type</span> = <span class="string">&quot;io.containerd.kata.v2&quot;</span></span><br><span class="line">       <span class="attr">privileged_without_host_devices</span> = <span class="literal">true</span></span><br><span class="line">       <span class="attr">pod_annotations</span> = [<span class="string">&quot;io.katacontainers.*&quot;</span>]</span><br><span class="line">       <span class="attr">container_annotations</span> = [<span class="string">&quot;io.katacontainers.*&quot;</span>]</span><br><span class="line">       <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes.kata.options]</span></span><br><span class="line">          <span class="attr">ConfigPath</span> = <span class="string">&quot;/opt/kata/share/defaults/kata-containers/configuration.toml&quot;</span></span><br></pre></td></tr></table></figure>
 
-<p>可以看到，Containerd 的默认 OCI 运行时为 runC，可以通过新增以下内容，用于对 Kata Containers 的支持：</p>
-<figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes]</span></span><br><span class="line">    <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes.kata]</span></span><br><span class="line">        <span class="attr">runtime_type</span> = <span class="string">&quot;io.containerd.kata.v2&quot;</span></span><br><span class="line">        <span class="attr">privileged_without_host_devices</span> = <span class="literal">true</span></span><br><span class="line">        <span class="attr">pod_annotations</span> = [<span class="string">&quot;io.katacontainers.*&quot;</span>]</span><br><span class="line">        <span class="attr">container_annotations</span> = [<span class="string">&quot;io.katacontainers.*&quot;</span>]</span><br><span class="line">        <span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes.kata.options]</span></span><br><span class="line">           <span class="attr">ConfigPath</span> = <span class="string">&quot;/opt/kata/share/defaults/kata-containers/configuration.toml&quot;</span>、</span><br></pre></td></tr></table></figure>
+<h2 id="CRI-O"><a href="#CRI-O" class="headerlink" title="CRI-O"></a>CRI-O</h2><p><em>TODO</em></p>
+<p>至此，可以单独通过 Container Engine 的命令行运行 Kata Containers，以 Containerd 为例：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sudo ctr image pull docker.io/library/ubuntu:latest</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sudo ctr run --runtime io.containerd.run.kata.v2 -t --<span class="built_in">rm</span> docker.io/library/ubuntu:latest hello sh -c <span class="string">&quot;free -h&quot;</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sudo ctr run --runtime io.containerd.run.kata.v2 -t --memory-limit 536870912 --<span class="built_in">rm</span> docker.io/library/ubuntu:latest hello sh -c <span class="string">&quot;free -h&quot;</span></span></span><br></pre></td></tr></table></figure>
 
-<h2 id="CRI-O"><a href="#CRI-O" class="headerlink" title="CRI-O"></a>CRI-O</h2><p>TODO</p>
-<h1 id="RuntimeClass"><a href="#RuntimeClass" class="headerlink" title="RuntimeClass"></a>RuntimeClass</h1><p>RuntimeClass 是一个用于选择容器运行时配置的特性，容器运行时配置用于运行 Pod 中的容器。</p>
+<h1 id="Kubernetes-集成"><a href="#Kubernetes-集成" class="headerlink" title="Kubernetes 集成"></a>Kubernetes 集成</h1><p>Kubernetes 中对于运行时的集成是通过 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/containers/runtime-class/">RuntimeClass</a> 资源对象，例如</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">RuntimeClass</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">node.k8s.io/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">kata-containers</span></span><br><span class="line"><span class="attr">handler:</span> <span class="string">kata</span></span><br><span class="line"><span class="attr">overhead:</span></span><br><span class="line">  <span class="attr">podFixed:</span></span><br><span class="line">    <span class="attr">memory:</span> <span class="string">&quot;140Mi&quot;</span></span><br><span class="line">    <span class="attr">cpu:</span> <span class="string">&quot;250m&quot;</span></span><br><span class="line"><span class="attr">scheduling:</span></span><br><span class="line">  <span class="attr">nodeSelector:</span></span><br><span class="line">    <span class="attr">runtime:</span> <span class="string">kata</span></span><br></pre></td></tr></table></figure>
 
-<h2 id="handler"><a href="#handler" class="headerlink" title="handler"></a>handler</h2><p>需要和 CRI 中注册的 handler（HANDLER_NAME） 保持一致，用于声明由具体实现的 runtime。</p>
+<h2 id="handler"><a href="#handler" class="headerlink" title="handler"></a>handler</h2><p>需要和 CRI 中注册的 handler（HANDLER_NAME） 保持一致。</p>
 <p><strong>Containerd</strong></p>
 <figure class="highlight toml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[plugins.&quot;io.containerd.grpc.v1.cri&quot;.containerd.runtimes.$&#123;HANDLER_NAME&#125;]</span></span><br></pre></td></tr></table></figure>
 
@@ -399,401 +420,51 @@
 <p>为了确保 Pod 会被调度到支持指定运行时的节点上，每个节点需要设置一个通用的 label 用于被 runtimeclass.scheduling.nodeSelector 挑选。在 admission 阶段，RuntimeClass 的 nodeSelector 将会与 Pod 的 nodeSelector 合并，取二者的交集。如果有冲突，Pod 将会被拒绝。</p>
 <p>如果节点需要阻止某些需要特定 RuntimeClass 的 Pod，可以在 tolerations 中指定。 与 nodeSelector 一样，tolerations 也在 admission 阶段与 Pod 的 tolerations 合并，取二者的并集。</p>
 <h2 id="overhead"><a href="#overhead" class="headerlink" title="overhead"></a>overhead</h2><p>在节点上运行 Pod 时，Pod 本身占用大量系统资源。这些资源是运行 Pod 内容器所需资源的附加资源。Overhead 是一个特性，用于计算 Pod 基础设施在容器请求和限制之上消耗的资源。</p>
-<p>在 Kubernetes 中，Pod 的开销是根据与 Pod 的 <a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/concepts/containers/runtime-class/">RuntimeClass</a> 相关联的开销在<a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/reference/access-authn-authz/extensible-admission-controllers/#what-are-admission-webhooks">准入</a>时设置的。</p>
-<p>如果启用了 Pod Overhead，在调度 Pod 时，除了考虑容器资源请求的总和外，还要考虑 Pod 开销。 类似地，kubelet 将在确定 Pod cgroups 的大小和执行 Pod 驱逐排序时也会考虑 Pod 开销。</p>
-<h1 id="Pod"><a href="#Pod" class="headerlink" title="Pod"></a>Pod</h1><h3 id="定制化的-annotation"><a href="#定制化的-annotation" class="headerlink" title="定制化的 annotation"></a>定制化的 annotation</h3><p>Kata Containers 可以通过 Pod annotation 的方式实现定制化每一个 Pod 的底层 Kata 参数。需要做的是上层 CRI 将 Pod annotation 透传至底层 runtime，同时 Kata Containers 开启识别特定的 Pod annotation，并且 CRI 需要支持此功能（如 Containerd 依赖 1.4.x 以上的版本才可以，且对应的 runtime 配置中新增相关 annotations 支持；CRI-O 默认透传所有参数，无需额外配置）</p>
-<p><strong>全局配置</strong></p>
+<p>在 Kubernetes 中，Pod 的开销是根据与 Pod 的 RuntimeClass 相关联的开销在准入控制时设置的。</p>
+<p>如果启用了 Pod Overhead，在调度 Pod 时，除了考虑容器资源请求的总和外，还要考虑 Pod 开销。 类似地，Kubelet 将在确定 Pod cgroups 的大小和执行 Pod 驱逐排序时也会考虑 Pod 开销。</p>
+<h1 id="annotation-扩展"><a href="#annotation-扩展" class="headerlink" title="annotation 扩展"></a>annotation 扩展</h1><p>Kata Containers 可以通过 annotation 的方式实现定制化每一个 Kata 容器的底层运行时参数。需要做的是上层 CRI 将 Pod annotation 透传至底层运行时（如 Containerd 1.4.x 以上的版本支持 annotation；CRI-O 默认透传所有参数，无需额外配置），同时 Kata Containers 开启识别特定的 annotation（[hypervisor].enable_annotations）。</p>
+<p><em>具体参考 Kata Containers 配置中动态配置项</em></p>
+<p>此外，Kata Containers 支持 OCI 和容器级别的配置，例如</p>
+<p><strong>OCI 配置</strong></p>
 <table>
 <thead>
 <tr>
-<th>Key</th>
-<th>Value Type</th>
-<th>Comments</th>
+<th>配置项</th>
+<th>含义</th>
 </tr>
 </thead>
 <tbody><tr>
-<td><code>io.katacontainers.config_path</code></td>
-<td>string</td>
-<td>Kata config file location that overrides the default config paths</td>
+<td>io.katacontainers.config_path</td>
+<td>Kata Containers 配置文件路径</td>
 </tr>
 <tr>
-<td><code>io.katacontainers.pkg.oci.bundle_path</code></td>
-<td>string</td>
-<td>OCI bundle path</td>
+<td>io.katacontainers.pkg.oci.bundle_path</td>
+<td>OCI bundle 路径</td>
 </tr>
 <tr>
-<td><code>io.katacontainers.pkg.oci.container_type</code></td>
-<td>string</td>
-<td>OCI container type. Only accepts <code>pod_container</code> and <code>pod_sandbox</code></td>
+<td>io.katacontainers.pkg.oci.container_type</td>
+<td>OCI 容器类型，可选的有 pod_container 和 pod_sandbox</td>
 </tr>
 </tbody></table>
-<p><strong>Runtime 配置</strong></p>
+<p><strong>容器配置</strong></p>
 <table>
 <thead>
 <tr>
-<th>Key</th>
-<th>Value Type</th>
-<th>Comments</th>
+<th>配置项</th>
+<th>含义</th>
 </tr>
 </thead>
 <tbody><tr>
-<td><code>io.katacontainers.config.runtime.experimental</code></td>
-<td><code>boolean</code></td>
-<td>determines if experimental features enabled</td>
+<td>io.katacontainers.container.resource.swappiness</td>
+<td>即 Resources.Memory.Swappiness</td>
 </tr>
 <tr>
-<td><code>io.katacontainers.config.runtime.disable_guest_seccomp</code></td>
-<td><code>boolean</code></td>
-<td>determines if <code>seccomp</code> should be applied inside guest</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.runtime.disable_new_netns</code></td>
-<td><code>boolean</code></td>
-<td>determines if a new netns is created for the hypervisor process</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.runtime.internetworking_model</code></td>
-<td>string</td>
-<td>determines how the VM should be connected to the container network interface. Valid values are <code>macvtap</code>, <code>tcfilter</code> and <code>none</code></td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.runtime.sandbox_cgroup_only</code></td>
-<td><code>boolean</code></td>
-<td>determines if Kata processes are managed only in sandbox cgroup</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.runtime.enable_pprof</code></td>
-<td><code>boolean</code></td>
-<td>enables Golang <code>pprof</code> for <code>containerd-shim-kata-v2</code> process</td>
+<td>io.katacontainers.container.resource.swap_in_bytes</td>
+<td>即 Resources.Memory.Swap</td>
 </tr>
 </tbody></table>
-<p><strong>Agent 配置</strong></p>
-<table>
-<thead>
-<tr>
-<th>Key</th>
-<th>Value Type</th>
-<th>Comments</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>io.katacontainers.config.agent.enable_tracing</code></td>
-<td><code>boolean</code></td>
-<td>enable tracing for the agent</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.agent.container_pipe_size</code></td>
-<td>uint32</td>
-<td>specify the size of the std(in&#x2F;out) pipes created for containers</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.agent.kernel_modules</code></td>
-<td>string</td>
-<td>the list of kernel modules and their parameters that will be loaded in the guest kernel. Semicolon separated list of kernel modules and their parameters. These modules will be loaded in the guest kernel using <code>modprobe</code>(8). E.g., <code>e1000e InterruptThrottleRate=3000,3000,3000 EEE=1; i915 enable_ppgtt=0</code></td>
-</tr>
-</tbody></table>
-<p><strong>Hypervisor 配置</strong></p>
-<table>
-<thead>
-<tr>
-<th>Key</th>
-<th>Value Type</th>
-<th>Comments</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>io.katacontainers.config.hypervisor.asset_hash_type</code></td>
-<td>string</td>
-<td>the hash type used for assets verification, default is <code>sha512</code></td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.block_device_cache_direct</code></td>
-<td><code>boolean</code></td>
-<td>Denotes whether use of <code>O_DIRECT</code> (bypass the host page cache) is enabled</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.block_device_cache_noflush</code></td>
-<td><code>boolean</code></td>
-<td>Denotes whether flush requests for the device are ignored</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.block_device_cache_set</code></td>
-<td><code>boolean</code></td>
-<td>cache-related options will be set to block devices or not</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.block_device_driver</code></td>
-<td>string</td>
-<td>the driver to be used for block device, valid values are <code>virtio-blk</code>, <code>virtio-scsi</code>, <code>nvdimm</code></td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.cpu_features</code></td>
-<td><code>string</code></td>
-<td>Comma-separated list of CPU features to pass to the CPU (QEMU)</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.ctlpath</code> (R)</td>
-<td><code>string</code></td>
-<td>Path to the <code>acrnctl</code>binary for the ACRN hypervisor</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.default_max_vcpus</code></td>
-<td>uint32</td>
-<td>the maximum number of vCPUs allocated for the VM by the hypervisor</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.default_memory</code></td>
-<td>uint32</td>
-<td>the memory assigned for a VM by the hypervisor in <code>MiB</code></td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.default_vcpus</code></td>
-<td>uint32</td>
-<td>the default vCPUs assigned for a VM by the hypervisor</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.disable_block_device_use</code></td>
-<td><code>boolean</code></td>
-<td>disallow a block device from being used</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.disable_image_nvdimm</code></td>
-<td><code>boolean</code></td>
-<td>specify if a <code>nvdimm</code> device should be used as rootfs for the guest (QEMU)</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.disable_vhost_net</code></td>
-<td><code>boolean</code></td>
-<td>specify if <code>vhost-net</code> is not available on the host</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.enable_hugepages</code></td>
-<td><code>boolean</code></td>
-<td>if the memory should be <code>pre-allocated</code> from huge pages</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.enable_iommu_platform</code></td>
-<td><code>boolean</code></td>
-<td>enable <code>iommu</code> on CCW devices (QEMU s390x)</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.enable_iommu</code></td>
-<td><code>boolean</code></td>
-<td>enable <code>iommu</code> on Q35 (QEMU x86_64)</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.enable_iothreads</code></td>
-<td><code>boolean</code></td>
-<td>enable IO to be processed in a separate thread. Supported currently for virtio-<code>scsi</code> driver</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.enable_mem_prealloc</code></td>
-<td><code>boolean</code></td>
-<td>the memory space used for <code>nvdimm</code> device by the hypervisor</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.enable_vhost_user_store</code></td>
-<td><code>boolean</code></td>
-<td>enable vhost-user storage device (QEMU)</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.enable_virtio_mem</code></td>
-<td><code>boolean</code></td>
-<td>enable virtio-mem (QEMU)</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.entropy_source</code> (R)</td>
-<td>string</td>
-<td>the path to a host source of entropy (<code>/dev/random</code>, <code>/dev/urandom</code> or real hardware RNG device)</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.file_mem_backend</code> (R)</td>
-<td>string</td>
-<td>file based memory backend root directory</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.firmware_hash</code></td>
-<td>string</td>
-<td>container firmware SHA-512 hash value</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.firmware</code></td>
-<td>string</td>
-<td>the guest firmware that will run the container VM</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.firmware_volume_hash</code></td>
-<td>string</td>
-<td>container firmware volume SHA-512 hash value</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.firmware_volume</code></td>
-<td>string</td>
-<td>the guest firmware volume that will be passed to the container VM</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.guest_hook_path</code></td>
-<td>string</td>
-<td>the path within the VM that will be used for drop in hooks</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.hotplug_vfio_on_root_bus</code></td>
-<td><code>boolean</code></td>
-<td>indicate if devices need to be hotplugged on the root bus instead of a bridge</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.hypervisor_hash</code></td>
-<td>string</td>
-<td>container hypervisor binary SHA-512 hash value</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.image_hash</code></td>
-<td>string</td>
-<td>container guest image SHA-512 hash value</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.image</code></td>
-<td>string</td>
-<td>the guest image that will run in the container VM</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.initrd_hash</code></td>
-<td>string</td>
-<td>container guest initrd SHA-512 hash value</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.initrd</code></td>
-<td>string</td>
-<td>the guest initrd image that will run in the container VM</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.jailer_hash</code></td>
-<td>string</td>
-<td>container jailer SHA-512 hash value</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.jailer_path</code> (R)</td>
-<td>string</td>
-<td>the jailer that will constrain the container VM</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.kernel_hash</code></td>
-<td>string</td>
-<td>container kernel image SHA-512 hash value</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.kernel_params</code></td>
-<td>string</td>
-<td>additional guest kernel parameters</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.kernel</code></td>
-<td>string</td>
-<td>the kernel used to boot the container VM</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.machine_accelerators</code></td>
-<td>string</td>
-<td>machine specific accelerators for the hypervisor</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.machine_type</code></td>
-<td>string</td>
-<td>the type of machine being emulated by the hypervisor</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.memory_offset</code></td>
-<td>uint64</td>
-<td>the memory space used for <code>nvdimm</code> device by the hypervisor</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.memory_slots</code></td>
-<td>uint32</td>
-<td>the memory slots assigned to the VM by the hypervisor</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.msize_9p</code></td>
-<td>uint32</td>
-<td>the <code>msize</code> for 9p shares</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.path</code></td>
-<td>string</td>
-<td>the hypervisor that will run the container VM</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.pcie_root_port</code></td>
-<td>specify the number of PCIe Root Port devices. The PCIe Root Port device is used to hot-plug a PCIe device (QEMU)</td>
-<td></td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.shared_fs</code></td>
-<td>string</td>
-<td>the shared file system type, either <code>virtio-9p</code> or <code>virtio-fs</code></td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.use_vsock</code></td>
-<td><code>boolean</code></td>
-<td>specify use of <code>vsock</code> for agent communication</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.vhost_user_store_path</code> (R)</td>
-<td><code>string</code></td>
-<td>specify the directory path where vhost-user devices related folders, sockets and device nodes should be (QEMU)</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.virtio_fs_cache_size</code></td>
-<td>uint32</td>
-<td>virtio-fs DAX cache size in <code>MiB</code></td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.virtio_fs_cache</code></td>
-<td>string</td>
-<td>the cache mode for virtio-fs, valid values are <code>always</code>, <code>auto</code> and <code>none</code></td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.virtio_fs_daemon</code></td>
-<td>string</td>
-<td>virtio-fs <code>vhost-user</code>daemon path</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.virtio_fs_extra_args</code></td>
-<td>string</td>
-<td>extra options passed to <code>virtiofs</code> daemon</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.enable_guest_swap</code></td>
-<td><code>boolean</code></td>
-<td>enable swap in the guest</td>
-</tr>
-<tr>
-<td><code>io.katacontainers.config.hypervisor.use_legacy_serial</code></td>
-<td><code>boolean</code></td>
-<td>uses legacy serial device for guest’s console (QEMU)</td>
-</tr>
-</tbody></table>
-<p><strong>Container 配置</strong></p>
-<table>
-<thead>
-<tr>
-<th>Key</th>
-<th>Value Type</th>
-<th>Comments</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>io.katacontainers.container.resource.swappiness&quot;</code></td>
-<td><code>uint64</code></td>
-<td>specify the <code>Resources.Memory.Swappiness</code></td>
-</tr>
-<tr>
-<td><code>io.katacontainers.container.resource.swap_in_bytes&quot;</code></td>
-<td><code>uint64</code></td>
-<td>specify the <code>Resources.Memory.Swap</code></td>
-</tr>
-</tbody></table>
-<p>例如，通过 Pod Annotation 启动一个忽略底层默认大小的，具有 5C 的 VM</p>
-<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">test</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">io.katacontainers.config.hypervisor.default_vcpus:</span> <span class="string">&quot;5&quot;</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">runtimeClassName:</span> <span class="string">kata-containers</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">uname-kata</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">    <span class="attr">command:</span> [<span class="string">&quot;/bin/sh&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;uname -r &amp;&amp; tail -f /dev/null&quot;</span>]</span><br></pre></td></tr></table></figure>
+<p>例如，通过 annotation 启动一个忽略底层默认大小，具有 5CPUs 的 VM</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">kata</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">io.katacontainers.config.hypervisor.default_vcpus:</span> <span class="string">&quot;5&quot;</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">runtimeClassName:</span> <span class="string">kata</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">kata</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">    <span class="attr">command:</span> [<span class="string">&quot;/bin/sh&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;tail -f /dev/null&quot;</span>]</span><br></pre></td></tr></table></figure>
 
 <h1 id="VMCache"><a href="#VMCache" class="headerlink" title="VMCache"></a>VMCache</h1><p>VMCache 是一项新功能，可在使用前将 VM 创建为缓存。它有助于加快新容器的创建。</p>
 <p>该功能由借助 Unix Socket 通信的一个 Server 和一些 Client 组成。该协议是 protocols&#x2F;cache&#x2F;cache.proto 中的 gRPC。</p>
@@ -846,9 +517,11 @@
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kata-runtime factory destroy</span><br><span class="line">vm factory destroyed</span><br></pre></td></tr></table></figure>
 
 <p>如果不想手动调用 kata-runtime factory init，默认创建的第一个 Kata 容器将自动创建一个 VM 模板。</p>
-<h1 id="kata-runtime"><a href="#kata-runtime" class="headerlink" title="kata-runtime"></a>kata-runtime</h1><h2 id="check-kata-check"><a href="#check-kata-check" class="headerlink" title="check (kata-check)"></a>check (kata-check)</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime check --verbose</span></span><br><span class="line">INFO[0000] Looking for releases                          arch=amd64 name=kata-runtime pid=33900 source=runtime url=&quot;https://api.github.com/repos/kata-containers/kata-containers/releases&quot;</span><br><span class="line">Newer major release available: 3.0.0 (url: https://github.com/kata-containers/kata-containers/releases/download/3.0.0/kata-containers-3.0.0-vendor.tar.gz, date: 2022-10-09T09:48:18Z)</span><br><span class="line">INFO[0002] CPU property found                            arch=amd64 description=&quot;Intel Architecture CPU&quot; name=GenuineIntel pid=33900 source=runtime type=attribute</span><br><span class="line">INFO[0002] CPU property found                            arch=amd64 description=&quot;Virtualization support&quot; name=vmx pid=33900 source=runtime type=flag</span><br><span class="line">INFO[0002] CPU property found                            arch=amd64 description=&quot;64Bit CPU&quot; name=lm pid=33900 source=runtime type=flag</span><br><span class="line">INFO[0002] CPU property found                            arch=amd64 description=SSE4.1 name=sse4_1 pid=33900 source=runtime type=flag</span><br><span class="line">INFO[0002] kernel property found                         arch=amd64 description=&quot;Host kernel accelerator for virtio&quot; name=vhost pid=33900 source=runtime type=module</span><br><span class="line">INFO[0002] kernel property found                         arch=amd64 description=&quot;Host kernel accelerator for virtio network&quot; name=vhost_net pid=33900 source=runtime type=module</span><br><span class="line">INFO[0002] kernel property found                         arch=amd64 description=&quot;Host Support for Linux VM Sockets&quot; name=vhost_vsock pid=33900 source=runtime type=module</span><br><span class="line">INFO[0002] kernel property found                         arch=amd64 description=&quot;Intel KVM&quot; name=kvm_intel pid=33900 source=runtime type=module</span><br><span class="line">INFO[0002] kernel property found                         arch=amd64 description=&quot;Kernel-based Virtual Machine&quot; name=kvm pid=33900 source=runtime type=module</span><br><span class="line">System is capable of running Kata Containers</span><br></pre></td></tr></table></figure>
+<h1 id="kata-runtime"><a href="#kata-runtime" class="headerlink" title="kata-runtime"></a>kata-runtime</h1><p>kata-runtime 是一个命令行工具，支持以下功能：</p>
+<h2 id="check-kata-check"><a href="#check-kata-check" class="headerlink" title="check (kata-check)"></a>check (kata-check)</h2><p>检测当前环境是否可以运行 Kata Containers 以及版本是否正确。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime check --verbose</span></span><br><span class="line">INFO[0000] IOMMUPlatform is disabled by default.        </span><br><span class="line">WARN[0000] Not running network checks as super user      arch=amd64 name=kata-runtime pid=29825 source=runtime</span><br><span class="line">INFO[0000] CPU property found                            arch=amd64 description=&quot;Intel Architecture CPU&quot; name=GenuineIntel pid=29825 source=runtime type=attribute</span><br><span class="line">INFO[0000] CPU property found                            arch=amd64 description=&quot;Virtualization support&quot; name=vmx pid=29825 source=runtime type=flag</span><br><span class="line">INFO[0000] CPU property found                            arch=amd64 description=&quot;64Bit CPU&quot; name=lm pid=29825 source=runtime type=flag</span><br><span class="line">INFO[0000] CPU property found                            arch=amd64 description=SSE4.1 name=sse4_1 pid=29825 source=runtime type=flag</span><br><span class="line">INFO[0000] kernel property found                         arch=amd64 description=&quot;Intel KVM&quot; name=kvm_intel pid=29825 source=runtime type=module</span><br><span class="line">INFO[0000] kernel property found                         arch=amd64 description=&quot;Kernel-based Virtual Machine&quot; name=kvm pid=29825 source=runtime type=module</span><br><span class="line">INFO[0000] kernel property found                         arch=amd64 description=&quot;Host kernel accelerator for virtio&quot; name=vhost pid=29825 source=runtime type=module</span><br><span class="line">INFO[0000] kernel property found                         arch=amd64 description=&quot;Host kernel accelerator for virtio network&quot; name=vhost_net pid=29825 source=runtime type=module</span><br><span class="line">INFO[0000] kernel property found                         arch=amd64 description=&quot;Host Support for Linux VM Sockets&quot; name=vhost_vsock pid=29825 source=runtime type=module</span><br><span class="line">System is capable of running Kata Containers</span><br><span class="line">INFO[0000] device available                              arch=amd64 check-type=full device=/dev/kvm name=kata-runtime pid=29825 source=runtime</span><br><span class="line">INFO[0000] feature available                             arch=amd64 check-type=full feature=create-vm name=kata-runtime pid=29825 source=runtime</span><br><span class="line">System can currently create Kata Containers</span><br></pre></td></tr></table></figure>
 
-<p>可选的 flags 包括</p>
+<p>可选的 flags 包括：</p>
 <table>
 <thead>
 <tr>
@@ -865,23 +538,24 @@
 <td>包含过滤预发布的版本</td>
 </tr>
 <tr>
-<td>–no-network-checks</td>
-<td>不借助网络执行检测</td>
+<td>–no-network-checks, -n</td>
+<td>不借助网络执行检测，该参数等价于设置 KATA_CHECK_NO_NETWORK 环境变量</td>
 </tr>
 <tr>
 <td>–only-list-releases</td>
 <td>仅列出较新的可用版本（需要网络支持，且非 root 用户）</td>
 </tr>
 <tr>
-<td>–strict</td>
+<td>–strict, -s</td>
 <td>进行严格检查</td>
 </tr>
 <tr>
-<td>–verbose</td>
+<td>–verbose, -v</td>
 <td>展示详细的检查项</td>
 </tr>
 </tbody></table>
-<h2 id="env-kata-env"><a href="#env-kata-env" class="headerlink" title="env (kata-env)"></a>env (kata-env)</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime <span class="built_in">env</span></span> </span><br><span class="line">[Kernel]</span><br><span class="line">  Path = &quot;/opt/kata/share/kata-containers/vmlinux.container&quot;</span><br><span class="line">  Parameters = &quot;systemd.unit=kata-containers.target systemd.mask=systemd-networkd.service systemd.mask=systemd-networkd.socket scsi_mod.scan=none agent.debug_console agent.debug_console_vport=1026&quot;</span><br><span class="line"></span><br><span class="line">[Meta]</span><br><span class="line">  Version = &quot;1.0.26&quot;</span><br><span class="line"></span><br><span class="line">[Image]</span><br><span class="line">  Path = &quot;/opt/kata/share/kata-containers/kata-containers.img&quot;</span><br><span class="line"></span><br><span class="line">[Initrd]</span><br><span class="line">  Path = &quot;&quot;</span><br><span class="line"></span><br><span class="line">[Hypervisor]</span><br><span class="line">  MachineType = &quot;q35&quot;</span><br><span class="line">  Version = &quot;QEMU emulator version 6.2.0 (kata-static)\nCopyright (c) 2003-2021 Fabrice Bellard and the QEMU Project developers&quot;</span><br><span class="line">  Path = &quot;/opt/kata/bin/qemu-system-x86_64&quot;</span><br><span class="line">  BlockDeviceDriver = &quot;virtio-scsi&quot;</span><br><span class="line">  EntropySource = &quot;/dev/urandom&quot;</span><br><span class="line">  SharedFS = &quot;virtio-fs&quot;</span><br><span class="line">  VirtioFSDaemon = &quot;/opt/kata/libexec/kata-qemu/virtiofsd&quot;</span><br><span class="line">  SocketPath = &quot;&lt;&lt;unknown&gt;&gt;&quot;</span><br><span class="line">  Msize9p = 8192</span><br><span class="line">  MemorySlots = 10</span><br><span class="line">  PCIeRootPort = 0</span><br><span class="line">  HotplugVFIOOnRootBus = false</span><br><span class="line">  Debug = false</span><br><span class="line"></span><br><span class="line">[Runtime]</span><br><span class="line">  Path = &quot;/usr/bin/kata-runtime&quot;</span><br><span class="line">  Debug = false</span><br><span class="line">  Trace = false</span><br><span class="line">  DisableGuestSeccomp = true</span><br><span class="line">  DisableNewNetNs = false</span><br><span class="line">  SandboxCgroupOnly = true</span><br><span class="line">  [Runtime.Config]</span><br><span class="line">    Path = &quot;/etc/kata-containers/configuration.toml&quot;</span><br><span class="line">  [Runtime.Version]</span><br><span class="line">    OCI = &quot;1.0.2-dev&quot;</span><br><span class="line">    [Runtime.Version.Version]</span><br><span class="line">      Semver = &quot;2.4.3&quot;</span><br><span class="line">      Commit = &quot;fcad969e5200607df3b0b31983cc64488e156e99&quot;</span><br><span class="line">      Major = 2</span><br><span class="line">      Minor = 4</span><br><span class="line">      Patch = 3</span><br><span class="line"></span><br><span class="line">[Host]</span><br><span class="line">  Kernel = &quot;3.10.0-957.10.5.el7.x86_64&quot;</span><br><span class="line">  Architecture = &quot;amd64&quot;</span><br><span class="line">  VMContainerCapable = true</span><br><span class="line">  SupportVSocks = true</span><br><span class="line">  [Host.Distro]</span><br><span class="line">    Name = &quot;ArcherOS OS&quot;</span><br><span class="line">    Version = &quot;1.6&quot;</span><br><span class="line">  [Host.CPU]</span><br><span class="line">    Vendor = &quot;GenuineIntel&quot;</span><br><span class="line">    Model = &quot;Intel(R) Xeon(R) CPU E5-2650 v4 @ 2.20GHz&quot;</span><br><span class="line">    CPUs = 48</span><br><span class="line">  [Host.Memory]</span><br><span class="line">    Total = 131447232</span><br><span class="line">    Free = 62496172</span><br><span class="line">    Available = 63926992</span><br><span class="line"></span><br><span class="line">[Agent]</span><br><span class="line">  Debug = false</span><br><span class="line">  Trace = false</span><br></pre></td></tr></table></figure>
+<h2 id="env-kata-env"><a href="#env-kata-env" class="headerlink" title="env (kata-env)"></a>env (kata-env)</h2><p>Kata Containers 配置展示，默认输出格式为 TOML。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime <span class="built_in">env</span></span> </span><br><span class="line">[Kernel]</span><br><span class="line">  Path = &quot;/opt/kata/share/kata-containers/vmlinux-5.19.2-96&quot;</span><br><span class="line">  Parameters = &quot;systemd.unit=kata-containers.target systemd.mask=systemd-networkd.service systemd.mask=systemd-networkd.socket scsi_mod.scan=none agent.log=debug agent.debug_console agent.debug_console_vport=1026&quot;</span><br><span class="line"></span><br><span class="line">[Meta]</span><br><span class="line">  Version = &quot;1.0.26&quot;</span><br><span class="line"></span><br><span class="line">[Image]</span><br><span class="line">  Path = &quot;/opt/kata/share/kata-containers/kata-clearlinux-latest.image&quot;</span><br><span class="line"></span><br><span class="line">[Initrd]</span><br><span class="line">  Path = &quot;&quot;</span><br><span class="line"></span><br><span class="line">[Hypervisor]</span><br><span class="line">  MachineType = &quot;q35&quot;</span><br><span class="line">  Version = &quot;QEMU emulator version 6.2.0 (kata-static)\nCopyright (c) 2003-2021 Fabrice Bellard and the QEMU Project developers&quot;</span><br><span class="line">  Path = &quot;/opt/kata/bin/qemu-system-x86_64&quot;</span><br><span class="line">  BlockDeviceDriver = &quot;virtio-scsi&quot;</span><br><span class="line">  EntropySource = &quot;/dev/urandom&quot;</span><br><span class="line">  SharedFS = &quot;virtio-fs&quot;</span><br><span class="line">  VirtioFSDaemon = &quot;/opt/kata/libexec/virtiofsd&quot;</span><br><span class="line">  SocketPath = &quot;&quot;</span><br><span class="line">  Msize9p = 8192</span><br><span class="line">  MemorySlots = 10</span><br><span class="line">  PCIeRootPort = 2</span><br><span class="line">  HotplugVFIOOnRootBus = true</span><br><span class="line">  Debug = true</span><br><span class="line"></span><br><span class="line">[Runtime]</span><br><span class="line">  Path = &quot;/usr/local/bin/kata-runtime&quot;</span><br><span class="line">  Debug = true</span><br><span class="line">  Trace = false</span><br><span class="line">  DisableGuestSeccomp = true</span><br><span class="line">  DisableNewNetNs = false</span><br><span class="line">  SandboxCgroupOnly = false</span><br><span class="line">  [Runtime.Config]</span><br><span class="line">    Path = &quot;/etc/kata-containers/configuration.toml&quot;</span><br><span class="line">  [Runtime.Version]</span><br><span class="line">    OCI = &quot;1.0.2-dev&quot;</span><br><span class="line">    [Runtime.Version.Version]</span><br><span class="line">      Semver = &quot;3.0.0&quot;</span><br><span class="line">      Commit = &quot;e2a8815ba46360acb8bf89a2894b0d437dc8548a-dirty&quot;</span><br><span class="line">      Major = 3</span><br><span class="line">      Minor = 0</span><br><span class="line">      Patch = 0</span><br><span class="line"></span><br><span class="line">[Host]</span><br><span class="line">  Kernel = &quot;4.18.0-305.43.25.ar.el7.x86_64&quot;</span><br><span class="line">  Architecture = &quot;amd64&quot;</span><br><span class="line">  VMContainerCapable = true</span><br><span class="line">  SupportVSocks = true</span><br><span class="line">  [Host.Distro]</span><br><span class="line">    Name = &quot;CentOS Linux&quot;</span><br><span class="line">    Version = &quot;7&quot;</span><br><span class="line">  [Host.CPU]</span><br><span class="line">    Vendor = &quot;GenuineIntel&quot;</span><br><span class="line">    Model = &quot;QEMU Virtual CPU version (cpu64-rhel6)&quot;</span><br><span class="line">    CPUs = 8</span><br><span class="line">  [Host.Memory]</span><br><span class="line">    Total = 12057632</span><br><span class="line">    Free = 3352124</span><br><span class="line">    Available = 8508112</span><br><span class="line"></span><br><span class="line">[Agent]</span><br><span class="line">  Debug = true</span><br><span class="line">  Trace = false</span><br></pre></td></tr></table></figure>
 
 <p>可选的 flags 包括</p>
 <table>
@@ -896,7 +570,8 @@
 <td>以 JSON 格式展示</td>
 </tr>
 </tbody></table>
-<h2 id="exec"><a href="#exec" class="headerlink" title="exec"></a>exec</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">对于 Pod 而言是其 SandboxID</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime <span class="built_in">exec</span> 27ab74433f11c0b64e404a841d5e2f8296a723ebfa4e598b4d9d32871173b82c</span></span><br></pre></td></tr></table></figure>
+<h2 id="exec"><a href="#exec" class="headerlink" title="exec"></a>exec</h2><p>借助 debug console，进入 VM 控制台，需要 [agent].debug_console_enabled 设置为 true。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">对于 Pod 而言是其 SandboxID</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime <span class="built_in">exec</span> 27ab74433f11c0b64e404a841d5e2f8296a723ebfa4e598b4d9d32871173b82c</span></span><br></pre></td></tr></table></figure>
 
 <p>可选的 flags 包括</p>
 <table>
@@ -911,9 +586,12 @@
 <td>debug console 监听的端口，默认为 1026 或者 0</td>
 </tr>
 </tbody></table>
-<h2 id="metrics"><a href="#metrics" class="headerlink" title="metrics"></a>metrics</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">对于 Pod 而言是其 SandboxID</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime metrics 27ab74433f11c0b64e404a841d5e2f8296a723ebfa4e598b4d9d32871173b82c</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP kata_hypervisor_fds Open FDs <span class="keyword">for</span> hypervisor.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE kata_hypervisor_fds gauge</span></span><br><span class="line">kata_hypervisor_fds 122</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP kata_hypervisor_io_stat Process IO statistics.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE kata_hypervisor_io_stat gauge</span></span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;cancelledwritebytes&quot;&#125; 0</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;rchar&quot;&#125; 5.915546e+06</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;readbytes&quot;&#125; 1.1665408e+07</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;syscr&quot;&#125; 95522</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;syscw&quot;&#125; 202276</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;wchar&quot;&#125; 3.715404e+06</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;writebytes&quot;&#125; 2.097152e+06</span><br></pre></td></tr></table></figure>
+<h2 id="metrics"><a href="#metrics" class="headerlink" title="metrics"></a>metrics</h2><p>收集与用于运行 sandbox 的基础设施相关的指标，例如 runtime、agent、hypervisor 等。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">对于 Pod 而言是其 SandboxID</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime metrics 27ab74433f11c0b64e404a841d5e2f8296a723ebfa4e598b4d9d32871173b82c</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP kata_hypervisor_fds Open FDs <span class="keyword">for</span> hypervisor.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE kata_hypervisor_fds gauge</span></span><br><span class="line">kata_hypervisor_fds 122</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP kata_hypervisor_io_stat Process IO statistics.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE kata_hypervisor_io_stat gauge</span></span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;cancelledwritebytes&quot;&#125; 0</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;rchar&quot;&#125; 5.915546e+06</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;readbytes&quot;&#125; 1.1665408e+07</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;syscr&quot;&#125; 95522</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;syscw&quot;&#125; 202276</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;wchar&quot;&#125; 3.715404e+06</span><br><span class="line">kata_hypervisor_io_stat&#123;item=&quot;writebytes&quot;&#125; 2.097152e+06</span><br></pre></td></tr></table></figure>
 
-<h2 id="direct-volume"><a href="#direct-volume" class="headerlink" title="direct-volume"></a>direct-volume</h2><h3 id="add"><a href="#add" class="headerlink" title="add"></a>add</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime direct-volume add --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount --mount-info \&#123;\&quot;volume-type\&quot;:\&quot;block\&quot;,\&quot;device\&quot;:\&quot;/dev/sdm\&quot;,\&quot;fstype\&quot;:\&quot;xfs\&quot;\&#125;</span></span><br></pre></td></tr></table></figure>
+<h2 id="direct-volume"><a href="#direct-volume" class="headerlink" title="direct-volume"></a>direct-volume</h2><p>管理 Kata Containers 的直通卷。</p>
+<p><strong>add</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime direct-volume add --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount --mount-info \&#123;\&quot;volume-type\&quot;:\&quot;block\&quot;,\&quot;device\&quot;:\&quot;/dev/sdm\&quot;,\&quot;fstype\&quot;:\&quot;xfs\&quot;\&#125;</span></span><br></pre></td></tr></table></figure>
 
 <p>可选的 flags 包括</p>
 <table>
@@ -932,7 +610,8 @@
 <td>管理卷挂载的详情信息</td>
 </tr>
 </tbody></table>
-<h3 id="remove"><a href="#remove" class="headerlink" title="remove"></a>remove</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime direct-volume delete --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount</span></span><br></pre></td></tr></table></figure>
+<p><strong>remove</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime direct-volume delete --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount</span></span><br></pre></td></tr></table></figure>
 
 <p>可选的 flags 包括</p>
 <table>
@@ -947,7 +626,8 @@
 <td>待操作的目标卷路径</td>
 </tr>
 </tbody></table>
-<h3 id="stats"><a href="#stats" class="headerlink" title="stats"></a>stats</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime direct-volume stats --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount</span></span><br></pre></td></tr></table></figure>
+<p><strong>stats</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime direct-volume stats --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount</span></span><br></pre></td></tr></table></figure>
 
 <p>可选的 flags 包括</p>
 <table>
@@ -962,7 +642,8 @@
 <td>待操作的目标卷路径</td>
 </tr>
 </tbody></table>
-<h3 id="resize"><a href="#resize" class="headerlink" title="resize"></a>resize</h3><p><em>截至 Kata Containers 2.4.3，社区仍未实现</em></p>
+<p><strong>resize</strong></p>
+<p><em>截至 Kata Containers 3.0.0，社区仍未实现 VM 中 Kata agent 的逻辑</em></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime direct-volume resize --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount --size 1756519562</span></span><br></pre></td></tr></table></figure>
 
 <p>可选的 flags 包括</p>
@@ -982,13 +663,19 @@
 <td>调整后的预期卷大小（单位为：Byte）</td>
 </tr>
 </tbody></table>
-<h2 id="factory"><a href="#factory" class="headerlink" title="factory"></a>factory</h2><h3 id="init"><a href="#init" class="headerlink" title="init"></a>init</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kata-runtime factory init</span><br><span class="line">vm factory initialized</span><br></pre></td></tr></table></figure>
+<h2 id="factory-1"><a href="#factory-1" class="headerlink" title="factory"></a>factory</h2><p>管理 Kata Containers 的 VM factory。</p>
+<p><strong>init</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime factory init</span></span><br><span class="line">vm factory initialized</span><br></pre></td></tr></table></figure>
 
-<h3 id="status"><a href="#status" class="headerlink" title="status"></a>status</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kata-runtime factory status</span><br><span class="line">vm factory is on</span><br></pre></td></tr></table></figure>
+<p><strong>status</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime factory status</span></span><br><span class="line">vm factory is on</span><br></pre></td></tr></table></figure>
 
-<h3 id="destroy"><a href="#destroy" class="headerlink" title="destroy"></a>destroy</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kata-runtime factory destroy</span><br><span class="line">vm factory destroyed</span><br></pre></td></tr></table></figure>
+<p><strong>destroy</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime factory destroy</span></span><br><span class="line">vm factory destroyed</span><br></pre></td></tr></table></figure>
 
-<h2 id="iptables"><a href="#iptables" class="headerlink" title="iptables"></a>iptables</h2><h3 id="get"><a href="#get" class="headerlink" title="get"></a>get</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime iptables get --sandbox-id xxx --v6</span></span><br></pre></td></tr></table></figure>
+<h2 id="iptables"><a href="#iptables" class="headerlink" title="iptables"></a>iptables</h2><p>管理 VM 中的 iptables 信息。</p>
+<p><strong>get</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime iptables get --sandbox-id xxx --v6</span></span><br></pre></td></tr></table></figure>
 
 <p>可选的 flags 包括</p>
 <table>
@@ -1007,7 +694,8 @@
 <td>获取 IPV6 的 iptables</td>
 </tr>
 </tbody></table>
-<h3 id="set"><a href="#set" class="headerlink" title="set"></a>set</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime iptables <span class="built_in">set</span> --sandbox-id xxx --v6 ./iptables</span></span><br></pre></td></tr></table></figure>
+<p><strong>set</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-runtime iptables <span class="built_in">set</span> --sandbox-id xxx --v6 ./iptables</span></span><br></pre></td></tr></table></figure>
 
 <p>可选的 flags 包括</p>
 <table>
@@ -1026,7 +714,8 @@
 <td>设置 IPV6 的 iptables</td>
 </tr>
 </tbody></table>
-<h1 id="kata-monitor"><a href="#kata-monitor" class="headerlink" title="kata-monitor"></a>kata-monitor</h1><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-monitor</span></span><br><span class="line">INFO[0000] announce                                      app=kata-monitor arch=amd64 git-commit=fcad969e5200607df3b0b31983cc64488e156e99 go-version=go1.16.10 listen-address=&quot;127.0.0.1:8090&quot; log-level=info os=linux runtime-endpoint=/run/containerd/containerd.sock version=0.3.0</span><br></pre></td></tr></table></figure>
+<h1 id="kata-monitor"><a href="#kata-monitor" class="headerlink" title="kata-monitor"></a>kata-monitor</h1><p>Kata monitor 是一个守护进程，能够收集和暴露在同一 host 上运行的所有 Kata 容器工作负载相关的指标。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kata-monitor</span></span><br><span class="line">INFO[0000] announce                                      app=kata-monitor arch=amd64 git-commit=fcad969e5200607df3b0b31983cc64488e156e99 go-version=go1.16.10 listen-address=&quot;127.0.0.1:8090&quot; log-level=info os=linux runtime-endpoint=/run/containerd/containerd.sock version=0.3.0</span><br></pre></td></tr></table></figure>
 
 <p>可选的 flags 包括</p>
 <table>
@@ -1049,7 +738,7 @@
 <td>CRI 容器运行时服务的 socket 地址，默认为 &#x2F;run&#x2F;containerd&#x2F;containerd.sock</td>
 </tr>
 </tbody></table>
-</div><div class="article-licensing box"><div class="licensing-title"><p>「 Kata Containers 」快速开始</p><p><a href="http://shenxianghong.github.io/2021/04/15/2021-04-15 Kata Containers 快速开始/">http://shenxianghong.github.io/2021/04/15/2021-04-15 Kata Containers 快速开始/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2021-04-15</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-05-29</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><hr style="height:1px;margin:1rem 0"><div class="level is-mobile is-flex"><div class="article-tags is-size-7 is-uppercase"><i class="fas fa-tags has-text-grey"></i> <a class="link-muted" rel="tag" href="/tags/Kata-Containers/">Kata Containers </a></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2021/04/22/2021-04-22%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Kata Containers 」源码编译</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/04/06/2021-04-06%20Kata%20Containers%20%E6%9E%B6%E6%9E%84%E4%B8%8E%E7%BB%84%E4%BB%B6%E6%A6%82%E8%BF%B0/"><span class="level-item">「 Kata Containers 」架构与组件概述</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">50</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">7</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">9</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/shenxianghong" target="_blank" rel="noopener">Follow</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Youtube" href="https://youtube.com"><i class="fab fa-youtube"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Bilibili" href="https://bilibili.com"><i class="fab fa-bilibili"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Reddit" href="https://reddit.com"><i class="fab fa-reddit"></i></a></div></div></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://google.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Google</span></span><span class="level-right"><span class="level-item tag">google.com</span></span></a></li><li><a class="level is-mobile" href="https://poe.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Poe</span></span><span class="level-right"><span class="level-item tag">poe.com</span></span></a></li></ul></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#安装"><span class="level-left"><span class="level-item">1</span><span class="level-item">安装</span></span></a></li><li><a class="level is-mobile" href="#配置参数"><span class="level-left"><span class="level-item">2</span><span class="level-item">配置参数</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#hypervisor"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">hypervisor</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#QEMU"><span class="level-left"><span class="level-item">2.1.1</span><span class="level-item">QEMU</span></span></a></li></ul></li></ul></li><li><a class="level is-mobile" href="#CRI-配置"><span class="level-left"><span class="level-item">3</span><span class="level-item">CRI 配置</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#Containerd"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">Containerd</span></span></a></li><li><a class="level is-mobile" href="#CRI-O"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">CRI-O</span></span></a></li></ul></li><li><a class="level is-mobile" href="#RuntimeClass"><span class="level-left"><span class="level-item">4</span><span class="level-item">RuntimeClass</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#handler"><span class="level-left"><span class="level-item">4.1</span><span class="level-item">handler</span></span></a></li><li><a class="level is-mobile" href="#scheduling"><span class="level-left"><span class="level-item">4.2</span><span class="level-item">scheduling</span></span></a></li><li><a class="level is-mobile" href="#overhead"><span class="level-left"><span class="level-item">4.3</span><span class="level-item">overhead</span></span></a></li></ul></li><li><a class="level is-mobile" href="#Pod"><span class="level-left"><span class="level-item">5</span><span class="level-item">Pod</span></span></a><ul class="menu-list"><ul class="menu-list"><li><a class="level is-mobile" href="#定制化的-annotation"><span class="level-left"><span class="level-item">5.1.1</span><span class="level-item">定制化的 annotation</span></span></a></li></ul></ul></li><li><a class="level is-mobile" href="#VMCache"><span class="level-left"><span class="level-item">6</span><span class="level-item">VMCache</span></span></a></li><li><a class="level is-mobile" href="#VM-Templating"><span class="level-left"><span class="level-item">7</span><span class="level-item">VM Templating</span></span></a></li><li><a class="level is-mobile" href="#kata-runtime"><span class="level-left"><span class="level-item">8</span><span class="level-item">kata-runtime</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#check-kata-check"><span class="level-left"><span class="level-item">8.1</span><span class="level-item">check (kata-check)</span></span></a></li><li><a class="level is-mobile" href="#env-kata-env"><span class="level-left"><span class="level-item">8.2</span><span class="level-item">env (kata-env)</span></span></a></li><li><a class="level is-mobile" href="#exec"><span class="level-left"><span class="level-item">8.3</span><span class="level-item">exec</span></span></a></li><li><a class="level is-mobile" href="#metrics"><span class="level-left"><span class="level-item">8.4</span><span class="level-item">metrics</span></span></a></li><li><a class="level is-mobile" href="#direct-volume"><span class="level-left"><span class="level-item">8.5</span><span class="level-item">direct-volume</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#add"><span class="level-left"><span class="level-item">8.5.1</span><span class="level-item">add</span></span></a></li><li><a class="level is-mobile" href="#remove"><span class="level-left"><span class="level-item">8.5.2</span><span class="level-item">remove</span></span></a></li><li><a class="level is-mobile" href="#stats"><span class="level-left"><span class="level-item">8.5.3</span><span class="level-item">stats</span></span></a></li><li><a class="level is-mobile" href="#resize"><span class="level-left"><span class="level-item">8.5.4</span><span class="level-item">resize</span></span></a></li></ul></li><li><a class="level is-mobile" href="#factory"><span class="level-left"><span class="level-item">8.6</span><span class="level-item">factory</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#init"><span class="level-left"><span class="level-item">8.6.1</span><span class="level-item">init</span></span></a></li><li><a class="level is-mobile" href="#status"><span class="level-left"><span class="level-item">8.6.2</span><span class="level-item">status</span></span></a></li><li><a class="level is-mobile" href="#destroy"><span class="level-left"><span class="level-item">8.6.3</span><span class="level-item">destroy</span></span></a></li></ul></li><li><a class="level is-mobile" href="#iptables"><span class="level-left"><span class="level-item">8.7</span><span class="level-item">iptables</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#get"><span class="level-left"><span class="level-item">8.7.1</span><span class="level-item">get</span></span></a></li><li><a class="level is-mobile" href="#set"><span class="level-left"><span class="level-item">8.7.2</span><span class="level-item">set</span></span></a></li></ul></li></ul></li><li><a class="level is-mobile" href="#kata-monitor"><span class="level-left"><span class="level-item">9</span><span class="level-item">kata-monitor</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Container-Runtime/"><span class="level-start"><span class="level-item">Container Runtime</span></span><span class="level-end"><span class="level-item tag">18</span></span></a></li><li><a class="level is-mobile" href="/categories/Disaster-Recovery/"><span class="level-start"><span class="level-item">Disaster Recovery</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/"><span class="level-start"><span class="level-item">Programming</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li><li><a class="level is-mobile" href="/categories/Scheduling-Orchestration/"><span class="level-start"><span class="level-item">Scheduling &amp; Orchestration</span></span><span class="level-end"><span class="level-item tag">2</span></span></a><ul><li><a class="level is-mobile" href="/categories/Scheduling-Orchestration/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Service-Mesh/"><span class="level-start"><span class="level-item">Service Mesh</span></span><span class="level-end"><span class="level-item tag">10</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7"><br/>And did you get what you wanted from this life, even so?</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Kata Containers 」快速开始</p><p><a href="http://shenxianghong.github.io/2021/04/15/2021-04-15 Kata Containers 快速开始/">http://shenxianghong.github.io/2021/04/15/2021-04-15 Kata Containers 快速开始/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2021-04-15</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-05-30</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><hr style="height:1px;margin:1rem 0"><div class="level is-mobile is-flex"><div class="article-tags is-size-7 is-uppercase"><i class="fas fa-tags has-text-grey"></i> <a class="link-muted" rel="tag" href="/tags/Kata-Containers/">Kata Containers </a></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-start"><a class="article-nav-prev level level-item link-muted" href="/2021/04/22/2021-04-22%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91/"><i class="level-item fas fa-chevron-left"></i><span class="level-item">「 Kata Containers 」源码编译</span></a></div><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2021/04/06/2021-04-06%20Kata%20Containers%20%E6%9E%B6%E6%9E%84%E4%B8%8E%E7%BB%84%E4%BB%B6%E6%A6%82%E8%BF%B0/"><span class="level-item">「 Kata Containers 」架构与组件概述</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">50</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">7</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">9</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/shenxianghong" target="_blank" rel="noopener">Follow</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Youtube" href="https://youtube.com"><i class="fab fa-youtube"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Bilibili" href="https://bilibili.com"><i class="fab fa-bilibili"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Reddit" href="https://reddit.com"><i class="fab fa-reddit"></i></a></div></div></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://google.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Google</span></span><span class="level-right"><span class="level-item tag">google.com</span></span></a></li><li><a class="level is-mobile" href="https://poe.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Poe</span></span><span class="level-right"><span class="level-item tag">poe.com</span></span></a></li></ul></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#安装"><span class="level-left"><span class="level-item">1</span><span class="level-item">安装</span></span></a></li><li><a class="level is-mobile" href="#Kata-Containers-配置"><span class="level-left"><span class="level-item">2</span><span class="level-item">Kata Containers 配置</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#hypervisor"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">hypervisor</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#QEMU"><span class="level-left"><span class="level-item">2.1.1</span><span class="level-item">QEMU</span></span></a></li></ul></li><li><a class="level is-mobile" href="#factory"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">factory</span></span></a></li></ul></li><li><a class="level is-mobile" href="#Container-Engine-集成"><span class="level-left"><span class="level-item">3</span><span class="level-item">Container Engine 集成</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#Docker"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">Docker</span></span></a></li><li><a class="level is-mobile" href="#Containerd"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">Containerd</span></span></a></li><li><a class="level is-mobile" href="#CRI-O"><span class="level-left"><span class="level-item">3.3</span><span class="level-item">CRI-O</span></span></a></li></ul></li><li><a class="level is-mobile" href="#Kubernetes-集成"><span class="level-left"><span class="level-item">4</span><span class="level-item">Kubernetes 集成</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#handler"><span class="level-left"><span class="level-item">4.1</span><span class="level-item">handler</span></span></a></li><li><a class="level is-mobile" href="#scheduling"><span class="level-left"><span class="level-item">4.2</span><span class="level-item">scheduling</span></span></a></li><li><a class="level is-mobile" href="#overhead"><span class="level-left"><span class="level-item">4.3</span><span class="level-item">overhead</span></span></a></li></ul></li><li><a class="level is-mobile" href="#annotation-扩展"><span class="level-left"><span class="level-item">5</span><span class="level-item">annotation 扩展</span></span></a></li><li><a class="level is-mobile" href="#VMCache"><span class="level-left"><span class="level-item">6</span><span class="level-item">VMCache</span></span></a></li><li><a class="level is-mobile" href="#VM-Templating"><span class="level-left"><span class="level-item">7</span><span class="level-item">VM Templating</span></span></a></li><li><a class="level is-mobile" href="#kata-runtime"><span class="level-left"><span class="level-item">8</span><span class="level-item">kata-runtime</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#check-kata-check"><span class="level-left"><span class="level-item">8.1</span><span class="level-item">check (kata-check)</span></span></a></li><li><a class="level is-mobile" href="#env-kata-env"><span class="level-left"><span class="level-item">8.2</span><span class="level-item">env (kata-env)</span></span></a></li><li><a class="level is-mobile" href="#exec"><span class="level-left"><span class="level-item">8.3</span><span class="level-item">exec</span></span></a></li><li><a class="level is-mobile" href="#metrics"><span class="level-left"><span class="level-item">8.4</span><span class="level-item">metrics</span></span></a></li><li><a class="level is-mobile" href="#direct-volume"><span class="level-left"><span class="level-item">8.5</span><span class="level-item">direct-volume</span></span></a></li><li><a class="level is-mobile" href="#factory-1"><span class="level-left"><span class="level-item">8.6</span><span class="level-item">factory</span></span></a></li><li><a class="level is-mobile" href="#iptables"><span class="level-left"><span class="level-item">8.7</span><span class="level-item">iptables</span></span></a></li></ul></li><li><a class="level is-mobile" href="#kata-monitor"><span class="level-left"><span class="level-item">9</span><span class="level-item">kata-monitor</span></span></a></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Container-Runtime/"><span class="level-start"><span class="level-item">Container Runtime</span></span><span class="level-end"><span class="level-item tag">18</span></span></a></li><li><a class="level is-mobile" href="/categories/Disaster-Recovery/"><span class="level-start"><span class="level-item">Disaster Recovery</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/"><span class="level-start"><span class="level-item">Programming</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li><li><a class="level is-mobile" href="/categories/Scheduling-Orchestration/"><span class="level-start"><span class="level-item">Scheduling &amp; Orchestration</span></span><span class="level-end"><span class="level-item tag">2</span></span></a><ul><li><a class="level is-mobile" href="/categories/Scheduling-Orchestration/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">2</span></span></a></li><li><a class="level is-mobile" href="/categories/Service-Mesh/"><span class="level-start"><span class="level-item">Service Mesh</span></span><span class="level-end"><span class="level-item tag">10</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7"><br/>And did you get what you wanted from this life, even so?</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
             article: {
                 highlight: {
                     clipboard: true,
