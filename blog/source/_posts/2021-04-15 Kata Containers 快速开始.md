@@ -96,7 +96,7 @@ opt/kata/
             └── s390-netboot.img
 ```
 
-# 配置参数
+# Kata Containers 配置
 
 Kata Containers 中配置的优先级为：动态配置项 > 静态配置项 > 默认值
 
@@ -116,11 +116,11 @@ Kata Containers 中配置的优先级为：动态配置项 > 静态配置项 > �
 | image                        | Y        | VM rootfs 镜像路径，与 initrd 有且仅有一个                   |
 | initrd                       | Y        | VM rootfs 镜像路径，与 image 有且仅有一个                    |
 | machine_type                 | Y        | QEMU 机器类型，例如 amd64 架构下为 q35、arm64 架构下为 virt  |
-| confidential_guest           | N        | 是否启用机密容器特性。机密容器需要 host 支持 tdxProtection（[Intel Trust Domain Extensions](https://software.intel.com/content/www/us/en/develop/articles/intel-trust-domain-extensions.html)）、sevProtection（[AMD Secure Encrypted Virtualization](https://developer.amd.com/sev/)）、pefProtection（[IBM POWER 9 Protected Execution Facility](https://www.kernel.org/doc/html/latest/powerpc/ultravisor.html)）以及 seProtection（[IBM Secure Execution (IBM Z & LinuxONE)](https://www.kernel.org/doc/html/latest/virt/kvm/s390-pv.html)）。不支持 CPU 和内存的热插拔以及 NVDIMM 设备。不支持 arm64 架构 |
+| confidential_guest           | N        | 是否启用机密容器特性。机密容器需要 host 支持 tdxProtection（[Intel Trust Domain Extensions](https://software.intel.com/content/www/us/en/develop/articles/intel-trust-domain-extensions.html)）、sevProtection（[AMD Secure Encrypted Virtualization](https://developer.amd.com/sev/)）、pefProtection（[IBM POWER 9 Protected Execution Facility](https://www.kernel.org/doc/html/latest/powerpc/ultravisor.html)）以及 seProtection（[IBM Secure Execution (IBM Z & LinuxONE)](https://www.kernel.org/doc/html/latest/virt/kvm/s390-pv.html)）。不支持 CPU 和内存的热插拔以及 NVDIMM 设备，不支持 arm64 架构 |
 | rootless                     | Y        | 是否以非 root 权限的随机用户启动 QEMU VMM，默认为 false      |
 | enable_annotations           | N        | 允许 hypervisor 动态配置的配置项                             |
-| valid_hypervisor_paths       | N        | 以 glob(3) 规则校验 path 参数是否合法的路径集合              |
-| kernel_params                | Y        | VM kernel 的附加参数，默认为空                               |
+| valid_hypervisor_paths       | N        | 以 glob(3) 规则校验 path 参数是否为合法的路径集合            |
+| kernel_params                | Y        | VM kernel 的额外附加参数，默认为空                           |
 | firmware                     | Y        |                                                              |
 | firmware_volume              | Y        |                                                              |
 | machine_accelerators         | Y        | 机器加速器参数，默认为空                                     |
@@ -133,378 +133,107 @@ Kata Containers 中配置的优先级为：动态配置项 > 静态配置项 > �
 | memory_slots                 | Y        | VM 默认的内存插槽数量，默认为 10，即内存热添加次数上限为 10  |
 | default_maxmemory            | Y        | VM 最大的内存总量，默认为  host 内存总量                     |
 | memory_offset                | Y        | VM 内存偏移量，用于描述 NVDIMM 设备的内存空间，当 block_device_driver 为 nvdimm 时，需要设置此参数，最终会追加到 default_maxmemory 中 |
-| enable_virtio_mem            | Y        | 是否启用 virtio-mem 设备，默认为 false。virtio-mem 设备可以提高 VM 的内存性能。它通过在 host 和 VM 之间共享内存，使 VM 可以直接访问 host 内存，而无需通过复制或传输数据。这种直接访问可显著降低内存访问延迟和 CPU 使用率，并提高 VM 的性能和吞吐量。需要设置 /proc/sys/vm/overcommit_memory 文件内容为 1 |
-| disable_block_device_use     |          |                                                              |
-| shared_fs                    |          |                                                              |
-| virtio_fs_daemon             |          |                                                              |
-| valid_virtio_fs_daemon_paths |          |                                                              |
-| virtio_fs_cache_size         |          |                                                              |
-| virtio_fs_extra_args         |          |                                                              |
-| virtio_fs_cache              |          |                                                              |
-| block_device_driver          |          |                                                              |
-| block_device_aio             |          |                                                              |
-| block_device_cache_set       |          |                                                              |
-| block_device_cache_direct    |          |                                                              |
-| block_device_cache_noflush   |          |                                                              |
-| enable_iothreads             |          |                                                              |
-| enable_mem_prealloc          |          |                                                              |
-| enable_hugepages             |          |                                                              |
-| enable_vhost_user_store      |          |                                                              |
-| vhost_user_store_path        |          |                                                              |
-| enable_iommu                 |          |                                                              |
-| enable_iommu_platform        |          |                                                              |
-| valid_vhost_user_store_paths |          |                                                              |
-| file_mem_backend             |          |                                                              |
-| valid_file_mem_backends      |          |                                                              |
-| pflashes                     |          |                                                              |
-| enable_debug                 |          |                                                              |
-| disable_nesting_checks       |          |                                                              |
-| msize_9p                     |          |                                                              |
-| disable_image_nvdimm         |          |                                                              |
-| hotplug_vfio_on_root_bus     |          |                                                              |
-| pcie_root_port               |          |                                                              |
-| disable_vhost_net            |          |                                                              |
-| entropy_source               |          |                                                              |
-| valid_entropy_sources        |          |                                                              |
-| guest_hook_path              |          |                                                              |
-| rx_rate_limiter_max_rate     |          |                                                              |
-| tx_rate_limiter_max_rate     |          |                                                              |
-| guest_memory_dump_path       |          |                                                              |
-| guest_memory_dump_paging     |          |                                                              |
-| enable_guest_swap            |          |                                                              |
-| use_legacy_serial            |          |                                                              |
-| disable_selinux              |          |                                                              |
+| enable_virtio_mem            | Y        | 是否启用 virtio-mem 设备，默认为 false。virtio-mem 设备可以提高 VM 的内存性能。它通过在 host 和 VM 之间共享内存，使 VM 可以直接访问 host 内存，而无需通过复制或传输数据。这种直接访问可显著降低内存访问延迟和 CPU 使用率，并提高 VM 的性能和吞吐量。推荐设置 /proc/sys/vm/overcommit_memory 文件内容为 1 |
+| disable_block_device_use     | Y        | 禁止块设备用于容器的 rootfs。例如 devicemapper 之类的存储驱动程序中，容器的 rootfs 由块设备支持，出于性能原因，块设备默认直接传递给 hypervisor。 禁用传递时，会用 virtio-fs 传递 rootfs |
+| shared_fs                    | Y        | host 和 VM 之间共享文件系统类型，默认为 virtio-fs，此外支持 virtio-9p 和 virtio-fs-nydus |
+| virtio_fs_daemon             | Y        | vhost-user-fs 可执行文件的路径                               |
+| valid_virtio_fs_daemon_paths | N        | 以 glob(3) 规则校验 virtio_fs_daemon 参数是否为合法的路径集合 |
+| virtio_fs_cache_size         | Y        | DAX 缓存大小，默认为 0 MiB。virtio_fs 支持 DAX（Direct Access）模式，这意味着 VM 可以直接访问 host 的文件系统缓存，从而提高了读取和写入数据的速度 |
+| virtio_fs_extra_args         | Y        | vhost-user-fs 的额外附加参数                                 |
+| virtio_fs_cache              | Y        | virtio-fs 文件系统在 VM 和 host 之间共享文件时的缓存模式，默认是 auto，此外支持 none 和 always。none 表示 VM 中不缓存文件系统的元数据、数据和路径名查找，所有这些信息都需要从 host 中获取。在这种模式下，任何对文件的修改都会立即被推送到 host；alway 则截然相反，表示 VM 中的文件系统元数据、数据和路径名查找都会被缓存，并且永不过期；而 auto 表示 VM 中的元数据和路径名查找缓存会在一定时间后过期（默认为 1 秒），而数据则会在文件打开时缓存（即 close-to-open 一致性）。在这种模式下，VM 会根据需要从 host 中获取文件信息，而不是每次都从 host 获取 |
+| block_device_driver          | Y        | hypervisor 用于管理容器 rootfs 的块存储驱动程序，默认为 virtio-scsi，此外支持 virtio-blk 和 nvdimm。virtio-scsi 是一种基于SCSI 协议的存储虚拟化技术；virtio-blk 则是一种用于块设备的存储虚拟化技术，在使用 virtio-scsi 和 virtio-blk 时，host 上的块设备可以被 VM 视为本地的块设备，从而可以在 VM 中进行读写操作；nvdimm 是一种用于非易失性内存（NVM）的存储技术。它允许将内存作为块设备使用，并提供了与传统块设备相似的可靠性和数据完整性保护 |
+| block_device_aio             | Y        | QEMU 使用的块设备异步 I/O 机制，默认为 io_uring，此外支持 threads 和 native。threads 表示 QEMU 使用基于 pthread 的磁盘 I/O 机制，这种机制是在用户空间实现的，可以在多个线程之间共享 CPU 时间，但是性能比较一般；native 表示 QEMU 使用本地的 Linux I/O 机制。这种机制是在内核空间实现的，可以获得更好的性能，但是需要特权；io_uring 表示 QEMU 使用 Linux io_uring API 来实现异步 I/O，这种机制提供了 Linux 中最快的 I/O 操作，可以在 QEMU 5.0 及以上版本中使用，但需要 Linux 内核版本大于 5.1，io_uring 机制可以减少 CPU 的上下文切换次数，提高 I/O 操作的效率 |
+| block_device_cache_set       | Y        | 是否将缓存相关选项设置给块设备，默认为 false。该参数影响到 block_device_cache_direct 和 block_device_cache_noflush 是否生效 |
+| block_device_cache_direct    | Y        | 是否启用 O_DIRECT 选项，默认为 false。O_DIRECT 是一种 Linux 系统提供的选项，可以绕过 host 页缓存，直接访问块设备，从而提高存储 I/O 的性能。受 block_device_cache_set 参数设置影响 |
+| block_device_cache_noflush   | Y        | 是否忽略块设备的缓存刷盘请求，默认为 false。受 block_device_cache_set 参数设置影响 |
+| enable_iothreads             | Y        | 是否启用独立的 I/O 线程，默认为 false。启用时，块设备的 I/O 操作将在一个单独的 I/O 线程中处理，而非 QEMU 的主线程中进行处理，可以减少了主线程的阻塞时间，提高 VM 的 I/O 性能 |
+| enable_mem_prealloc          | Y        | 是否启用 VM 内存预分配，默认为 false。启用 VM 内存的预分配可以使内存分配更加稳定和可预测，从而提高 VM 的性能。但是，预分配内存也会占用更多的系统资源，降低容器密度 |
+| enable_hugepages             | Y        | 是否启用 VM 大页内存，默认为 false。Huge Pages 的特点是将内存分配成固定大小的页（通常为 2MB 或 1GB），从而降低了页表的大小和操作系统内核的开销，使用 Huge Pages 分配 VM 内存可以提升性能。在启用大页内存时，内存预分配（enable_mem_prealloc）会被强制设置启用 |
+| enable_vhost_user_store      | Y        | 是否启用 vhost-user 存储设备，默认为 false。启用 vhost-user 存储设备可以将 host 上的块设备虚拟化为一种可以在 VM 中使用的设备，通过 vhost-user 协议在 host 和 VM 之间传输数据，从而提高 VM 的存储性能。在启用 vhost-user 存储设备时，Linux 中的一些保留块类型（Major Range 240-254）将被选择用于表示 vhost-user 设备 |
+| vhost_user_store_path        | Y        | vhost-user 设备的目录，默认为 /var/run/kata-containers/vhost-user。在该目录下，"block" 子目录用于存储块设备，"block/sockets" 子目录用于存储 vhost-user sockets，"block/devices" 子目录用于存储模拟的块设备节点 |
+| enable_iommu                 | Y        | 是否启用 vIOMMU 设备，默认为 false。vIOMMU 用于将 VM 的 I/O 操作隔离在一个独立的内存地址空间中，以提高 VM 的安全性和性能。此外，vIOMMU 还可以提供更好的 I/O 性能，因为它可以减少 VM 和 host 之间的数据传输次数 |
+| enable_iommu_platform        | Y        | 是否启用 IOMMU_PLATFORM 设备，默认为 false。IOMMU_PLATFORM 用于设备 DMA（Direct Memory Access）操作隔离在一个独立的内存地址空间中，以提高系统的安全性和性能。此外，IOMMU_PLATFORM 还可以提供更好的 DMA 性能，因为它可以减少系统和设备之间的数据传输次数。 |
+| valid_vhost_user_store_paths | N        | 以 glob(3) 规则校验 vhost_user_store_path 参数是否为合法的路径集合 |
+| file_mem_backend             | Y        | 基于文件的内存支持的路径，默认为空。基于文件的 VM 内存支持是一种将 VM 内存保存在文件中的技术，而不是保存在 host 的物理内存中。此外，使用基于文件的 VM 内存还可以减少 VM 和 host 之间的数据传输，从而提高 VM 的性能。在使用 virtio-fs 时，该选项会自动启用，并使用 "/dev/shm" 作为后端文件 |
+| valid_file_mem_backends      | N        | 以 glob(3) 规则校验 file_mem_backend 参数是否为合法的路径集合 |
+| pflashes                     | N        | 向 VM 中添加的镜像文件路径，默认为空。镜像文件通常用于模拟系统中的 BIOS 或 UEFI  固件等。例如，arm64 架构下的内存热插拔则需要提供一对 pflash |
+| enable_debug                 | N        | 是否启用 hypervisor 和内核的 debug 参数，默认为 false        |
+| disable_nesting_checks       | N        | 是否禁止嵌套虚拟化环境检查，默认为 false。禁用嵌套检查可以从运行时的行为与在裸机上相同 |
+| msize_9p                     | Y        | virtio-9p 共享文件系统中描述 9p 数据包有效载荷的字节数量，默认为 8192 |
+| disable_image_nvdimm         | Y        | 是否禁止使用 NVDIMM 设备挂载 VM 镜像，默认为 false。在未禁用且支持 NVDIMM 设备时，VM 镜像会借助 NVDIMM 设备热添加，否则，使用 virtio-block 设备 |
+| hotplug_vfio_on_root_bus     | Y        | 是否允许 VFIO 设备在 root 总线上热插拔，默认为 true。VFIO 是一种用于虚拟化环境中的设备直通技术，它允许将物理设备直接分配给 VM，从而提高 VM 的性能和可靠性。然而，在桥接设备上进行 VFIO 设备的热插拔存在一些限制，特别是对于具有大型 PCI 条的设备。因此，通过将该选项设置为 true，可以在 root 总线上启用 VFIO 设备的热插拔，从而解决这些限制问题 |
+| pcie_root_port               | Y        | pcie_root_port 设备数量，默认为 0。在热插拔 PCIe 设备之前需要添加 pcie_root_port 设备，主要针对使用一些大型 PCI 条设备（如 Nvidia GPU）的情况。仅在启用 hotplug_vfio_on_root_bus 且 machine_type 为 q35 时生效 |
+| disable_vhost_net            | Y        | 是否禁用 vhost-net 作为 virtio-net 的后端，默认为 false。使用 vhost-net 时意味着在提高网络 I/O 性能的同时，会牺牲一定的安全性（因为 vhost-net 运行在 ring0 模式下，具有最高的权限和特权） |
+| entropy_source               | Y        | 熵源路径，默认为 /dev/urandom，用于生成随机数的来源。/dev/random 是一个阻塞的熵源，如果 host 的熵池用尽，VM 的启动时间会增加，可能会导致启动超时。相比之下，/dev/urandom 是一个非阻塞的熵源，可以适用于大多数场景 |
+| valid_entropy_sources        | N        | 以 glob(3) 规则校验 entropy_source 参数是否为合法的路径集合  |
+| guest_hook_path              | Y        | VM 中 hook 脚本路径，默认为空。hook 必须按照其 hook 类型存储在 guest_hook_path 的子目录中，例如 "guest_hook_path/{prestart,poststart,poststop}"。Kata agent 将扫描这些目录查找可执行文件，按字母顺序将其添加到容器的生命周期中，并在 VM 运行时命名空间中执行 |
+| rx_rate_limiter_max_rate     | Y        | 网络 I/O inbound 带宽限制，默认为 0，即不作限制。在 QEMU 中，借助 HTB(Hierarchy Token Bucket) 限制管理 |
+| tx_rate_limiter_max_rate     | Y        | 网络 I/O outbound 带宽限制，默认为 0，即不作限制。在 QEMU 中，借助 HTB(Hierarchy Token Bucket) 限制管理 |
+| guest_memory_dump_path       | N        | VM 内存转储文件路径，默认为空。在出现 GUEST_PANICKED 事件时，VM 的内存将被转储到 host 文件系统下的指定目录中（如果该目录不存在，会自动创建）。被转储的文件（也称为 vmcore 文件）可以使用 crash 或 gdb 等工具进行处理。注意，转储 VM 内存可能需要很长时间，具体取决于 VM 内存的大小，并且会占用大量磁盘空间 |
+| guest_memory_dump_paging     | N        | 是否启用 VM 内存分页，默认为 false。在 VM 内存转储时，将使用分页机制来处理虚拟地址和物理地址之间的映射关系。如果禁用该选项，则将使用物理地址而不是虚拟地址来进行转储。比如，如果希望使用 gdb 工具而不是 crash 工具，或者需要在 ELF vmcore 中使用VM 的虚拟地址，那么则需要启用内存分页功能 |
+| enable_guest_swap            | Y        | 是否启用 VM 中的交换空间，默认为 false。启用时，会将一个 raw 格式的设备添加到 VM 中作为 SWAP 设备。如果 annotations["io.katacontainers.container.resource.swappiness"] 大于 0，则根据 annotations["io.katacontainers.container.resource.swap_in_bytes"] 计算 SWAP 设备大小：默认为 swap_in_bytes - memory_limit_in_bytes；如果 swap_in_bytes 未设置，则为 memory_limit_in_bytes，如果均未设置，则为 default_memory |
+| use_legacy_serial            | Y        | 是否使用传统的串行接口作为 VM 控制台设备，默认为 false       |
+| disable_selinux              | N        | 是否禁用在 hypervisor 上应用 SELinux，默认为 false           |
 
-# CRI 配置
+## factory
 
-Kata Containers 在与 Kubernetes 集成时，默认支持 Containerd 和 CRI-O 作为 CRI，不支持使用 docker-shim 作为 CRI。
+不支持动态配置项
+
+| 静态配置项        | 含义                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| enable_template   | 是否启用 VM 模板，默认为 false。 启用后，从模板克隆创建新的 VM。 它们将通过只读映射共享相同的内核、initramfs 和 Kata agent 内存。 如果在同一 host 上运行许多 Kata 容器，VM 模板有助于加快容器的创建并节省大量内存。仅支持镜像类型为 initrd |
+| template_path     | VM 模板保存的路径，默认为 /run/vc/vm/template                |
+| vm_cache_number   | VMCache 的数量，默认为 0，表示禁用 VMCache。VMCache 是一种在使用之前将 VM 创建为缓存的功能，有助于加快容器的创建。 该功能由服务器和通过 Unix socket 进行通信的客户端组成，服务器将创建一些 VM 并缓存起来。如果启用了 VMCache 功能，kata-runtime 在创建新的 sandbox 时会向 VMCache 服务器请求 VM |
+| vm_cache_endpoint | VMCache 服务器的 socket 地址，默认为 /var/run/kata-containers/cache.sock |
+
+# Container Engine 集成
+
+## Docker
+
+*TODO：Docker 23.0.0 版本，新增了运行时 shim 的支持，也就支持了 Kata Containers*
 
 ## Containerd
 
-*/etc/containerd/config.toml*
-
-在 Docker（docker-shim）作为 CRI 的场景下，Containerd 本身也是 Docker 的组件之一，但是禁用了 Containerd 作为 CRI。
-
-**非 CRI**
-
-默认安装 Docker 服务时，会自动安装 Containerd，配置文件如下：
+在 Docker（本质为 docker-shim）作为 CRI 的场景下，Containerd 本身也是 Docker 的组件之一，但是禁用了 Containerd 作为 CRI 的能力，因此也无法集成使用 Kata Containers：
 
 ```toml
-#   Copyright 2018-2022 Docker Inc.
-
-#   Licensed under the Apache License, Version 2.0 (the "License");
-#   you may not use this file except in compliance with the License.
-#   You may obtain a copy of the License at
-
-#       http://www.apache.org/licenses/LICENSE-2.0
-
-#   Unless required by applicable law or agreed to in writing, software
-#   distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
-
 disabled_plugins = ["cri"]
-
-#root = "/var/lib/containerd"
-#state = "/run/containerd"
-#subreaper = true
-#oom_score = 0
-
-#[grpc]
-#  address = "/run/containerd/containerd.sock"
-#  uid = 0
-#  gid = 0
-
-#[debug]
-#  address = "/run/containerd/debug.sock"
-#  uid = 0
-#  gid = 0
-#  level = "info"
 ```
 
-**CRI**
-
-借助 Containerd 自带的配置生成能力，创建其作为 CRI 的配置文件：
-
 ```shell
+# 生成 Containerd 默认的配置文件
 $ sudo mkdir -p /etc/containerd
 $ containerd config default | sudo tee /etc/containerd/config.toml
 ```
 
-```toml
-disabled_plugins = []
-imports = []
-oom_score = 0
-plugin_dir = ""
-required_plugins = []
-root = "/var/lib/containerd"
-state = "/run/containerd"
-temp = ""
-version = 2
-
-[cgroup]
-  path = ""
-
-[debug]
-  address = ""
-  format = ""
-  gid = 0
-  level = ""
-  uid = 0
-
-[grpc]
-  address = "/run/containerd/containerd.sock"
-  gid = 0
-  max_recv_message_size = 16777216
-  max_send_message_size = 16777216
-  tcp_address = ""
-  tcp_tls_ca = ""
-  tcp_tls_cert = ""
-  tcp_tls_key = ""
-  uid = 0
-
-[metrics]
-  address = ""
-  grpc_histogram = false
-
-[plugins]
-
-  [plugins."io.containerd.gc.v1.scheduler"]
-    deletion_threshold = 0
-    mutation_threshold = 100
-    pause_threshold = 0.02
-    schedule_delay = "0s"
-    startup_delay = "100ms"
-
-  [plugins."io.containerd.grpc.v1.cri"]
-    device_ownership_from_security_context = false
-    disable_apparmor = false
-    disable_cgroup = false
-    disable_hugetlb_controller = true
-    disable_proc_mount = false
-    disable_tcp_service = true
-    enable_selinux = false
-    enable_tls_streaming = false
-    enable_unprivileged_icmp = false
-    enable_unprivileged_ports = false
-    ignore_image_defined_volumes = false
-    max_concurrent_downloads = 3
-    max_container_log_line_size = 16384
-    netns_mounts_under_state_dir = false
-    restrict_oom_score_adj = false
-    sandbox_image = "registry.k8s.io/pause:3.6"
-    selinux_category_range = 1024
-    stats_collect_period = 10
-    stream_idle_timeout = "4h0m0s"
-    stream_server_address = "127.0.0.1"
-    stream_server_port = "0"
-    systemd_cgroup = false
-    tolerate_missing_hugetlb_controller = true
-    unset_seccomp_profile = ""
-
-    [plugins."io.containerd.grpc.v1.cri".cni]
-      bin_dir = "/opt/cni/bin"
-      conf_dir = "/etc/cni/net.d"
-      conf_template = ""
-      ip_pref = ""
-      max_conf_num = 1
-
-    [plugins."io.containerd.grpc.v1.cri".containerd]
-      default_runtime_name = "runc"
-      disable_snapshot_annotations = true
-      discard_unpacked_layers = false
-      ignore_rdt_not_enabled_errors = false
-      no_pivot = false
-      snapshotter = "overlayfs"
-
-      [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime]
-        base_runtime_spec = ""
-        cni_conf_dir = ""
-        cni_max_conf_num = 0
-        container_annotations = []
-        pod_annotations = []
-        privileged_without_host_devices = false
-        runtime_engine = ""
-        runtime_path = ""
-        runtime_root = ""
-        runtime_type = ""
-
-        [plugins."io.containerd.grpc.v1.cri".containerd.default_runtime.options]
-
-      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
-
-        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
-          base_runtime_spec = ""
-          cni_conf_dir = ""
-          cni_max_conf_num = 0
-          container_annotations = []
-          pod_annotations = []
-          privileged_without_host_devices = false
-          runtime_engine = ""
-          runtime_path = ""
-          runtime_root = ""
-          runtime_type = "io.containerd.runc.v2"
-
-          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-            BinaryName = ""
-            CriuImagePath = ""
-            CriuPath = ""
-            CriuWorkPath = ""
-            IoGid = 0
-            IoUid = 0
-            NoNewKeyring = false
-            NoPivotRoot = false
-            Root = ""
-            ShimCgroup = ""
-            SystemdCgroup = false
-
-      [plugins."io.containerd.grpc.v1.cri".containerd.untrusted_workload_runtime]
-        base_runtime_spec = ""
-        cni_conf_dir = ""
-        cni_max_conf_num = 0
-        container_annotations = []
-        pod_annotations = []
-        privileged_without_host_devices = false
-        runtime_engine = ""
-        runtime_path = ""
-        runtime_root = ""
-        runtime_type = ""
-
-        [plugins."io.containerd.grpc.v1.cri".containerd.untrusted_workload_runtime.options]
-
-    [plugins."io.containerd.grpc.v1.cri".image_decryption]
-      key_model = "node"
-
-    [plugins."io.containerd.grpc.v1.cri".registry]
-      config_path = ""
-
-      [plugins."io.containerd.grpc.v1.cri".registry.auths]
-
-      [plugins."io.containerd.grpc.v1.cri".registry.configs]
-
-      [plugins."io.containerd.grpc.v1.cri".registry.headers]
-
-      [plugins."io.containerd.grpc.v1.cri".registry.mirrors]
-
-    [plugins."io.containerd.grpc.v1.cri".x509_key_pair_streaming]
-      tls_cert_file = ""
-      tls_key_file = ""
-
-  [plugins."io.containerd.internal.v1.opt"]
-    path = "/opt/containerd"
-
-  [plugins."io.containerd.internal.v1.restart"]
-    interval = "10s"
-
-  [plugins."io.containerd.internal.v1.tracing"]
-    sampling_ratio = 1.0
-    service_name = "containerd"
-
-  [plugins."io.containerd.metadata.v1.bolt"]
-    content_sharing_policy = "shared"
-
-  [plugins."io.containerd.monitor.v1.cgroups"]
-    no_prometheus = false
-
-  [plugins."io.containerd.runtime.v1.linux"]
-    no_shim = false
-    runtime = "runc"
-    runtime_root = ""
-    shim = "containerd-shim"
-    shim_debug = false
-
-  [plugins."io.containerd.runtime.v2.task"]
-    platforms = ["linux/amd64"]
-    sched_core = false
-
-  [plugins."io.containerd.service.v1.diff-service"]
-    default = ["walking"]
-
-  [plugins."io.containerd.service.v1.tasks-service"]
-    rdt_config_file = ""
-
-  [plugins."io.containerd.snapshotter.v1.aufs"]
-    root_path = ""
-
-  [plugins."io.containerd.snapshotter.v1.btrfs"]
-    root_path = ""
-
-  [plugins."io.containerd.snapshotter.v1.devmapper"]
-    async_remove = false
-    base_image_size = ""
-    discard_blocks = false
-    fs_options = ""
-    fs_type = ""
-    pool_name = ""
-    root_path = ""
-
-  [plugins."io.containerd.snapshotter.v1.native"]
-    root_path = ""
-
-  [plugins."io.containerd.snapshotter.v1.overlayfs"]
-    root_path = ""
-    upperdir_label = false
-
-  [plugins."io.containerd.snapshotter.v1.zfs"]
-    root_path = ""
-
-  [plugins."io.containerd.tracing.processor.v1.otlp"]
-    endpoint = ""
-    insecure = false
-    protocol = ""
-
-[proxy_plugins]
-
-[stream_processors]
-
-  [stream_processors."io.containerd.ocicrypt.decoder.v1.tar"]
-    accepts = ["application/vnd.oci.image.layer.v1.tar+encrypted"]
-    args = ["--decryption-keys-path", "/etc/containerd/ocicrypt/keys"]
-    env = ["OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf"]
-    path = "ctd-decoder"
-    returns = "application/vnd.oci.image.layer.v1.tar"
-
-  [stream_processors."io.containerd.ocicrypt.decoder.v1.tar.gzip"]
-    accepts = ["application/vnd.oci.image.layer.v1.tar+gzip+encrypted"]
-    args = ["--decryption-keys-path", "/etc/containerd/ocicrypt/keys"]
-    env = ["OCICRYPT_KEYPROVIDER_CONFIG=/etc/containerd/ocicrypt/ocicrypt_keyprovider.conf"]
-    path = "ctd-decoder"
-    returns = "application/vnd.oci.image.layer.v1.tar+gzip"
-
-[timeouts]
-  "io.containerd.timeout.bolt.open" = "0s"
-  "io.containerd.timeout.shim.cleanup" = "5s"
-  "io.containerd.timeout.shim.load" = "5s"
-  "io.containerd.timeout.shim.shutdown" = "3s"
-  "io.containerd.timeout.task.state" = "2s"
-
-[ttrpc]
-  address = ""
-  gid = 0
-  uid = 0
-```
-
-可以看到，Containerd 的默认 OCI 运行时为 runC，可以通过新增以下内容，用于对 Kata Containers 的支持：
+可以看到，Containerd 的默认 OCI 运行时为 runC，可以通过新增以下内容，新增对 Kata Containers 的支持：
 
 ```toml
-[plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+ [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
     [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata]
         runtime_type = "io.containerd.kata.v2"
         privileged_without_host_devices = true
         pod_annotations = ["io.katacontainers.*"]
         container_annotations = ["io.katacontainers.*"]
         [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.kata.options]
-           ConfigPath = "/opt/kata/share/defaults/kata-containers/configuration.toml"、
+           ConfigPath = "/opt/kata/share/defaults/kata-containers/configuration.toml"
 ```
 
 ## CRI-O
 
-TODO
+*TODO*
 
-# RuntimeClass
+至此，可以单独通过 Container Engine 的命令行运行 Kata Containers，以 Containerd 为例：
 
-RuntimeClass 是一个用于选择容器运行时配置的特性，容器运行时配置用于运行 Pod 中的容器。
+```shell
+$ sudo ctr image pull docker.io/library/ubuntu:latest
+$ sudo ctr run --runtime io.containerd.run.kata.v2 -t --rm docker.io/library/ubuntu:latest hello sh -c "free -h"
+$ sudo ctr run --runtime io.containerd.run.kata.v2 -t --memory-limit 536870912 --rm docker.io/library/ubuntu:latest hello sh -c "free -h"
+```
+
+# Kubernetes 集成
+
+Kubernetes 中对于运行时的集成是通过 [RuntimeClass](https://kubernetes.io/docs/concepts/containers/runtime-class/) 资源对象，例如
 
 ```yaml
 kind: RuntimeClass
@@ -523,7 +252,7 @@ scheduling:
 
 ## handler
 
-需要和 CRI 中注册的 handler（HANDLER_NAME） 保持一致，用于声明由具体实现的 runtime。
+需要和 CRI 中注册的 handler（HANDLER_NAME） 保持一致。
 
 **Containerd**
 
@@ -549,124 +278,48 @@ scheduling:
 
 在节点上运行 Pod 时，Pod 本身占用大量系统资源。这些资源是运行 Pod 内容器所需资源的附加资源。Overhead 是一个特性，用于计算 Pod 基础设施在容器请求和限制之上消耗的资源。
 
-在 Kubernetes 中，Pod 的开销是根据与 Pod 的 [RuntimeClass](https://kubernetes.io/zh/docs/concepts/containers/runtime-class/) 相关联的开销在[准入](https://kubernetes.io/zh/docs/reference/access-authn-authz/extensible-admission-controllers/#what-are-admission-webhooks)时设置的。
+在 Kubernetes 中，Pod 的开销是根据与 Pod 的 RuntimeClass 相关联的开销在准入控制时设置的。
 
-如果启用了 Pod Overhead，在调度 Pod 时，除了考虑容器资源请求的总和外，还要考虑 Pod 开销。 类似地，kubelet 将在确定 Pod cgroups 的大小和执行 Pod 驱逐排序时也会考虑 Pod 开销。
+如果启用了 Pod Overhead，在调度 Pod 时，除了考虑容器资源请求的总和外，还要考虑 Pod 开销。 类似地，Kubelet 将在确定 Pod cgroups 的大小和执行 Pod 驱逐排序时也会考虑 Pod 开销。
 
-# Pod
+# annotation 扩展
 
-### 定制化的 annotation
+Kata Containers 可以通过 annotation 的方式实现定制化每一个 Kata 容器的底层运行时参数。需要做的是上层 CRI 将 Pod annotation 透传至底层运行时（如 Containerd 1.4.x 以上的版本支持 annotation；CRI-O 默认透传所有参数，无需额外配置），同时 Kata Containers 开启识别特定的 annotation（[hypervisor].enable_annotations）。
 
-Kata Containers 可以通过 Pod annotation 的方式实现定制化每一个 Pod 的底层 Kata 参数。需要做的是上层 CRI 将 Pod annotation 透传至底层 runtime，同时 Kata Containers 开启识别特定的 Pod annotation，并且 CRI 需要支持此功能（如 Containerd 依赖 1.4.x 以上的版本才可以，且对应的 runtime 配置中新增相关 annotations 支持；CRI-O 默认透传所有参数，无需额外配置）
+*具体参考 Kata Containers 配置中动态配置项*
 
-**全局配置**
+此外，Kata Containers 支持 OCI 和容器级别的配置，例如
 
-| Key                                        | Value Type | Comments                                                     |
-| ------------------------------------------ | ---------- | ------------------------------------------------------------ |
-| `io.katacontainers.config_path`            | string     | Kata config file location that overrides the default config paths |
-| `io.katacontainers.pkg.oci.bundle_path`    | string     | OCI bundle path                                              |
-| `io.katacontainers.pkg.oci.container_type` | string     | OCI container type. Only accepts `pod_container` and `pod_sandbox` |
+**OCI 配置**
 
-**Runtime 配置**
+| 配置项                                   | 含义                                                |
+| ---------------------------------------- | --------------------------------------------------- |
+| io.katacontainers.config_path            | Kata Containers 配置文件路径                        |
+| io.katacontainers.pkg.oci.bundle_path    | OCI bundle 路径                                     |
+| io.katacontainers.pkg.oci.container_type | OCI 容器类型，可选的有 pod_container 和 pod_sandbox |
 
-| Key                                                      | Value Type | Comments                                                     |
-| -------------------------------------------------------- | ---------- | ------------------------------------------------------------ |
-| `io.katacontainers.config.runtime.experimental`          | `boolean`  | determines if experimental features enabled                  |
-| `io.katacontainers.config.runtime.disable_guest_seccomp` | `boolean`  | determines if `seccomp` should be applied inside guest       |
-| `io.katacontainers.config.runtime.disable_new_netns`     | `boolean`  | determines if a new netns is created for the hypervisor process |
-| `io.katacontainers.config.runtime.internetworking_model` | string     | determines how the VM should be connected to the container network interface. Valid values are `macvtap`, `tcfilter` and `none` |
-| `io.katacontainers.config.runtime.sandbox_cgroup_only`   | `boolean`  | determines if Kata processes are managed only in sandbox cgroup |
-| `io.katacontainers.config.runtime.enable_pprof`          | `boolean`  | enables Golang `pprof` for `containerd-shim-kata-v2` process |
+**容器配置**
 
-**Agent 配置**
+| 配置项                                             | 含义                           |
+| -------------------------------------------------- | ------------------------------ |
+| io.katacontainers.container.resource.swappiness    | 即 Resources.Memory.Swappiness |
+| io.katacontainers.container.resource.swap_in_bytes | 即 Resources.Memory.Swap       |
 
-| Key                                                  | Value Type | Comments                                                     |
-| ---------------------------------------------------- | ---------- | ------------------------------------------------------------ |
-| `io.katacontainers.config.agent.enable_tracing`      | `boolean`  | enable tracing for the agent                                 |
-| `io.katacontainers.config.agent.container_pipe_size` | uint32     | specify the size of the std(in/out) pipes created for containers |
-| `io.katacontainers.config.agent.kernel_modules`      | string     | the list of kernel modules and their parameters that will be loaded in the guest kernel. Semicolon separated list of kernel modules and their parameters. These modules will be loaded in the guest kernel using `modprobe`(8). E.g., `e1000e InterruptThrottleRate=3000,3000,3000 EEE=1; i915 enable_ppgtt=0` |
-
-**Hypervisor 配置**
-
-| Key                                                          | Value Type                                                   | Comments                                                     |
-| ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| `io.katacontainers.config.hypervisor.asset_hash_type`        | string                                                       | the hash type used for assets verification, default is `sha512` |
-| `io.katacontainers.config.hypervisor.block_device_cache_direct` | `boolean`                                                    | Denotes whether use of `O_DIRECT` (bypass the host page cache) is enabled |
-| `io.katacontainers.config.hypervisor.block_device_cache_noflush` | `boolean`                                                    | Denotes whether flush requests for the device are ignored    |
-| `io.katacontainers.config.hypervisor.block_device_cache_set` | `boolean`                                                    | cache-related options will be set to block devices or not    |
-| `io.katacontainers.config.hypervisor.block_device_driver`    | string                                                       | the driver to be used for block device, valid values are `virtio-blk`, `virtio-scsi`, `nvdimm` |
-| `io.katacontainers.config.hypervisor.cpu_features`           | `string`                                                     | Comma-separated list of CPU features to pass to the CPU (QEMU) |
-| `io.katacontainers.config.hypervisor.ctlpath` (R)            | `string`                                                     | Path to the `acrnctl`binary for the ACRN hypervisor          |
-| `io.katacontainers.config.hypervisor.default_max_vcpus`      | uint32                                                       | the maximum number of vCPUs allocated for the VM by the hypervisor |
-| `io.katacontainers.config.hypervisor.default_memory`         | uint32                                                       | the memory assigned for a VM by the hypervisor in `MiB`      |
-| `io.katacontainers.config.hypervisor.default_vcpus`          | uint32                                                       | the default vCPUs assigned for a VM by the hypervisor        |
-| `io.katacontainers.config.hypervisor.disable_block_device_use` | `boolean`                                                    | disallow a block device from being used                      |
-| `io.katacontainers.config.hypervisor.disable_image_nvdimm`   | `boolean`                                                    | specify if a `nvdimm` device should be used as rootfs for the guest (QEMU) |
-| `io.katacontainers.config.hypervisor.disable_vhost_net`      | `boolean`                                                    | specify if `vhost-net` is not available on the host          |
-| `io.katacontainers.config.hypervisor.enable_hugepages`       | `boolean`                                                    | if the memory should be `pre-allocated` from huge pages      |
-| `io.katacontainers.config.hypervisor.enable_iommu_platform`  | `boolean`                                                    | enable `iommu` on CCW devices (QEMU s390x)                   |
-| `io.katacontainers.config.hypervisor.enable_iommu`           | `boolean`                                                    | enable `iommu` on Q35 (QEMU x86_64)                          |
-| `io.katacontainers.config.hypervisor.enable_iothreads`       | `boolean`                                                    | enable IO to be processed in a separate thread. Supported currently for virtio-`scsi` driver |
-| `io.katacontainers.config.hypervisor.enable_mem_prealloc`    | `boolean`                                                    | the memory space used for `nvdimm` device by the hypervisor  |
-| `io.katacontainers.config.hypervisor.enable_vhost_user_store` | `boolean`                                                    | enable vhost-user storage device (QEMU)                      |
-| `io.katacontainers.config.hypervisor.enable_virtio_mem`      | `boolean`                                                    | enable virtio-mem (QEMU)                                     |
-| `io.katacontainers.config.hypervisor.entropy_source` (R)     | string                                                       | the path to a host source of entropy (`/dev/random`, `/dev/urandom` or real hardware RNG device) |
-| `io.katacontainers.config.hypervisor.file_mem_backend` (R)   | string                                                       | file based memory backend root directory                     |
-| `io.katacontainers.config.hypervisor.firmware_hash`          | string                                                       | container firmware SHA-512 hash value                        |
-| `io.katacontainers.config.hypervisor.firmware`               | string                                                       | the guest firmware that will run the container VM            |
-| `io.katacontainers.config.hypervisor.firmware_volume_hash`   | string                                                       | container firmware volume SHA-512 hash value                 |
-| `io.katacontainers.config.hypervisor.firmware_volume`        | string                                                       | the guest firmware volume that will be passed to the container VM |
-| `io.katacontainers.config.hypervisor.guest_hook_path`        | string                                                       | the path within the VM that will be used for drop in hooks   |
-| `io.katacontainers.config.hypervisor.hotplug_vfio_on_root_bus` | `boolean`                                                    | indicate if devices need to be hotplugged on the root bus instead of a bridge |
-| `io.katacontainers.config.hypervisor.hypervisor_hash`        | string                                                       | container hypervisor binary SHA-512 hash value               |
-| `io.katacontainers.config.hypervisor.image_hash`             | string                                                       | container guest image SHA-512 hash value                     |
-| `io.katacontainers.config.hypervisor.image`                  | string                                                       | the guest image that will run in the container VM            |
-| `io.katacontainers.config.hypervisor.initrd_hash`            | string                                                       | container guest initrd SHA-512 hash value                    |
-| `io.katacontainers.config.hypervisor.initrd`                 | string                                                       | the guest initrd image that will run in the container VM     |
-| `io.katacontainers.config.hypervisor.jailer_hash`            | string                                                       | container jailer SHA-512 hash value                          |
-| `io.katacontainers.config.hypervisor.jailer_path` (R)        | string                                                       | the jailer that will constrain the container VM              |
-| `io.katacontainers.config.hypervisor.kernel_hash`            | string                                                       | container kernel image SHA-512 hash value                    |
-| `io.katacontainers.config.hypervisor.kernel_params`          | string                                                       | additional guest kernel parameters                           |
-| `io.katacontainers.config.hypervisor.kernel`                 | string                                                       | the kernel used to boot the container VM                     |
-| `io.katacontainers.config.hypervisor.machine_accelerators`   | string                                                       | machine specific accelerators for the hypervisor             |
-| `io.katacontainers.config.hypervisor.machine_type`           | string                                                       | the type of machine being emulated by the hypervisor         |
-| `io.katacontainers.config.hypervisor.memory_offset`          | uint64                                                       | the memory space used for `nvdimm` device by the hypervisor  |
-| `io.katacontainers.config.hypervisor.memory_slots`           | uint32                                                       | the memory slots assigned to the VM by the hypervisor        |
-| `io.katacontainers.config.hypervisor.msize_9p`               | uint32                                                       | the `msize` for 9p shares                                    |
-| `io.katacontainers.config.hypervisor.path`                   | string                                                       | the hypervisor that will run the container VM                |
-| `io.katacontainers.config.hypervisor.pcie_root_port`         | specify the number of PCIe Root Port devices. The PCIe Root Port device is used to hot-plug a PCIe device (QEMU) |                                                              |
-| `io.katacontainers.config.hypervisor.shared_fs`              | string                                                       | the shared file system type, either `virtio-9p` or `virtio-fs` |
-| `io.katacontainers.config.hypervisor.use_vsock`              | `boolean`                                                    | specify use of `vsock` for agent communication               |
-| `io.katacontainers.config.hypervisor.vhost_user_store_path` (R) | `string`                                                     | specify the directory path where vhost-user devices related folders, sockets and device nodes should be (QEMU) |
-| `io.katacontainers.config.hypervisor.virtio_fs_cache_size`   | uint32                                                       | virtio-fs DAX cache size in `MiB`                            |
-| `io.katacontainers.config.hypervisor.virtio_fs_cache`        | string                                                       | the cache mode for virtio-fs, valid values are `always`, `auto` and `none` |
-| `io.katacontainers.config.hypervisor.virtio_fs_daemon`       | string                                                       | virtio-fs `vhost-user`daemon path                            |
-| `io.katacontainers.config.hypervisor.virtio_fs_extra_args`   | string                                                       | extra options passed to `virtiofs` daemon                    |
-| `io.katacontainers.config.hypervisor.enable_guest_swap`      | `boolean`                                                    | enable swap in the guest                                     |
-| `io.katacontainers.config.hypervisor.use_legacy_serial`      | `boolean`                                                    | uses legacy serial device for guest's console (QEMU)         |
-
-**Container 配置**
-
-| Key                                                   | Value Type | Comments                                  |
-| ----------------------------------------------------- | ---------- | ----------------------------------------- |
-| `io.katacontainers.container.resource.swappiness"`    | `uint64`   | specify the `Resources.Memory.Swappiness` |
-| `io.katacontainers.container.resource.swap_in_bytes"` | `uint64`   | specify the `Resources.Memory.Swap`       |
-
-例如，通过 Pod Annotation 启动一个忽略底层默认大小的，具有 5C 的 VM
+例如，通过 annotation 启动一个忽略底层默认大小，具有 5CPUs 的 VM
 
 ```yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: test
+  name: kata
   annotations:
     io.katacontainers.config.hypervisor.default_vcpus: "5"
 spec:
-  runtimeClassName: kata-containers
+  runtimeClassName: kata
   containers:
-  - name: uname-kata
+  - name: kata
     image: busybox
-    command: ["/bin/sh", "-c", "uname -r && tail -f /dev/null"]
+    command: ["/bin/sh", "-c", "tail -f /dev/null"]
 ```
 
 # VMCache
@@ -763,48 +416,57 @@ vm factory destroyed
 
 # kata-runtime
 
+kata-runtime 是一个命令行工具，支持以下功能：
+
 ## check (kata-check)
+
+检测当前环境是否可以运行 Kata Containers 以及版本是否正确。
 
 ```shell
 $ kata-runtime check --verbose
-INFO[0000] Looking for releases                          arch=amd64 name=kata-runtime pid=33900 source=runtime url="https://api.github.com/repos/kata-containers/kata-containers/releases"
-Newer major release available: 3.0.0 (url: https://github.com/kata-containers/kata-containers/releases/download/3.0.0/kata-containers-3.0.0-vendor.tar.gz, date: 2022-10-09T09:48:18Z)
-INFO[0002] CPU property found                            arch=amd64 description="Intel Architecture CPU" name=GenuineIntel pid=33900 source=runtime type=attribute
-INFO[0002] CPU property found                            arch=amd64 description="Virtualization support" name=vmx pid=33900 source=runtime type=flag
-INFO[0002] CPU property found                            arch=amd64 description="64Bit CPU" name=lm pid=33900 source=runtime type=flag
-INFO[0002] CPU property found                            arch=amd64 description=SSE4.1 name=sse4_1 pid=33900 source=runtime type=flag
-INFO[0002] kernel property found                         arch=amd64 description="Host kernel accelerator for virtio" name=vhost pid=33900 source=runtime type=module
-INFO[0002] kernel property found                         arch=amd64 description="Host kernel accelerator for virtio network" name=vhost_net pid=33900 source=runtime type=module
-INFO[0002] kernel property found                         arch=amd64 description="Host Support for Linux VM Sockets" name=vhost_vsock pid=33900 source=runtime type=module
-INFO[0002] kernel property found                         arch=amd64 description="Intel KVM" name=kvm_intel pid=33900 source=runtime type=module
-INFO[0002] kernel property found                         arch=amd64 description="Kernel-based Virtual Machine" name=kvm pid=33900 source=runtime type=module
+INFO[0000] IOMMUPlatform is disabled by default.        
+WARN[0000] Not running network checks as super user      arch=amd64 name=kata-runtime pid=29825 source=runtime
+INFO[0000] CPU property found                            arch=amd64 description="Intel Architecture CPU" name=GenuineIntel pid=29825 source=runtime type=attribute
+INFO[0000] CPU property found                            arch=amd64 description="Virtualization support" name=vmx pid=29825 source=runtime type=flag
+INFO[0000] CPU property found                            arch=amd64 description="64Bit CPU" name=lm pid=29825 source=runtime type=flag
+INFO[0000] CPU property found                            arch=amd64 description=SSE4.1 name=sse4_1 pid=29825 source=runtime type=flag
+INFO[0000] kernel property found                         arch=amd64 description="Intel KVM" name=kvm_intel pid=29825 source=runtime type=module
+INFO[0000] kernel property found                         arch=amd64 description="Kernel-based Virtual Machine" name=kvm pid=29825 source=runtime type=module
+INFO[0000] kernel property found                         arch=amd64 description="Host kernel accelerator for virtio" name=vhost pid=29825 source=runtime type=module
+INFO[0000] kernel property found                         arch=amd64 description="Host kernel accelerator for virtio network" name=vhost_net pid=29825 source=runtime type=module
+INFO[0000] kernel property found                         arch=amd64 description="Host Support for Linux VM Sockets" name=vhost_vsock pid=29825 source=runtime type=module
 System is capable of running Kata Containers
+INFO[0000] device available                              arch=amd64 check-type=full device=/dev/kvm name=kata-runtime pid=29825 source=runtime
+INFO[0000] feature available                             arch=amd64 check-type=full feature=create-vm name=kata-runtime pid=29825 source=runtime
+System can currently create Kata Containers
 ```
 
-可选的 flags 包括
+可选的 flags 包括：
 
-| 名称                   | 含义                                                         |
-| ---------------------- | ------------------------------------------------------------ |
-| --check-version-only   | 仅对比前使用版本和最新可用版本（需要网络支持，且非 root 用户） |
-| --include-all-releases | 包含过滤预发布的版本                                         |
-| --no-network-checks    | 不借助网络执行检测                                           |
-| --only-list-releases   | 仅列出较新的可用版本（需要网络支持，且非 root 用户）         |
-| --strict               | 进行严格检查                                                 |
-| --verbose              | 展示详细的检查项                                             |
+| 名称                    | 含义                                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| --check-version-only    | 仅对比前使用版本和最新可用版本（需要网络支持，且非 root 用户） |
+| --include-all-releases  | 包含过滤预发布的版本                                         |
+| --no-network-checks, -n | 不借助网络执行检测，该参数等价于设置 KATA_CHECK_NO_NETWORK 环境变量 |
+| --only-list-releases    | 仅列出较新的可用版本（需要网络支持，且非 root 用户）         |
+| --strict, -s            | 进行严格检查                                                 |
+| --verbose, -v           | 展示详细的检查项                                             |
 
 ## env (kata-env)
+
+Kata Containers 配置展示，默认输出格式为 TOML。
 
 ```shell
 $ kata-runtime env 
 [Kernel]
-  Path = "/opt/kata/share/kata-containers/vmlinux.container"
-  Parameters = "systemd.unit=kata-containers.target systemd.mask=systemd-networkd.service systemd.mask=systemd-networkd.socket scsi_mod.scan=none agent.debug_console agent.debug_console_vport=1026"
+  Path = "/opt/kata/share/kata-containers/vmlinux-5.19.2-96"
+  Parameters = "systemd.unit=kata-containers.target systemd.mask=systemd-networkd.service systemd.mask=systemd-networkd.socket scsi_mod.scan=none agent.log=debug agent.debug_console agent.debug_console_vport=1026"
 
 [Meta]
   Version = "1.0.26"
 
 [Image]
-  Path = "/opt/kata/share/kata-containers/kata-containers.img"
+  Path = "/opt/kata/share/kata-containers/kata-clearlinux-latest.image"
 
 [Initrd]
   Path = ""
@@ -816,51 +478,51 @@ $ kata-runtime env
   BlockDeviceDriver = "virtio-scsi"
   EntropySource = "/dev/urandom"
   SharedFS = "virtio-fs"
-  VirtioFSDaemon = "/opt/kata/libexec/kata-qemu/virtiofsd"
-  SocketPath = "<<unknown>>"
+  VirtioFSDaemon = "/opt/kata/libexec/virtiofsd"
+  SocketPath = ""
   Msize9p = 8192
   MemorySlots = 10
-  PCIeRootPort = 0
-  HotplugVFIOOnRootBus = false
-  Debug = false
+  PCIeRootPort = 2
+  HotplugVFIOOnRootBus = true
+  Debug = true
 
 [Runtime]
-  Path = "/usr/bin/kata-runtime"
-  Debug = false
+  Path = "/usr/local/bin/kata-runtime"
+  Debug = true
   Trace = false
   DisableGuestSeccomp = true
   DisableNewNetNs = false
-  SandboxCgroupOnly = true
+  SandboxCgroupOnly = false
   [Runtime.Config]
     Path = "/etc/kata-containers/configuration.toml"
   [Runtime.Version]
     OCI = "1.0.2-dev"
     [Runtime.Version.Version]
-      Semver = "2.4.3"
-      Commit = "fcad969e5200607df3b0b31983cc64488e156e99"
-      Major = 2
-      Minor = 4
-      Patch = 3
+      Semver = "3.0.0"
+      Commit = "e2a8815ba46360acb8bf89a2894b0d437dc8548a-dirty"
+      Major = 3
+      Minor = 0
+      Patch = 0
 
 [Host]
-  Kernel = "3.10.0-957.10.5.el7.x86_64"
+  Kernel = "4.18.0-305.43.25.ar.el7.x86_64"
   Architecture = "amd64"
   VMContainerCapable = true
   SupportVSocks = true
   [Host.Distro]
-    Name = "ArcherOS OS"
-    Version = "1.6"
+    Name = "CentOS Linux"
+    Version = "7"
   [Host.CPU]
     Vendor = "GenuineIntel"
-    Model = "Intel(R) Xeon(R) CPU E5-2650 v4 @ 2.20GHz"
-    CPUs = 48
+    Model = "QEMU Virtual CPU version (cpu64-rhel6)"
+    CPUs = 8
   [Host.Memory]
-    Total = 131447232
-    Free = 62496172
-    Available = 63926992
+    Total = 12057632
+    Free = 3352124
+    Available = 8508112
 
 [Agent]
-  Debug = false
+  Debug = true
   Trace = false
 ```
 
@@ -871,6 +533,8 @@ $ kata-runtime env
 | --json | 以 JSON 格式展示 |
 
 ## exec
+
+借助 debug console，进入 VM 控制台，需要 [agent].debug_console_enabled 设置为 true。
 
 ```shell
 # 对于 Pod 而言是其 SandboxID
@@ -884,6 +548,8 @@ $ kata-runtime exec 27ab74433f11c0b64e404a841d5e2f8296a723ebfa4e598b4d9d32871173
 | --kata-debug-port | debug console 监听的端口，默认为 1026 或者 0 |
 
 ## metrics
+
+收集与用于运行 sandbox 的基础设施相关的指标，例如 runtime、agent、hypervisor 等。
 
 ```shell
 # 对于 Pod 而言是其 SandboxID
@@ -904,7 +570,9 @@ kata_hypervisor_io_stat{item="writebytes"} 2.097152e+06
 
 ## direct-volume
 
-### add
+管理 Kata Containers 的直通卷。
+
+**add**
 
 ```shell
 $ kata-runtime direct-volume add --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount --mount-info \{\"volume-type\":\"block\",\"device\":\"/dev/sdm\",\"fstype\":\"xfs\"\}
@@ -917,7 +585,7 @@ $ kata-runtime direct-volume add --volume-path /var/lib/kubelet/pods/8c3d29ad-84
 | --volume-path | 待操作的目标卷路径   |
 | --mount-info  | 管理卷挂载的详情信息 |
 
-### remove
+**remove**
 
 ```shell
 $ kata-runtime direct-volume delete --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount
@@ -929,7 +597,7 @@ $ kata-runtime direct-volume delete --volume-path /var/lib/kubelet/pods/8c3d29ad
 | ------------- | ------------------ |
 | --volume-path | 待操作的目标卷路径 |
 
-### stats
+**stats**
 
 ```shell
 $ kata-runtime direct-volume stats --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount
@@ -941,9 +609,9 @@ $ kata-runtime direct-volume stats --volume-path /var/lib/kubelet/pods/8c3d29ad-
 | ------------- | ------------------ |
 | --volume-path | 待操作的目标卷路径 |
 
-### resize
+**resize**
 
-*截至 Kata Containers 2.4.3，社区仍未实现*
+*截至 Kata Containers 3.0.0，社区仍未实现 VM 中 Kata agent 的逻辑*
 
 ```shell
 $ kata-runtime direct-volume resize --volume-path /var/lib/kubelet/pods/8c3d29ad-84b8-45f0-9fcc-8e16778cb3cb/volumes/kubernetes.io~csi/pvc-a950ed68-622c-4ec4-81fa-506f16de2196/mount --size 1756519562
@@ -958,30 +626,34 @@ $ kata-runtime direct-volume resize --volume-path /var/lib/kubelet/pods/8c3d29ad
 
 ## factory
 
-### init
+管理 Kata Containers 的 VM factory。
 
-```go
+**init**
+
+```shell
 $ kata-runtime factory init
 vm factory initialized
 ```
 
-### status
+**status**
 
-```go
+```shell
 $ kata-runtime factory status
 vm factory is on
 ```
 
-### destroy
+**destroy**
 
-```go
+```shell
 $ kata-runtime factory destroy
 vm factory destroyed
 ```
 
 ## iptables
 
-### get
+管理 VM 中的 iptables 信息。
+
+**get**
 
 ```shell
 $ kata-runtime iptables get --sandbox-id xxx --v6
@@ -994,7 +666,7 @@ $ kata-runtime iptables get --sandbox-id xxx --v6
 | --sandbox-id | 待操作的 Sandbox ID   |
 | --v6         | 获取 IPV6 的 iptables |
 
-### set
+**set**
 
 ```shell
 $ kata-runtime iptables set --sandbox-id xxx --v6 ./iptables
@@ -1008,6 +680,8 @@ $ kata-runtime iptables set --sandbox-id xxx --v6 ./iptables
 | --v6         | 设置 IPV6 的 iptables |
 
 # kata-monitor
+
+Kata monitor 是一个守护进程，能够收集和暴露在同一 host 上运行的所有 Kata 容器工作负载相关的指标。
 
 ```shell
 $ kata-monitor

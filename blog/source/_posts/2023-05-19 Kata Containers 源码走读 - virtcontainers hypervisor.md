@@ -338,7 +338,7 @@ type Config struct {
 	// MemShared: 
 	// - 如果为 VM factory 中的启动为模板场景，则为 true
 	// - 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus, 再或者 annotations["io.katacontainers.config.hypervisor.file_mem_backend"] 不为空，则为 true
-	// - 如果指定了 [hypervisor].vhost_user_store_path，则为 true
+	// - 如果启用 [hypervisor].enable_vhost_user_store，则为 true
 	Knobs Knobs
 
 	// Bios is the -bios parameter
