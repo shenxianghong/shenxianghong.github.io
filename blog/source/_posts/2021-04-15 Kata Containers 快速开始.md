@@ -96,11 +96,11 @@ opt/kata/
             └── s390-netboot.img
 ```
 
-# Kata Containers 配置
+# 配置参数
 
 Kata Containers 中配置的优先级为：动态配置项 > 静态配置项 > 默认值
 
-- 动态配置项是通过 OCI spec 中的 annotations 传递，主流的 CRI 实现支持将 Kubernetes Pod annotations 透传至 Kata 运行时
+- 动态配置项是通过 OCI spec 中的 annotations 传递，主流的 Container Engine 均实现支持将容器 annotations 透传至 Kata 运行时
 - 各个动态与静态配置项支持与否视 hypervisor 具体实现的能力有所区别
 
 ## hypervisor
@@ -121,11 +121,11 @@ Kata Containers 中配置的优先级为：动态配置项 > 静态配置项 > �
 | enable_annotations           | N        | 允许 hypervisor 动态配置的配置项                             |
 | valid_hypervisor_paths       | N        | 以 glob(3) 规则校验 path 参数是否为合法的路径集合            |
 | kernel_params                | Y        | VM kernel 的额外附加参数，默认为空                           |
-| firmware                     | Y        |                                                              |
-| firmware_volume              | Y        |                                                              |
+| firmware                     | Y        | 固件路径，默认为空                                           |
+| firmware_volume              | Y        | 固件卷路径，默认为空                                         |
 | machine_accelerators         | Y        | 机器加速器参数，默认为空                                     |
 | seccompsandbox               | N        | seccomp 参数。QEMU seccomp sandbox 是 QEMU VM 中的一种安全特性，通过限制 QEMU 进程的系统调用，以提高 VM 的安全性。它使用了 Linux 内核提供的 seccomp 机制，将 QEMU 进程限制在一组安全的系统调用中，从而降低 VM 遭受攻击的风险。推荐设置 /proc/sys/net/core/bpf_jit_enable 文件内容为 1，以降低该特性带来的性能下降 |
-| cpu_features                 | Y        | CPU 特性参数，例如默认的 pmu=off 参数用于禁用 VM 中的性能监视器单元（Performance Monitoring Unit，PMU）。PMU 是一种硬件设备，用于监控 CPU 的性能指标，如指令执行次数、缓存命中率等。在某些情况下，PMU 可能会被用于进行侧信道攻击或窃取敏感信息 |
+| cpu_features                 | Y        | CPU 特性参数，默认为空                                       |
 | default_vcpus                | Y        | VM 默认的 CPU 数量，默认为 1，最大为 host CPU 数量           |
 | default_maxvcpus             | Y        | VM 最大的 CPU 数量，默认为 host CPU 数量，具体能否使用到 host CPU 数量，还需要视 hypervisor 限制而定。过大的 CPU 数量会影响到 VM 的性能以及内存占比 |
 | default_bridges              | N        | VM 默认的 PCI 桥数量，默认为 1，最大为 5。目前，仅支持 PCI bridge，每个 PCI bridge 最多支持 30 个设备的热插拔，每个 VM 最多支持 5 个 PCI bridge（这可能是 QEMU 或内核中的一个 bug） |
@@ -186,7 +186,70 @@ Kata Containers 中配置的优先级为：动态配置项 > 静态配置项 > �
 | vm_cache_number   | VMCache 的数量，默认为 0，表示禁用 VMCache。VMCache 是一种在使用之前将 VM 创建为缓存的功能，有助于加快容器的创建。 该功能由服务器和通过 Unix socket 进行通信的客户端组成，服务器将创建一些 VM 并缓存起来。如果启用了 VMCache 功能，kata-runtime 在创建新的 sandbox 时会向 VMCache 服务器请求 VM |
 | vm_cache_endpoint | VMCache 服务器的 socket 地址，默认为 /var/run/kata-containers/cache.sock |
 
-# Container Engine 集成
+## runtime
+
+动态配置项的前缀为 io.katacontainers.config.runtime.\<静态配置项\>
+
+| 静态配置项                   | 动态配置 | 含义                                                         |
+| ---------------------------- | -------- | ------------------------------------------------------------ |
+| enable_debug                 | N        | 是否启用 containerd-shim-kata-v2 的 debug 参数，默认为 false |
+| internetworking_model        | Y        | VM 与容器网络的连通方式，默认为 tcfilter，此外支持 tcfilter、macvtap 和 none。无论哪种方式，tap 设备都是创建的，区别在于 tap 设备和容器网络是如何打通的 |
+| disable_guest_seccomp        | Y        | 是否在 VM 中启用 seccomp 特性，默认为 false。启用时，seccomp 配置文件会由 Kata agent 传递到 VM 中并应用，用于提供额外的安全层 |
+| enable_tracing               | N        | 是否启用 opentracing 的 traces 和 spans，默认为 false        |
+| jaeger_endpoint              | N        | Jaeger 服务地址，默认为 `http://localhost:14268/api/traces`  |
+| jaeger_user                  | N        | Jaeger 服务账号，默认为空                                    |
+| jaeger_password              | N        | Jaeger 服务密码，默认为空                                    |
+| disable_new_netns            | Y        | 是否禁止为 shim 和 hypervisor 进程创建网络命名空间，默认为 false。适用于 internetworking_model 为 none，此时 tap 设备将位于 host 网络命名空间中，并可以直接连接到 bridge（如 OVS） |
+| sandbox_cgroup_only          | Y        | 是否仅启用 sandboxCgroup，默认为 false。启用时，cgroups 仅有一个 sandboxCgroup，用于限制所有的 Kata 进程；禁用时，cgroups 分为 sandboxCgroup 和 overheadCgroup，除 vCPU 线程外的其他 Kata 进程和线程都将在 overheadCgroup 下运行 |
+| static_sandbox_resource_mgmt | N        | 是否启用静态资源管理，默认为 false。启用时，Kata Containers 将在 VM 启动之前尝试确定适当的资源大小，而非动态更新 VM 中的内存和 CPU 数量，用作不支持 CPU 和内存热插拔的硬件架构或 hypervisor 解决方案 |
+| sandbox_bind_mounts          | N        | VM 中待挂载 host 的文件路径，默认为空。启用时，host 的该路径文件会被以只读的形式挂载到 VM 的 /run/kata-containers/shared/containers/sandbox-mounts 路径中，不会暴露给容器工作负载，仅为潜在的 VM 服务提供 |
+| vfio_mode                    | Y        | VFIO 的模式，默认为 guest-kernel，可选的有 vfio 和 guest-kernel。vfio 与 runC 的行为相近，在容器中，VFIO 设备将显示为 VFIO 字符设备，位于 /dev/vfio 下，确切的名称可能与 host 不同（需要匹配 VM 的 IOMMU 组号，而不是 host 的）；guest-kernel 是 Kata 特有的行为，VFIO 设备由 VM 内核中的驱动程序管理，意味着它将显示为一个或多个设备节点或网络接口，具体取决于设备的特性。这种模式要求容器内的工作负载具有显式支持 VM 内设备的代码或逻辑 |
+| disable_guest_empty_dir      | N        | 是否禁用在 VM 文件系统创建 emptyDir 挂载点，默认为 false。禁用时，Kata Containers 将不会在 VM 文件系统上创建 Kubernetes emptyDir 挂载点，而是在 host 上创建 emptyDir 挂载点，并通过 virtio-fs 共享，虽然更慢一些，但允许从 host 共享文件到 VM 中 |
+| experimental                 | Y        | 体验特性，默认为空。*暂未有支持的体验特性*                   |
+| enable_pprof                 | Y        | 是否启用 pprof，默认为 false。启用后，可以通过 kata-monitor 运行 pprof 工具来分析 shim 进程 |
+
+## annotation 参数扩展
+
+Kata Containers 可以通过 annotation 的方式定制化每一个 Kata 容器的底层运行时参数：
+
+- 上层容器运行时将 annotation 透传至底层运行时（例如 Containerd 1.4.x 以上的版本支持 annotation 透传；CRI-O 默认透传所有 annotation，无需额外配置。*具体参考 Container Manager 集成*）
+- Kata Containers 配置中开启识别特定的 annotation（[hypervisor].enable_annotations）
+
+此外，Kata Containers 支持 OCI 和容器级别的配置，例如：
+
+**OCI 配置**
+
+| 配置项                                   | 含义                                                |
+| ---------------------------------------- | --------------------------------------------------- |
+| io.katacontainers.config_path            | Kata Containers 配置文件路径                        |
+| io.katacontainers.pkg.oci.bundle_path    | OCI bundle 路径                                     |
+| io.katacontainers.pkg.oci.container_type | OCI 容器类型，可选的有 pod_container 和 pod_sandbox |
+
+**容器配置**
+
+| 配置项                                             | 含义                                                         |
+| -------------------------------------------------- | ------------------------------------------------------------ |
+| io.katacontainers.container.resource.swappiness    | 即 Resources.Memory.Swappiness，用于配置容器内存管理器在何时将内存页面写入 SWAP 空间的一个相对度量。该参数的值介于 0 和 100 之间，表示内存页面的使用频率 |
+| io.katacontainers.container.resource.swap_in_bytes | 即 Resources.Memory.Swap，用于配置容器可以使用的 SWAP 空间的大小 |
+
+例如，通过 annotation 启动一个忽略底层默认大小，具有 5 CPUs 的 VM：
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kata
+  annotations:
+    io.katacontainers.config.hypervisor.default_vcpus: "5"
+spec:
+  runtimeClassName: kata
+  containers:
+  - name: kata
+    image: busybox
+    command: ["/bin/sh", "-c", "tail -f /dev/null"]
+```
+
+# 与 Container Manager 集成
 
 ## Docker
 
@@ -194,19 +257,13 @@ Kata Containers 中配置的优先级为：动态配置项 > 静态配置项 > �
 
 ## Containerd
 
-在 Docker（本质为 docker-shim）作为 CRI 的场景下，Containerd 本身也是 Docker 的组件之一，但是禁用了 Containerd 作为 CRI 的能力，因此也无法集成使用 Kata Containers：
-
-```toml
-disabled_plugins = ["cri"]
-```
-
 ```shell
 # 生成 Containerd 默认的配置文件
 $ sudo mkdir -p /etc/containerd
 $ containerd config default | sudo tee /etc/containerd/config.toml
 ```
 
-可以看到，Containerd 的默认 OCI 运行时为 runC，可以通过新增以下内容，新增对 Kata Containers 的支持：
+可以看到，Containerd 的默认底层运行时为 runC，新增以下内容支持 Kata Containers：
 
 ```toml
  [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
@@ -223,7 +280,7 @@ $ containerd config default | sudo tee /etc/containerd/config.toml
 
 *TODO*
 
-至此，可以单独通过 Container Engine 的命令行运行 Kata Containers，以 Containerd 为例：
+至此，可以单独通过 Container Manager 各自的命令行运行 Kata Containers，以 Containerd 为例：
 
 ```shell
 $ sudo ctr image pull docker.io/library/ubuntu:latest
@@ -231,7 +288,7 @@ $ sudo ctr run --runtime io.containerd.run.kata.v2 -t --rm docker.io/library/ubu
 $ sudo ctr run --runtime io.containerd.run.kata.v2 -t --memory-limit 536870912 --rm docker.io/library/ubuntu:latest hello sh -c "free -h"
 ```
 
-# Kubernetes 集成
+# 与 Kubernetes 集成
 
 Kubernetes 中对于运行时的集成是通过 [RuntimeClass](https://kubernetes.io/docs/concepts/containers/runtime-class/) 资源对象，例如
 
@@ -282,137 +339,122 @@ scheduling:
 
 如果启用了 Pod Overhead，在调度 Pod 时，除了考虑容器资源请求的总和外，还要考虑 Pod 开销。 类似地，Kubelet 将在确定 Pod cgroups 的大小和执行 Pod 驱逐排序时也会考虑 Pod 开销。
 
-# annotation 扩展
+# VM factory
 
-Kata Containers 可以通过 annotation 的方式实现定制化每一个 Kata 容器的底层运行时参数。需要做的是上层 CRI 将 Pod annotation 透传至底层运行时（如 Containerd 1.4.x 以上的版本支持 annotation；CRI-O 默认透传所有参数，无需额外配置），同时 Kata Containers 开启识别特定的 annotation（[hypervisor].enable_annotations）。
-
-*具体参考 Kata Containers 配置中动态配置项*
-
-此外，Kata Containers 支持 OCI 和容器级别的配置，例如
-
-**OCI 配置**
-
-| 配置项                                   | 含义                                                |
-| ---------------------------------------- | --------------------------------------------------- |
-| io.katacontainers.config_path            | Kata Containers 配置文件路径                        |
-| io.katacontainers.pkg.oci.bundle_path    | OCI bundle 路径                                     |
-| io.katacontainers.pkg.oci.container_type | OCI 容器类型，可选的有 pod_container 和 pod_sandbox |
-
-**容器配置**
-
-| 配置项                                             | 含义                           |
-| -------------------------------------------------- | ------------------------------ |
-| io.katacontainers.container.resource.swappiness    | 即 Resources.Memory.Swappiness |
-| io.katacontainers.container.resource.swap_in_bytes | 即 Resources.Memory.Swap       |
-
-例如，通过 annotation 启动一个忽略底层默认大小，具有 5CPUs 的 VM
-
-```yaml
-apiVersion: v1
-kind: Pod
-metadata:
-  name: kata
-  annotations:
-    io.katacontainers.config.hypervisor.default_vcpus: "5"
-spec:
-  runtimeClassName: kata
-  containers:
-  - name: kata
-    image: busybox
-    command: ["/bin/sh", "-c", "tail -f /dev/null"]
-```
-
-# VMCache
+## VMCache
 
 VMCache 是一项新功能，可在使用前将 VM 创建为缓存。它有助于加快新容器的创建。
 
-该功能由借助 Unix Socket 通信的一个 Server 和一些 Client 组成。该协议是 protocols/cache/cache.proto 中的 gRPC。
+该功能由借助 Unix socket 通信的一个 gRPC Server 和一些 Client 组成。
 
-VMCache Server 将创建一些 VM 并通过 factory cache 缓存它们。它将 VM 转换为 gRPC 格式并在收到 client 请求时传输它。
+VMCache server 将事先创建并缓存一些 VM，它将 VM 转换为 gRPC 格式并在收到 client 请求时返回；grpccache factory 是 VMCache 客户端，它将请求到的 gRPC 格式的 VM 并将其转换回 VM。如果启用了 VMCache 功能，Kata 运行时在创建新的 sandbox 时会向 grpccache 请求获取 VM。
 
-grpccache Factory 是 VMCache 客户端。它将请求 gRPC 格式的 VM 并将其转换回 VM。如果启用了 VMCache 功能，kata-runtime 在创建新的 sandbox 时会向 grpccache 请求 VM。
+**与 VM tmplating 的区别**
 
-**与 VM Tmplating 的区别**
+VM tmplating 和 VMCache 都有助于加快新容器的创建。
 
-VM Tmplating 和 VMCache 都有助于加快新容器的创建。
+当启用 VM tmplating 时，通过从预先创建的模板 VM 克隆来创建新的 VM，它们将以只读模式共享相同的 initramfs、内核和 agent 内存。因此，如果在同一主机上运行许多 Kata 容器，它会节省大量内存。
 
-当启用 VM 模板时，通过从预先创建的模板 VM 克隆来创建新的 VM，它们将以只读模式共享相同的 initramfs、内核和 agent 内存。因此，如果在同一台主机上运行许多 Kata 容器，它会节省大量内存。
-
-VMCache 不容易受到共享内存 CVE 的影响，因为每个 VM 不共享内存。
+而 VMCache 不容易受到共享内存 CVE 的影响，因为每个 VM 不共享内存。
 
 **如何启用 VM Cache**
 
 配置文件中修改以下配置项：
 
-- vm_cache_number 指定 VMCache 缓存的个数，不指定或者为 0 时代表 VMCache 被禁用；> 0 时即为缓存个数
-- vm_cache_endpoint 指定 socket 地址
+- [factory].vm_cache_number 指定 VM 缓存的个数
+- [factory].vm_cache_endpoint 指定 socket 地址（自动创建），默认为 /var/run/kata-containers/cache.sock
 
-通过以下命令创建一个 VM 模板供以后使用，通过 CTRL+C 退出
+通过以下命令创建一个 VM 模板供以后使用，通过 CTRL+C 退出：
 
 ```shell
 $ kata-runtime factory init
 ```
 
-**已知限制**
+区别于 VM templating，VMCache 创建的 VM 是处于运行状态，而非保存在 [factory].template_path 目录下
 
-- 无法与 VM Templating 共存
-- 仅支持 QEMU 作为 hypervisor
+```shell
+$ kata-runtime factory status
+VM cache server pid = 38308
+VM pid = 38334 Cpu = 1 Memory = 2048MiB
+VM pid = 38331 Cpu = 1 Memory = 2048MiB
+VM pid = 38332 Cpu = 1 Memory = 2048MiB
+vm factory not enabled
 
-# VM Templating
-
-VM Templating 是 Kata Containers 的一项功能，可以借助克隆技术创建新的 VM。启用后，通过从预先创建的模板 VM 克隆创建新的 VM，它们将以只读模式共享相同的 initramfs、内核和 agent 内存。类似于内核的 fork 进程操作，这里 fork 的是 VM。
-
-**与 VMCache 的区别**
-
-VMCache 和 VM Templating 都有助于加快新容器的创建。
-
-启用 VMCache 后，VMCache 服务器会创建新的 VM。所以它不容易受到共享内存 CVE 的攻击，因为每个 VM 都不共享内存。
-
-如果在同一台主机上运行许多 Kata 容器，VM Templating 可以节省大量内存
-
-**优势**
-
-如果在同一主机上运行许多 Kata 容器，VM Templating 有助于加快新容器的创建并节省大量内存。如果正在运行高密度工作负载，或者非常关心容器启动速度，VM Templating 可能非常有用。
-
-在一个示例中，创建了 100 个 Kata 容器，每个容器都拥有 128MB 的 Guest 内存，并且在启用 VM Templating 特性时最终总共节省了 9GB 的内存，这大约是 Guest 内存总量的 72%。[完整结果参考](https://github.com/kata-containers/runtime/pull/303#issuecomment-395846767)。
-
-在另一个示例中，使用 containerd shimv2 创建了 10 个 Kata 容器，并计算了每个容器的平均启动速度。结果表明，VM Templating 将 Kata 容器的创建速度提高了 38.68%。[完整结果参考](https://gist.github.com/bergwolf/06974a3c5981494a40e2c408681c085d)。
-
-**不足**
-
-VM Templating 的一个缺点是它无法避免跨 VM 侧通道攻击，例如最初针对 Linux KSM 功能的 CVE-2015-2877。得出的结论是，“相互不信任的租户之间用于内存保护的共享直到写入的方法本质上是可检测的信息泄露，并且可以归类为潜在的被误解的行为而不是漏洞。”如果对此敏感，不要使用 VM Templating 或 KSM。
-
-**如何启用 VM Templating**
-
-配置文件中修改以下配置项：
-
-- hypervisor 为 qemu，且版本为 v4.1.0 以上
-- enable_template 设为 true
-- VM 镜像为 initrd 类型
-- shared_fs 不为 virtio-fs
-
-通过以下命令创建一个VM 模板供以后使用
-
-```go
-$ kata-runtime factory init
-vm factory initialized
+$ ls -la /run/vc/vm
+a78a9744-5984-4e54-bda9-9b6280bf9a3f
+41648333-a4a3-48ee-b80b-f7c19e3081b1
+57d2dd69-0e73-4779-b23f-68ee8e4f66de
+template
 ```
 
-创建的模板位于
-
-```go
-$ ls /run/vc/vm/template
-memory  state
-```
-
-通过以下命令销毁
-
-```go
+```shell
 $ kata-runtime factory destroy
 vm factory destroyed
 ```
 
-如果不想手动调用 kata-runtime factory init，默认创建的第一个 Kata 容器将自动创建一个 VM 模板。
+**已知限制**
+
+- 无法与 VM templating 共存
+- 仅支持 QEMU 作为 hypervisor
+- [hypervisor].shared_fs 为 virtio-9p（社区有支持 virtio-fs 的提案 https://github.com/kata-containers/kata-containers/pull/4522，但截至 Kata 3.0.0 暂未合入）
+
+*经验证，截至 Kata 3.0.0，VMCache 并不能开箱即用，在 VMCache 流程中部分变量缺少赋值，导致代码报错*
+
+## VM templating
+
+VM templating 是 Kata Containers 的一项功能，可以借助克隆技术创建新的 VM。启用后，新的 VM 将通过从预先创建的模板进行克隆来创建，它们将以只读模式共享相同的 initramfs、内核和 agent 内存。类似于内核的 fork 进程操作，这里 fork 的是 VM。
+
+**与 VMCache 的区别**
+
+VMCache 和 VM templating 都有助于加快新容器的创建。
+
+启用 VMCache 后，VMCache 服务器会创建新的 VM。所以它不容易受到共享内存 CVE 的攻击，因为每个 VM 都不共享内存。
+
+如果在同一主机上运行许多 Kata 容器，VM templating 可以节省大量内存。
+
+**优势**
+
+如果在同一主机上运行许多 Kata 容器，VM templating 有助于加快新容器的创建并节省大量内存。如果正在运行高密度工作负载，或者非常关心容器启动速度，VM templating 可能非常有用。
+
+在一个[示例](https://github.com/kata-containers/runtime/pull/303#issuecomment-395846767)中，创建了 100 个 Kata 容器，每个容器都拥有 128MB 的 VM 内存，并且在启用 VM templating 特性时最终总共节省了 9GB 的内存，这大约是 VM 内存总量的 72%。
+
+在另一个[示例](https://gist.github.com/bergwolf/06974a3c5981494a40e2c408681c085d)中，创建了 10 个 Kata 容器，并计算了每个容器的平均启动速度。结果表明，VM templating 将 Kata 容器的创建速度提高了 38.68%。
+
+**不足**
+
+VM templating 的一个缺点是它无法避免跨 VM 侧通道攻击，例如最初针对 Linux KSM 功能的 CVE-2015-2877。得出的结论是，“相互不信任的租户之间用于内存保护的共享直到写入的方法本质上是可检测的信息泄露，并且可以归类为潜在的被误解的行为而不是漏洞。”如果对此敏感，不要使用 VM templating 或 KSM。
+
+**如何启用 VM templating**
+
+配置文件中修改以下配置项：
+
+- hypervisor 为 qemu，且版本为 v4.1.0 以上
+- [factory].enable_template 设为 true
+- VM 镜像为 initrd 类型，即为 [hypervisor].initrd
+- [hypervisor].shared_fs 为 virtio-9p
+
+通过以下命令创建一个 VM 模板：
+
+```shell
+$ kata-runtime factory init
+vm factory initialized
+```
+
+创建的模板默认保存在 /run/vc/vm/template，可以通过 [factory].template_path 指定：
+
+```shell
+$ ls /run/vc/vm/template
+memory  state
+```
+
+模板通过以下命令销毁：
+
+```shell
+$ kata-runtime factory destroy
+vm factory destroyed
+```
+
+如果不想手动调用 kata-runtime factory init，在启用 VM templating 后，默认创建的第一个 Kata 容器将自动创建一个 VM 模板。
 
 # kata-runtime
 
@@ -570,7 +612,7 @@ kata_hypervisor_io_stat{item="writebytes"} 2.097152e+06
 
 ## direct-volume
 
-管理 Kata Containers 的直通卷。
+管理 Kata Containers 的直通卷。*具体使用方式参考 **Kata Containers Block Volume 直通**说明。*
 
 **add**
 
@@ -626,7 +668,7 @@ $ kata-runtime direct-volume resize --volume-path /var/lib/kubelet/pods/8c3d29ad
 
 ## factory
 
-管理 Kata Containers 的 VM factory。
+管理 Kata Containers 的 VM factory。*具体使用方式参考 **VM factory** 说明。*
 
 **init**
 
