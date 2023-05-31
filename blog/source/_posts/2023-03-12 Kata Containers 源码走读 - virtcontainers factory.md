@@ -205,8 +205,6 @@ type factory struct {
 7. 如果 base VM 中的 CPU 数量小于期望配置中的 CPU 数量，则调用 hypervisor 的 **HotplugAddDevice**，热添加差值 CPU；内存同理
 8. 当有 CPU 或内存的热添加动作后，调用 agent 的 **onlineCPUMem**，通知 agent 上线资源
 
-****
-
 # Cache Server
 
 *<u>src/runtime/protocols/cachecache.pb.go</u>*

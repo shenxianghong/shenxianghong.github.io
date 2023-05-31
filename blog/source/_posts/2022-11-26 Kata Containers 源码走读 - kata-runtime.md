@@ -33,8 +33,6 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
 4. 如果子命令为 check（kata-check），则设置日志级别为 warn；否则，根据 --log 参数创建日志文件（默认为 /dev/null），根据 --log-format 设置日志格式（支持 text 和 json，默认为 text），日志中新增 command 字段标识子命令，提取 context 设置给 logger
 5. 将配置文件内容解析并转为 OCI runtime 配置，设置在 context 中，后续的操作中不再解析配置文件
 
-****
-
 # check（kata-check）
 
 **Kata Containers 的运行环境要求检查**
@@ -78,8 +76,6 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
    1. 不区分 hypervisor 类型，验证流程参考：[kvmIsUsable](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_arm64.go#L66)
    2. 验证是否支持 KVM Extension，验证流程参考：[checkKVMExtensions](#https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/cmd/kata-runtime/kata-check_arm64.go#L70)
 
-****
-
 # env（kata-env）
 
 **展示 Kata Containers 的设置信息**
@@ -91,8 +87,6 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
 3. 通过配置文件和 OCI Runtime 的信息，生成 runtime、agent、 hypervisor、image、initrd、kernel  配置项内容
 4. 通过解析 /proc/version 获取内核版本信息；通过解析 /etc/os-release 或者 /usr/lib/os-release 获取发行版名称和版本信息；通过解析 /proc/cpuinfo 获得 CPU 类别和型号；通过 /dev/vhost-vsock 的存在性，判断是否支持 vhost-sock。此外，汇合内存总量与使用量、CPU 是否满足运行要求等，生成 host 配置项内容
 5. 汇总以上配置项内容，根据是否指定 --json 参数（默认为 TOML 格式），格式化展示内容
-
-****
 
 # exec
 
@@ -112,8 +106,6 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
 4. 如果 sandbox 的 console socket 协议为 vsock，则构建成类似 vsock://4138340623:1026 的格式；如果协议为 hvsock，则构建成 hvsock:///run/vc/firecracker/340b412c97bf1375cdda56bfa8f18c8a/root/kata.hvsock:1026 的格式。仅支持此两种协议，建立 grpc 请求链接，用于 VM 内外的通信交互
 5. 获取当前进程的 console，将 kata-runtime exec \<sandboxID\> 的输出流展示到当前 console 中
 
-****
-
 # metrics
 
 **获取 VM 中暴露的指标信息**
@@ -122,8 +114,6 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
 
 1. 校验指定的 sandboxID 参数是否不为空，且正则匹配满足 ^\[a-zA-Z0-9][a-zA-Z0-9_.-]+$
 2. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 `http://shim/metrics`，展示请求返回内容
-
-****
 
 # factory
 
@@ -153,8 +143,6 @@ kata-runtime 本身是基于 [urfave/cli](https://github.com/urfave/cli) 库构�
 
 1. 如果启用 VM cache 特性（即 [factory].vm_cache_number 大于 0），则通过 [factory].vm_cache_endpoint（默认为 /var/run/kata-containers/cache.sock）gRPC 调用 cache server 的 **Status**，展示请求返回内容
 2. 如果启用 VM template 特性（即 [factory].enable_template 为 true），则获取现有的 factory （即 fetchOnly 为 true），输出其是否存在
-
-****
 
 # direct-volume
 
@@ -216,8 +204,6 @@ type MountInfo struct {
 2. 遍历目录，获取到 sandboxID（直通卷模式下，该目录中仅有一个 sandboxID 目录与 mountInfo.json 文件，因此名称不为 mountInfo.json 的即为 sandboxID）
 3. 获取并解析目录中的 mountInto.json 文件内容，得到 mountInfo.Device（即位于 host 上待直通至 VM 中的设备）
 4. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送格式为 application/json 的 HTTP POST 请求至 shim server 的 `http://shim/direct-volume/resize`，其中请求体包含 mountInfo.Device 和卷扩容后的期望大小
-
-****
 
 # iptables
 

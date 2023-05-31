@@ -30,8 +30,6 @@ Kata monitor 是一个守护进程，能够收集和暴露在同一 host 上运�
 
 Kata monitor 提供的指标均采用 Prometheus 格式。虽然 Kata monitor 可以在任何运行 Kata Containers 工作负载的主机上用作独立守护进程，并且可以用于从正在运行的 Kata 运行时检索分析数据，但它的主要预期用途是作为 DaemonSet 部署在 Kubernetes 集群上。
 
-****
-
 *<u>src/runtime/cmd/kata-monitor/main.go</u>*
 
 ```go
@@ -62,8 +60,6 @@ type KataMonitor struct {
 4. 注册 /metrics、/sandboxes、/agent-url 和一系列 Golang pprof 的 HTTP 端点；根服务请求（/）会展示所有可用的 HTTP 端点
 5. 启动 monitor server 服务，监听地址通过 --listen-address 指定，默认为 127.0.0.1:8090
 
-****
-
 # ProcessMetricsRequest
 
 **处理 /metrics 请求，获取 shim、hypervisor、vm 和 agent 指标**
@@ -74,8 +70,6 @@ type KataMonitor struct {
 2. 如果指定了 sandbox 参数，则通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 `http://shim/metrics`，获取指定 sandbox 的指标信息并返回（等价于 kata-runtime metrics \<sandboxID\>）
 3. 如果没有指定 sandbox 参数，则通过 Prometheus 聚合所有 sandbox 的指标处理并返回
 
-****
-
 # ListSandboxes
 
 **处理 /sandboxes 请求，获取所有运行的 sandbox**
@@ -85,8 +79,6 @@ type KataMonitor struct {
 1. 获取维护的所有 sandboxID
 2. 根据实际请求，具体展示 HTML 或者 Text 格式的内容
 
-****
-
 # GetAgentURL
 
 **处理 /agent-url 请求，获取指定 sandboxID 的 agent 地址**
@@ -95,8 +87,6 @@ type KataMonitor struct {
 
 1. 检验请求中的 sandbox 参数是否不为空
 2. 通过 /run/vc/sbs/\<sandboxID\>/shim-monitor.sock 发送 HTTP GET 请求至 shim server 的 `http://shim/agent-url`，解析内容获得 sandbox socket 地址
-
-****
 
 # ExpvarHandler、PprofIndex、PprofCmdline、PprofProfile、PprofSymbol、PprofTrace
 

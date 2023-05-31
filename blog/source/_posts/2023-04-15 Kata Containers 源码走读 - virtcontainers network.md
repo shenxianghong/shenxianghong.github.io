@@ -392,8 +392,6 @@ Endpoint 中声明的 **Properties**、**Type**、**PciPath**、**SetProperties*
 1. 进入到该 netns 中，获取名为 tap0_kata（示例名称，其中 0 为递增生成的索引）的设备，关停并移除
 2. 调用 hypervisor 的 **HotplugRemoveDevice**，以 NetDev 热移除 VM 中的 endpoint 设备
 
-***
-
 # Network
 
 *<u>src/runtime/virtcontainers/network.go</u>*

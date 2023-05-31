@@ -25,8 +25,6 @@ virtcontainers 本质上不是独立组件，而是一个用于构建硬件虚�
 
 virtcontainers API 大致受到 Kubernetes CRI 的启发。然而，尽管这两个项目之间的 API 相似，但 virtcontainers 的目标不是构建 CRI 实现，而是提供一个通用的、运行时规范不可知的、硬件虚拟化的容器库，其他项目可以利用它来自己实现 CRI。
 
-****
-
 # VC
 
 *<u>src/runtime/virtcontainers/interfaces.go</u>*
@@ -90,8 +88,6 @@ VC 中声明的 **SetLogger** 和 **SetFactory** 均为参数赋值，无复杂�
 2. 获取 sandbox 并更新其中的容器（更新的意义在于后续的删除操作以文件内容为准）
 3. 调用 VCSandbox 的 **StopContainer** 和 **DeleteContainer**，关停并删除该容器
 4. 调用 VCSandbox 的 **GetAllContainers**，获取 sandbox 中的所有容器，如果仍大于 0（说明当前 sandbox 仍有容器存在，需要保留 sandbox 环境），否则调用 VCSandbox 的 **Stop**，关停 sandbox，并调用 VCSandbox 的 **Delete**，删除 sandbox
-
-****
 
 # VCSandbox
 
@@ -574,8 +570,6 @@ VCSandbox 中声明的 **Annotations**、**GetNetNs**、**GetAllContainers**、*
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/sandbox_metrics.go#L2334)
 
 1. 调用 agent 的 **setIPTables**，设置 iptables 信息
-
-****
 
 # VCContainer
 

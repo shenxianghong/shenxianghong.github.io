@@ -91,8 +91,6 @@ DeviceReceiver 中声明的 **GetHypervisorType** 为参数获取，无复杂逻
    2. 调用 hypervisor 的 **AddDevice**，添加所有 vfio 设备
 3. 其余设备类型均不支持
 
-****
-
 # Device
 
 *<u>src/runtime/pkg/device/api/interface.go</u>*
@@ -471,8 +469,6 @@ Device 中声明的 **DeviceID**、**GetAttachCount**、**GetHostPath** 和 **Ge
 1. 调用 **bumpAttachCount**，维护 attach 计数，判断是否执行后续实际操作
 2. 调用 devReceiver 的 **HotplugRemoveDevice**，热移除设备
 3. 根据 device.DeviceInfo.DriverOptions["block-driver"]，判断 block-driver 是否是 virtio-blk。如果是 virtio-blk，则调用 devReceiver 的 **UnsetSandboxBlockIndex**，释放记录的 virtio-block 索引<br>*如果未指定则视为 virtio-scsi；如果指定为 virtio-blk、virtio-blk-ccw 或 virtio-mmio 则视为 virtio-blk*
-
-****
 
 # DeviceManager
 

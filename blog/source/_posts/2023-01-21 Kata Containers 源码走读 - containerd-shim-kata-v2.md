@@ -19,8 +19,6 @@ tag:
 
 本质上，Kata agent 负责 VM（也称 sandbox、guest 等）中的容器等进程的生命周期的管理。而 containerd-shim-kata-v2 作为 Kata agent 唯一的服务入口（本身是一个可执行程序，运行后即为 shim server），一部分实现了 Containerd shimv2 接口，暴露 shim API 用于与 Containerd 的 gRPC 通信，一部分暴露 HTTP endpoints 用于命令行工具和 Kata monitor 的服务请求处理，内部调用 virtcontainers 的诸多子模块，提供了用户和 Containerd 对 VM 以及容器进程的生命周期管理的能力。
 
-****
-
 *<u>src/runtime/vendor/github.com/containerd/containerd/runtime/v2/task/shim.pb.go</u>*
 
 ```go
@@ -68,9 +66,6 @@ type service struct {
    3. 启动 goroutine，持续处理 service 中的 exit channel，构建 TaskExit 事件发送至 events channel 中
    4. 初始化 eventForwarder，并启动 goroutine 调用 eventForwarder 的 **forward** 持续上报事件
    5. 返回 service，交给 Containerd 负责针对每个容器启动 shim server
-
-
-****
 
 # Service
 
@@ -613,8 +608,6 @@ shim server 对外暴露的 gRPC 服务。
 5. 调用 VC 的 **CleanupContainer**，清理容器
 6. 移除 rootfs 挂载点（例如 /run/containerd/io.containerd.runtime.v2.task/k8s.io/\<containerID\>/rootfs）
 
-****
-
 # ShimManagement
 
 shim server 对外暴露的 HTTP 服务。
@@ -672,8 +665,6 @@ shim server 对外暴露的 HTTP 服务。
 
 1. 两者本质相似，区别在于 ip6TablesHandler 的 isIPv6 参数为 true，后续调用接口时，会传递该参数
 2. 判断请求方法，目前仅支持 PUT 和 GET 两种，其余返回状态码 501。如果为 PUT 请求，则读取请求体，调用 VCSandbox 的 **SetIPTables**，设置 guest 中的 iptables 信息；如果为 GET 请求，调用 VCSandbox 的 **GetIPTables**，获取 guest 中的 iptables 信息
-
-****
 
 # EventForwarder
 
