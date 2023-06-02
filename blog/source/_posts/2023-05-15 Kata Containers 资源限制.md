@@ -46,6 +46,28 @@ Kata Containers 并不会动态检测这两种情况，而是通过配置文件�
 
   位于 /kata_overhead 层级下的子 cgroup，命名为 /kata_overhead/\<sandboxID\>，由运行时管理
 
+**测试负载**
+
+```shell
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kata
+spec:
+  runtimeClassName: kata
+  containers:
+  - name: kata
+    image: ubuntu:18.04
+    command: ["/bin/sh", "-c", "tail -f /dev/null"]
+    resources:
+      requests:
+        memory: "1Gi"
+        cpu: "1"
+      limits:
+        memory: "1Gi"
+        cpu: "1"
+```
+
 ## sandbox_cgroup_only = true
 
 sandbox_cgroup_only 设置为 true 意味着 Kubelet 在设置 Pod cgroup 的大小时会将 Pod 的额外开销考虑在内（Kubernetes 1.16 起，借助 Pod Overhead 特性）。相对而言，这种方式较为推荐，Kata Containers 所有相关进程都可以简单地放置在给定的 cgroup 路径中。
@@ -75,17 +97,6 @@ sandbox_cgroup_only 设置为 true 意味着 Kubelet 在设置 Pod cgroup 的大
 当启用 sandbox_cgroup_only 时，Kata shim 将在 Pod cgroup 下创建一个名为 /kata\_<sandboxID\> 的子 cgroup，即 sandbox cgroup。大多数情况下，sandbox cgroup 不作单独约束和限制，而是自继承父 cgroup。cpuset 和 devices cgroup 子系统除外，它们是由 Kata shim 管理。
 
 ```shell
-# ======= host =======
-# Kata 的 cgroup 层级与限制
-└── /kubepods/pod08ae4074-5398-439b-93ae-a63035cbd3ae
-	├── tasks				(空)
-    ├── cpu.cfs_period_us	(-> 100000)
-    ├── cpu.cfs_quota_us	(-> 100000)
-    └── kata_dc5e4c1588ba3cdeb4fe1dffcb2420997408f42ad2545ddc792724b3bbfb7654	(infra 容器)
-    	├── tasks				(containerd-shim-kata-v2、virtiofsd、vhost 和 qemu-system 虚拟化进程)
-    	├── cpu.cfs_period_us	(-> 100000)
-    	└── cpu.cfs_quota_us	(-> -1)
-
 # runC 的 cgroup 层级与限制
 └── /kubepods/pod505eb17b-78d4-4dce-bfb2-60085f629344
 	├── tasks				(空)
@@ -99,8 +110,17 @@ sandbox_cgroup_only 设置为 true 意味着 Kubelet 在设置 Pod cgroup 的大
     	├── tasks				(pause 进程)
     	├── cpu.cfs_period_us	(-> 100000)
     	└── cpu.cfs_quota_us	(-> -1)
-    	
-# ======= guest =======
+
+# Kata 的 cgroup 层级与限制
+└── /kubepods/pod08ae4074-5398-439b-93ae-a63035cbd3ae
+	├── tasks				(空)
+    ├── cpu.cfs_period_us	(-> 100000)
+    ├── cpu.cfs_quota_us	(-> 100000)
+    └── kata_dc5e4c1588ba3cdeb4fe1dffcb2420997408f42ad2545ddc792724b3bbfb7654	(infra 容器)
+    	├── tasks				(containerd-shim-kata-v2、virtiofsd、vhost 和 qemu-system 虚拟化进程)
+    	├── cpu.cfs_period_us	(-> 100000)
+    	└── cpu.cfs_quota_us	(-> -1)
+
 # Kata VM 中的 cgroup 层级与限制
 └── /kubepods/pod08ae4074-5398-439b-93ae-a63035cbd3ae
 	├── tasks				(空)
@@ -170,7 +190,49 @@ Kata Containers 不对 overhead cgroup 作任何约束或限制，因此可以
 
 当 sandbox_cgroup_only 被禁用时，Kata shim 将在 Pod cgroup 下创建 sandbox cgroup 子 cgroup，并在 overhead cgroup 下创建一个名为 /\<sandboxID\> 的子 cgroup。
 
-TODO
+```shell
+# runC 的 cgroup 层级与限制
+└── /kubepods/pod505eb17b-78d4-4dce-bfb2-60085f629344
+	├── tasks				(空)
+    ├── cpu.cfs_period_us	(-> 100000)
+    ├── cpu.cfs_quota_us	(-> 100000)
+    ├── 499316b3661bc989f0999dd51901d2afaad0dda0aa614a2ebcd39f2517e7c56b	(业务容器)
+    |	├── tasks				(业务进程)
+    | 	├── cpu.cfs_period_us	(-> 100000)
+    |	└── cpu.cfs_quota_us	(-> 100000)
+    └──	fa6545c433f02a1c712db11cb58bb100a013f9622d725c6a41c60500c20031c5	(infra 容器)
+    	├── tasks				(pause 进程)
+    	├── cpu.cfs_period_us	(-> 100000)
+    	└── cpu.cfs_quota_us	(-> -1)
+
+# Kata 的 cgroup 层级与限制
+├── /kubepods/podf2f4d981-27ab-4deb-87c0-07764f72f63c
+|	├── tasks				(空)
+|   ├── cpu.cfs_period_us	(-> 100000)
+|   ├── cpu.cfs_quota_us	(-> 100000)
+|   └── kata_db541270577881d786b38b188d86959301c2e3e22bb7f08dcab009ed089d80d8	(infra 容器)
+|    	├── tasks				(有 PID，但是进程信息已销毁，应该就是社区说的 vCPU 线程)
+|    	├── cpu.cfs_period_us	(-> 100000)
+|    	└── cpu.cfs_quota_us	(-> -1)
+└── /kata_overhead/db541270577881d786b38b188d86959301c2e3e22bb7f08dcab009ed089d80d8
+	├── tasks				(containerd-shim-kata-v2、virtiofsd、vhost 和 qemu-system 虚拟化进程)
+	├── cpu.cfs_period_us	(-> 100000)
+	└── cpu.cfs_quota_us	(-> -1)
+
+# Kata VM 中的 cgroup 层级与限制
+└── /kubepods/podf2f4d981-27ab-4deb-87c0-07764f72f63c
+	├── tasks				(空)
+    ├── cpu.cfs_period_us	(-> 100000)
+    ├── cpu.cfs_quota_us	(-> -1)
+    ├── 87bd38d05b248b095e2feb4d3e1196a8ab604baf1ede6f81b55a3fca42545a83	(业务容器)
+    |	├── tasks				(业务进程)
+    |	├── cpu.cfs_period_us	(-> 100000)
+    |	└── cpu.cfs_quota_us	(-> 100000)
+    └──	db541270577881d786b38b188d86959301c2e3e22bb7f08dcab009ed089d80d8	(infra 容器)
+    	├── tasks				(pause 进程)
+    	├── cpu.cfs_period_us	(-> 100000)
+    	└── cpu.cfs_quota_us	(-> -1)
+```
 
 与启用 sandbox_cgroup_only 时不同，Kata shim 将其自身加入到 overhead cgroup 中，然后将 vCPU 线程移动到 sandbox cgroup 中。除 vCPU 线程外的其他 Kata 进程和线程都将在 overhead cgroup 下运行。
 
@@ -181,3 +243,58 @@ TODO
 在不受约束的 overhead cgroup 下运行所有非 vCPU 线程可能会导致工作负载潜在地消耗大量 host 资源。
 
 另一方面，由于 overhead cgroup 的专用性，在 overhead cgroup 下运行所有非 vCPU 线程可以获取 Kata Container Pod 额外开销的准确指标，以此更合理的调整 overhead cgroup 大小和约束。
+
+## 总结
+
+- VM 自身的规格用于限制 VM 中所有系统服务（如 Kata agent）与用户服务（如容器工作负载）的资源开销
+- VM 中的 cgroup 用于限制 Kata 容器的工作负载的资源开销
+- host 的 cgroup 用于限制 Kata 容器在 host 侧虚拟化层面的资源开销（视不同的 cgroup 管理方式而定）
+
+# runtimeClass.overhead
+
+```yaml
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: kata
+handler: kata
+overhead:
+  podFixed:
+    memory: "1024Mi"
+    cpu: "500m"
+```
+
+**requests**：resources.requests + runtimeClass.overhead
+
+- 节点调度时，无论是否声明 resources.requests，runtimeClass.overhead 均会追加到 resources.requests 中，两者之和作为调度的资源请求量
+
+**limits**：resources.limits + runtimeClass.overhead
+
+- 资源限制时，如果声明了 resources.limit，则 runtimeClass.overhead 会追加到其中，两者之和作为资源的限制使用量
+
+  runtimeClass.overhead 部分会作用在 Pod cgroup 层面
+
+```shell
+Namespace     Name     CPU Requests     CPU Limits     Memory Requests     Memory Limits     Age
+---------     ----     ------------     ----------     ---------------     -------------     ---
+default       kata     1500m (4%)       1500m (4%)     2Gi (13%)           2Gi (13%)         7s
+```
+
+此外，overhead 的资源声明规范并不会影响到 Pod 的 QoS，也不会影响到 VM 最终的规格。
+
+# VM 规格
+
+VM 最终规格为
+
+- **CPU**：[hypervisor].default_vcpus + resources.limits，最大不超过 [hypervisor].default_maxvcpus
+- **MEM**：[hypervisor].default_memory + resources.limits
+
+```shell
+root@localhost:/# nproc
+2
+root@localhost:/# free -m
+              total        used        free      shared  buff/cache   available
+Mem:           3017          46        2832           0         138        2929
+Swap:             0           0           0
+```
+
