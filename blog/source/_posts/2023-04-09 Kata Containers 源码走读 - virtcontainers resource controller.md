@@ -21,51 +21,36 @@ tag:
 
 *<u>src/runtime/pkg/resourcecontrol/controller.go</u>*
 
-ResourceController 在 Linux 上的实现为 LinuxCgroup，而 LinuxCgroup 具体体现为两种：sandboxController 和 overheadController。当 [runtime].sandbox_cgroup_only 开启时，顾名思义仅有 sandboxController，用于管理 Pod 所有的线程资源；当未开启时，资源分为两类，其中 vCPU 线程资源会由 sandboxController 管理，其余资源由 overheadController 管理。
+ResourceController 在 Linux 上的实现为 LinuxCgroup，而 LinuxCgroup 具体体现为两种：sandboxController 和 overheadController：
 
-*具体执行标准参考 OCI runtime-spec：https://github.com/opencontainers/runtime-spec/blob/main/config-linux.md*
+- 当 [runtime].sandbox_cgroup_only 开启时，顾名思义仅有 sandboxController，用于管理 Pod 所有的线程资源
+- 当 [runtime].sandbox_cgroup_only 未开启时，资源分为两类，其中 vCPU 线程资源会由 sandboxController 管理，其余资源由 overheadController 管理
+
+*具体执行标准参考 OCI runtime-spec：https://github.com/opencontainers/runtime-spec/blob/main/config-linux.md。*
 
 ```go
 type LinuxCgroup struct {
-	cgroup  interface{}
-	path    string
-	cpusets *specs.LinuxCPU
-	devices []specs.LinuxDeviceCgroup
-
 	sync.Mutex
+    
+	// cgroup 实现，其中类型包括 legacy、hybrid 和 unified，用于区分 cgroups v1 和 v2
+	cgroup  interface{}
+
+	// cgroup 路径
+	path    string
+
+	// 待限制的 CPU
+	cpusets *specs.LinuxCPU
+    
+	// 待限制的 sandbox 设备
+	// 除了创建时指定的 sandbox 设备，还会追加以下设备：
+	//   默认设备：/dev/null、/dev/random、/dev/full、/dev/tty、/dev/zero、/dev/urandom 和 /dev/console
+	//   虚拟化设备：/dev/kvm、/dev/vhost-net、/dev/vfio/vfio 和 /dev/vhost-vsock
+	//   wildcard 设备（通过手动指定 major、minor、access 和 type 属性构造的设备）：tuntap、/dev/pts 等
+	devices []specs.LinuxDeviceCgroup
 }
 ```
 
-**工厂函数**
-
-工厂函数有以下三种实现方式：
-
-**NewResourceController**
-
-[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/resourcecontrol/cgroups.go#L133)
-
-*用于构建 overheadController 或仅 sandboxController 存在的场景下，用于构建 sandboxController*
-
-1. 简单调用 `github.com/containerd/cgroups`，根据 cgroup 的类型，创建对应版本的 cgroup，初始化 LinuxCgroup
-
-**NewSandboxResourceController**
-
-[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/resourcecontrol/cgroups.go#L168)
-
-*overheadController 和 sandboxController 同时存在的场景下，用于构建 sandboxController*
-
-1. 准备待纳管的 sandbox 资源信息<br>*除了创建时指定的 sandbox 设备之外，还会追加以下设备：*<br>*默认设备：/dev/null、/dev/random、/dev/full、/dev/tty、/dev/zero、/dev/urandom 和 /dev/console*<br>*虚拟化设备：/dev/kvm、/dev/vhost-net、/dev/vfio/vfio 和 /dev/vhost-vsock*<br>*wildcard 设备（通过手动指定 major、minor、access 和 type 属性构造的设备）：tuntap、/dev/pts 等*
-2. 如果 cgroup 不是由 systemd 纳管（通过 cgroupPath 格式判断）或者 [runtime].sandbox_cgroup_only 为 false，则以第一种工厂函数流程处理；否则，调用 systemd 创建对应版本的 cgroup，加载 cgroup，追加 sandbox 资源信息，初始化 LinuxCgroup<br>*github.com/containerd/cgroups 不支持针对 systemd 创建具有 v1 和 v2 cgroup 的 scope，因此直接与 systemd 交互创建 cgroup，然后使用 containerd 的 api 加载它。 添加运行时进程，无需调用 setupCgroups*
-
-**LoadResourceController**
-
-[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/pkg/resourcecontrol/cgroups.go#L229)
-
-*根据 cgroupsPath，回溯得到对应的 sandboxController 或 overheadController*
-
-1. 解析 cgroupsPath 的路径，得到现存的 cgroup 信息，初始化 LinuxCgroup
-
-LinuxCgroup 的实现方式本质上是封装了 `github.com/containerd/cgroups ` 库，用于处理 cgroup 资源。因此，**Type**、**ID**、**Parent**、**Delete**、**Stat**、**AddProcess**、**AddThread**、**Update**、**MoveTo**、**AddDevice**、**RemoveDevice** 和 **UpdateCpuSet** 均为该库针对 cgroup v1 和 v2 不同版本下统一入口的二次封装。
+LinuxCgroup 的实现方式本质上是封装了 `github.com/containerd/cgroups ` 库，用于处理 cgroup 资源。因此，**Type**、**ID**、**Parent**、**Delete**、**Stat**、**AddProcess**、**AddThread**、**Update**、**MoveTo**、**AddDevice**、**RemoveDevice** 和 **UpdateCpuSet** 均为该库针对 cgroup v1 和 v2 不同版本下统一入口的二次封装。*该库不支持针对 systemd 创建具有 v1 和 v2 cgroup 的 scope，因此这部分是直接与 systemd 交互创建 cgroup，然后使用 containerd 的 api 加载它。 添加运行时进程，无需调用 setupCgroups*
 
 *此外，以下的函数声明并非 ResourceController 的接口声明，而是 VCSandbox 的扩展封装，为了便于理解，将其归类至 ResourceController 下。*
 
