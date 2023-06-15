@@ -295,8 +295,6 @@ data:
 
 ack-koordinator 组件提供 koord-descheduler 模块，其中 LowNodeLoad 插件负责感知负载水位并完成热点打散重调度工作。与 Kubernetes 原生的Descheduler 的插件 LowNodeUtilization 不同，LowNodeLoad 是根据节点真实利用率决策重调度，而 LowNodeUtilization 是根据资源分配率决策重调度。
 
-<div align=center><img width="800" style="border: 0px" src="/gallery/overcommitted/koord-descheduler.jpg"></div>
-
 koord-descheduler 模块周期性运行，每个周期内的执行过程分为以下三个阶段：
 
 1. 数据收集：获取集群内的节点和工作负载信息，以及相关的资源利用率数据
@@ -311,5 +309,7 @@ koord-descheduler 模块周期性运行，每个周期内的执行过程分为�
    4. 若满足条件则将 Pod 归类为待迁移副本，若不满足则继续遍历其他 Pod 和热点节点
 
 3. 容器驱逐迁移：针对待迁移的 Pod 发起 Evict 驱逐操作
+
+<div align=center><img width="800" style="border: 0px" src="/gallery/overcommitted/koord-descheduler.jpg"></div>
 
 ## Katalyst
