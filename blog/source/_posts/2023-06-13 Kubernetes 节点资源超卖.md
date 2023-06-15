@@ -87,118 +87,43 @@ Kubernetes 设计原语中，Pod 声明的 spec.resources.requests 用于描述�
 
 # 社区成果
 
-## Crane
-
-<div align=center><img width="800" style="border: 0px" src="/gallery/overcommitted/crane-overview.png"></div>
-
-Crane 是一个基于 FinOps 的云资源分析与成本优化平台。它的愿景是在保证客户应用运行质量的前提下实现极致的降本。
-
-**负载感知调度**
-
-<div align=center><img width="800" style="border: 0px" src="/gallery/overcommitted/crane-scheduler.png"></div>
-
-Crane-scheduler 是一组基于 [scheduler framework](https://kubernetes.io/docs/concepts/scheduling-eviction/scheduling-framework/) 的调度插件，依赖于 Prometheus 和 Node-exporter 收集和汇总指标数据，它由两个组件组成：
-
-- Node-annotator 定期从 Prometheus 拉取数据，并以注释的形式在节点上用时间戳标记它们
-- Dynamic plugin 直接从节点的注释中读取负载数据，过滤并基于简单的算法对候选节点进行评分
-
-动态调度器提供了一个默认值调度策略并支持用户自定义策略。默认策略依赖于以下指标：
-
-- cpu_usage_avg_5m
-- cpu_usage_max_avg_1h
-- cpu_usage_max_avg_1d
-- mem_usage_avg_5m
-- mem_usage_max_avg_1h
-- mem_usage_max_avg_1d
-
-在调度的 Filter 阶段，如果该节点的实际使用率大于上述任一指标的阈值，则该节点将被过滤。而在 Score 阶段，最终得分是这些指标值的加权和。
-
-在生产集群中，可能会频繁出现调度热点，因为创建 Pod 后节点的负载不能立即增加。因此，Crane 定义了一个额外的指标，名为 Hot Value，表示节点最近几次的调度频率。并且节点的最终优先级是最终得分减去 Hot Value。
-
-**弹性资源超卖**
-
-Crane 通过如下两种方式收集了节点的空闲资源量，综合后作为节点的空闲资源量，增强了资源评估的准确性：<br>*这里以 CPU 为例，同时也支持内存的空闲资源回收和计算。*
-
-1. 通过本地收集的 CPU 用量信息
-
-   > nodeCpuCannotBeReclaimed = nodeCpuUsageTotal + exclusiveCPUIdle - extResContainerCpuUsageTotal
-
-   exclusiveCPUIdle 是指被 CPU manager 策略 为 exclusive 的 Pod 占用的 CPU 的空闲量，虽然这部分资源是空闲的，但是因为独占的原因，是无法被复用的，因此加上被算作已使用量<br>*exclusive  策略是 Crane 在精细化管理 CPU 中提出的概念，该策略对应 Kubelet 的 static 策略，Pod 会独占 CPU 核心，其他任何 Pod 都无法使用*
-
-   extResContainerCpuUsageTotal 是指被作为动态资源使用的 CPU 用量，需要减去以免被二次计算
-
-2. 创建节点 CPU 使用量的 TSP，默认情况下自动创建，会根据历史预测节点 CPU 用量
-
-   ```yaml
-   apiVersion: v1
-   data:
-     spec: |
-       predictionMetrics:
-       - algorithm:
-           algorithmType: dsp
-           dsp:
-             estimators:
-               fft:
-               - highFrequencyThreshold: "0.05"
-                 lowAmplitudeThreshold: "1.0"
-                 marginFraction: "0.2"
-                 maxNumOfSpectrumItems: 20
-                 minNumOfSpectrumItems: 10
-             historyLength: 3d
-             sampleInterval: 60s
-         resourceIdentifier: cpu
-         type: ExpressionQuery
-         expressionQuery:
-           expression: 'sum(count(node_cpu_seconds_total{mode="idle",instance=~"({{.metadata.name}})(:\\d+)?"}) by (mode, cpu)) - sum(irate(node_cpu_seconds_total{mode="idle",instance=~"({{.metadata.name}})(:\\d+)?"}[5m]))'
-       predictionWindowSeconds: 3600    
-   kind: ConfigMap
-   metadata:
-     name: noderesource-tsp-template
-     namespace: default
-   ```
-
-时间序列预测是指使用过去的时间序列数据来预测未来的值。时间序列数据通常包括时间和相应的数值，例如资源用量、股票价格或气温。时间序列预测算法 DSP（Digital Signal Processing）是一种数字信号处理技术，可以用于分析和处理时间序列数据。
-
-离散傅里叶变换（DFT）就是 DSP 领域常用的一种算法。DFT 是一种将时域信号转换为频域信号的技术。通过将时域信号分解成不同的频率成分，可以更好地理解和分析信号的特征和结构。在时间序列预测中，DFT 可以用于分析和预测信号的周期性和趋势性，从而提高预测的准确性。
-
-Crane 使用在数字信号处理（Digital Signal Processing）领域中常用的的离散傅里叶变换、自相关函数等手段，识别、预测周期性的时间序列。更多参考：https://gocrane.io/docs/core-concept/timeseriees-forecasting-by-dsp/。
-
-结合预测算法和当前实际用量推算节点的剩余可用资源，并将其作为拓展资源赋予节点，Pod 可标明使用该扩展资源作为离线作业将空闲资源利用起来，以提升节点的资源利用率，部署 Pod 时 limit 和 request 使用 gocrane.io/\<resourceName\>: \<value\> 即可，如下：
-
-```yaml
-spec: 
-   containers:
-   - image: nginx
-     imagePullPolicy: Always
-     name: extended-resource-demo-ctr
-     resources:
-       limits:
-         gocrane.io/cpu: "2"
-         gocrane.io/memory: "2000Mi"
-       requests:
-         gocrane.io/cpu: "2"
-         gocrane.io/memory: "2000Mi"
-```
-
-**弹性资源限制**
-
-原生的 BestEffort 应用缺乏资源用量的公平保证，Crane 保证使用动态资源的 BestEffort Pod 其 CPU 使用量被限制在其允许使用的合理范围内，agent 保证使用扩展资源的 Pod 实际用量也不会超过其声明限制，同时在 CPU 竞争时也能按照各自声明量公平竞争；同时使用弹性资源的 Pod 也会受到水位线功能的管理。部署 Pod 时 limit 和 request 使用  gocrane.io/\<resourceName\>: \<value\> 即可。
-
 ## Koordinator
 
 <div align=center><img width="400" style="border: 0px" src="/gallery/overcommitted/koordinator.png"></div>
 
-ack-koordinator 与开源项目 [Koordinator](https://koordinator.sh/) 紧密相关。Koordinator 是一个基于 QoS 的 Kubernetes 混合工作负载调度系统，源自阿里巴巴在差异化 SLO 调度领域多年累积的经验，旨在提高对延迟敏感的工作负载和批处理作业的运行时效率和可靠性，简化与资源相关的配置调整的复杂性，并增加 Pod 部署密度以提高资源利用率。
+Koordinator 是一个基于 QoS 的 Kubernetes 混合工作负载调度系统，旨在提高对延迟敏感的工作负载和批处理作业的运行时效率和可靠性，简化与资源相关的配置调整的复杂性，并增加 Pod 部署密度以提高资源利用率。
 
-ack-koordinator 组件的前身是 ack-slo-manager，一方面 ack-slo-manager 为 Koordinator 开源社区的孵化提供了宝贵的经验，另一方面随着 Koordinator 逐渐成熟稳定，技术上对 ack-slo-manager 实现了反哺。因此，ack-koordinator 提供两类功能，一是 Koordinator 开源版本已经支持的功能，二是原 ack-slo-manager 提供的一系列差异化 SLO 能力。
+Koordinator 由两个控制面 Koordinator Scheduler、Koordinator Manager 和一个 DaemonSet 组件 Koordlet 组成。Koordinator 在 Kubernetes 原有的能力基础上增加了混部功能，并兼容了 Kubernetes 原有的工作负载。
 
-ack-koordinator 由中心侧组件和单机侧组件两大部分组成，各模块功能描述如下
+***Koordinator Scheduler***
 
-- Koordinator Manager：以 Deployment 的形式部署的中心组件，由主备两个实例组成，以保证组件的高可用
-  - SLO Controller：用于资源超卖管理，根据节点混部时的运行状态，动态调整集群的超卖资源量，同时为管理各节点的差异化 SLO 策略
-  - Recommender：提供资源画像功能，预估工作负载的峰值资源需求，简化您的配置容器资源规格的复杂度
-- Koordinator Descheduler：以 Deployment 的形式部署的中心组件，提供重调度功能
-- Koordlet：以 DaemonSet 的形式部署的单机组件，用于支持混部场景下的资源超卖、单机精细化调度，以及容器 QoS 保证等
+Koordinator Scheduler 以 Deployment 的形式部署，用于增强 Kubernetes 在混部场景下的资源调度能力，包括:
+
+- 更多的场景支持，包括弹性配额调度、资源超卖、资源预留、Gang 调度、异构资源调度
+- 更好的性能，包括动态索引优化、等价 class 调度、随机算法优化
+- 更安全的 descheduling，包括工作负载感知、确定性的 Pod 迁移、细粒度的流量控制和变更审计支持
+
+***Koordinator Manager***
+
+Koordinator Manager 以 Deployment 的形式部署，通常由两个实例组成，一个 leader 实例和一个 backup 实例。Koordinator Manager 由几个控制器和 webhooks 组成，用于协调混部场景下的工作负载，资源超卖和 SLO 管理。
+
+目前，提供了三个组件:
+
+- Colocation Profile，用于支持混部而不需要修改工作负载。用户只需要在集群中做少量的配置，原来的工作负载就可以在混部模式下运行
+- SLO 控制器，用于资源超卖管理，根据节点混部时的运行状态，动态调整集群的超发配置比例。该控制器的核心职责是管理混部时的 SLO，如智能识别出集群中的异常节点并降低其权重，动态调整混部时的水位和压力策略，从而保证集群中 Pod 的稳定性和吞吐量
+- Recommender，它使用 histograms 来统计和预测工作负载的资源使用细节，用来预估工作负载的峰值资源需求，从而支持更好地分散热点，提高混部的效率。此外，提供资源画像功能，预估工作负载的峰值资源需求，资源 profiling 还将用于简化用户资源规范化配置的复杂性，如支持 VPA
+
+***Koordlet***
+
+Koordlet 以 DaemonSet 的形式部署在 Kubernetes 集群中，用于支持混部场景下的资源超卖、干扰检测、QoS 保证等。
+
+在 Koordlet 内部，它主要包括以下模块:
+
+- 资源 profiling，估算 Pod 资源的实际使用情况，回收已分配但未使用的资源，用于低优先级 Pod 的 overcommit
+- 资源隔离，为不同类型的 Pod 设置资源隔离参数，避免低优先级的 Pod 影响高优先级 Pod 的稳定性和性能
+- 干扰检测，对于运行中的 Pod，动态检测资源争夺，包括 CPU 调度、内存分配延迟、网络、磁盘 IO 延迟等
+- QoS 管理器，根据资源剖析、干扰检测结果和 SLO 配置，动态调整混部节点的水位，抑制影响服务质量的 Pod
+- 资源调优，针对混部场景进行容器资源调优，优化容器的 CPU Throttle、OOM 等，提高服务运行质量
 
 **负载感知调度**
 
@@ -311,5 +236,102 @@ koord-descheduler 模块周期性运行，每个周期内的执行过程分为�
 3. 容器驱逐迁移：针对待迁移的 Pod 发起 Evict 驱逐操作
 
 <div align=center><img width="800" style="border: 0px" src="/gallery/overcommitted/koord-descheduler.jpg"></div>
+
+## Crane
+
+<div align=center><img width="800" style="border: 0px" src="/gallery/overcommitted/crane-overview.png"></div>
+
+Crane 是一个基于 FinOps 的云资源分析与成本优化平台。它的愿景是在保证客户应用运行质量的前提下实现极致的降本。
+
+**负载感知调度**
+
+<div align=center><img width="800" style="border: 0px" src="/gallery/overcommitted/crane-scheduler.png"></div>
+
+Crane-scheduler 是一组基于 Kubernetes Scheduling Framework 的调度插件，依赖于 Prometheus 和 Node-exporter 收集和汇总指标数据，Crane-scheduler 由两个组件组成：
+
+- Node-annotator 定期从 Prometheus 拉取数据，并以注释的形式在节点上用时间戳标记它们
+- Dynamic plugin 直接从节点的注释中读取负载数据，过滤并基于简单的算法对候选节点进行评分
+
+Crane-scheduler 提供了一个默认值调度策略并支持用户自定义策略。默认策略依赖于以下指标：
+
+- cpu_usage_avg_5m
+- cpu_usage_max_avg_1h
+- cpu_usage_max_avg_1d
+- mem_usage_avg_5m
+- mem_usage_max_avg_1h
+- mem_usage_max_avg_1d
+
+在调度的 Filter 阶段，如果该节点的实际使用率大于上述任一指标的阈值，则该节点将被过滤。而在 Score 阶段，最终得分是这些指标值的加权和。
+
+在生产集群中，可能会频繁出现调度热点，因为创建 Pod 后节点的负载不能立即增加。因此，Crane 定义了一个额外的指标 — Hot Value，表示节点最近几次的调度频率。并且节点的最终优先级是最终得分减去 Hot Value。
+
+**弹性资源超卖**
+
+Crane 通过如下两种方式收集了节点的空闲资源量，综合后作为节点的空闲资源量，增强了资源评估的准确性：<br>*这里以 CPU 为例，同时也支持内存的空闲资源回收和计算。*
+
+1. 通过本地收集的 CPU 用量信息
+
+   > nodeCpuCannotBeReclaimed = nodeCpuUsageTotal + exclusiveCPUIdle - extResContainerCpuUsageTotal
+
+   exclusiveCPUIdle 是指被 CPU manager 策略为 exclusive 的 Pod 占用的 CPU 的空闲量，虽然这部分资源是空闲的，但是因为独占的原因，是无法被复用的，因此加上被算作已使用量；<br>*exclusive 策略是 Crane 在精细化管理 CPU 中提出的概念，该策略对应 Kubelet 的 static 策略，Pod 会独占 CPU 核心，其他任何 Pod 都无法使用*
+
+   extResContainerCpuUsageTotal 是指被作为动态资源使用的 CPU 用量，需要减去以免被二次计算
+
+2. 创建节点 CPU 使用量的 TSP，默认情况下自动创建，会根据历史预测节点 CPU 用量
+
+   ```yaml
+   apiVersion: v1
+   data:
+     spec: |
+       predictionMetrics:
+       - algorithm:
+           algorithmType: dsp
+           dsp:
+             estimators:
+               fft:
+               - highFrequencyThreshold: "0.05"
+                 lowAmplitudeThreshold: "1.0"
+                 marginFraction: "0.2"
+                 maxNumOfSpectrumItems: 20
+                 minNumOfSpectrumItems: 10
+             historyLength: 3d
+             sampleInterval: 60s
+         resourceIdentifier: cpu
+         type: ExpressionQuery
+         expressionQuery:
+           expression: 'sum(count(node_cpu_seconds_total{mode="idle",instance=~"({{.metadata.name}})(:\\d+)?"}) by (mode, cpu)) - sum(irate(node_cpu_seconds_total{mode="idle",instance=~"({{.metadata.name}})(:\\d+)?"}[5m]))'
+       predictionWindowSeconds: 3600    
+   kind: ConfigMap
+   metadata:
+     name: noderesource-tsp-template
+     namespace: default
+   ```
+
+时间序列预测是指使用过去的时间序列数据来预测未来的值。时间序列数据通常包括时间和相应的数值，例如资源用量、股票价格或气温。时间序列预测算法 DSP（Digital Signal Processing）是一种数字信号处理技术，可以用于分析和处理时间序列数据。
+
+离散傅里叶变换（DFT）就是 DSP 领域常用的一种算法。DFT 是一种将时域信号转换为频域信号的技术。通过将时域信号分解成不同的频率成分，可以更好地理解和分析信号的特征和结构。在时间序列预测中，DFT 可以用于分析和预测信号的周期性和趋势性，从而提高预测的准确性。
+
+Crane 使用在数字信号处理（Digital Signal Processing）领域中常用的的离散傅里叶变换、自相关函数等手段，识别、预测周期性的时间序列。更多参考：https://gocrane.io/docs/core-concept/timeseriees-forecasting-by-dsp/。
+
+结合预测算法和当前实际用量推算节点的剩余可用资源，并将其作为拓展资源赋予节点，Pod 可标明使用该扩展资源作为离线作业将空闲资源利用起来，以提升节点的资源利用率，部署 Pod 时声明使用 gocrane.io/\<resourceName\>:  \<value\> 扩展资源即可，例如：
+
+```yaml
+spec: 
+   containers:
+   - image: nginx
+     imagePullPolicy: Always
+     name: extended-resource-demo-ctr
+     resources:
+       limits:
+         gocrane.io/cpu: "2"
+         gocrane.io/memory: "2000Mi"
+       requests:
+         gocrane.io/cpu: "2"
+         gocrane.io/memory: "2000Mi"
+```
+
+**弹性资源限制**
+
+同样的，部署 Pod 时声明使用 gocrane.io/\<resourceName\>:  \<value\> 扩展资源即可。
 
 ## Katalyst
