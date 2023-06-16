@@ -28,7 +28,7 @@ Kubernetes 设计原语中，Pod 声明的 spec.resources.requests 用于描述�
 
 为了提升集群资源利用率，应用管理员会提交一些 BestEffort QoS 的低优任务，来充分使用那些已分配但未使用的资源。即基于 Pod QoS 的服务混部（co-location）以实现 Kubernetes 节点资源的超卖（overcommitted）。
 
-<div align=center><img width="600" style="border: 0px" src="/gallery/overcommitted/overcommitted.png"></div>
+<div align=center><img width="500" style="border: 0px" src="/gallery/overcommitted/overcommitted.png"></div>
 
 这种策略常用于容器服务平台的在离线业务混部，但是这种基础的混部方案存在一些弊端：
 
@@ -67,31 +67,147 @@ Kubernetes 设计原语中，Pod 声明的 spec.resources.requests 用于描述�
 
 考虑到 Kubelet cgroup manager 不支持接口扩展，所以需要借助 agent 类型的组件维护容器的 cgroup，同时在 CPU 竞争时也能按照各自声明量公平竞争。
 
-## 负载感知调度
-
-现阶段，原生 Kube-scheduler 主要基于资源的分配率情况进行调度，这种行为本质上是静态调度，也就是根据容器的资源请求（spec.resources.requests）执行调度算法，而非考虑节点的实际资源使用率与负载。所以，经常会发生节点负载较低，但是却无法满足 Pod 调度要求。
-
-<div align=center><img width="400" style="border: 0px" src="/gallery/overcommitted/static-schedule-1.png"></div>
-
-另外，静态调度会导致节点之间的负载不均衡，有的节点资源利用率很高，而有的节点资源利用率很低。Kubernetes 在调度时是有一个负载均衡优选调度算法（LeastRequested）的，但是它调度均衡的依据是资源请求量而不是节点实际的资源使用率。
-
-<div align=center><img width="400" style="border: 0px" src="/gallery/overcommitted/static-schedule-2.png"></div>
-
-因此，调度算法中的预选与优选阶段需要新增节点实际负载情况的考量，也就是需要引入基于节点实际负载实现动态调度机制。
-
-## 热点打散重调度
-
-节点的利用率会随着时间、集群环境、工作负载的流量或请求等动态变化，导致集群内节点间原本负载均衡的情况被打破，甚至有可能出现极端负载不均衡的情况，影响到工作负载运行时质量。因此需要提供重调度能力，可以持续优化节点的负载情况，通过将负载感知调度和热点打散重调度结合使用，可以获得集群最佳的负载均衡效果。
-
-<div align=center><img width="600" style="border: 0px" src="/gallery/overcommitted/descheduler.png"></div>
-
 # 社区成果
+
+国内社区在探索节点资源超卖方面的思路整体相似，都是围绕弹性资源回收、超卖与限制三个部分展开。阿里的 Koordinator、腾讯的 Crane、华为的 Volcano、字节的 Katalyst、网易轻舟 NCS 和美团的 LAR 等都是类似的解决方案，它们的本质相同，只是在弹性资源结算方式等细节点上有所不同。
 
 ## Koordinator
 
-<div align=center><img width="400" style="border: 0px" src="/gallery/overcommitted/koordinator.png"></div>
+<u>*https://github.com/koordinator-sh/koordinator*</u>
+
+<div align=center><img width="700" style="border: 0px" src="/gallery/koordinator/overview.png"></div>
 
 Koordinator 是一个基于 QoS 的 Kubernetes 混合工作负载调度系统，旨在提高对延迟敏感的工作负载和批处理作业的运行时效率和可靠性，简化与资源相关的配置调整的复杂性，并增加 Pod 部署密度以提高资源利用率。
+
+**SLO**
+
+在集群中运行的 Pod 资源 SLO（Service Level Objectives）由两个概念组成，即优先级和 QoS
+
+- 优先级，即资源的优先级，代表了请求资源被调度的优先级。通常情况下，优先级会影响 Pod 在调度器待定队列中的相对位置
+- QoS，代表 Pod 运行时的服务质量。如cgroups cpu share、cfs 配额、LLC、内存、OOM 优先级等等
+
+Koordinator 定义了五种类型的 QoS，用于编排调度与资源隔离场景：
+
+| QoS                              | 特点                                                         | 说明                                                         |
+| -------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| SYSTEM                           | 系统进程，资源受限                                           | 对于 DaemonSets 等系统服务，虽然需要保证系统服务的延迟，但也需要限制节点上这些系统服务容器的资源使用，以确保其不占用过多的资源 |
+| LSE(Latency Sensitive Exclusive) | 保留资源并组织同 QoS 的 Pod 共享资源                         | 很少使用，常见于中间件类应用，一般在独立的资源池中使用       |
+| LSR(Latency Sensitive Reserved)  | 预留资源以获得更好的确定性                                   | 类似于社区的 Guaranteed，CPU 核被绑定                        |
+| LS(Latency Sensitive)            | 共享资源，对突发流量有更好的弹性                             | 微服务工作负载的典型 QoS 级别，实现更好的资源弹性和更灵活的资源调整能力 |
+| BE(Best Effort)                  | 共享不包括 LSE 的资源，资源运行质量有限，甚至在极端情况下被杀死 | 批量作业的典型 QoS 水平，在一定时期内稳定的计算吞吐量，低成本资源 |
+
+此外，进一步定义了四类优先级，用于扩展优先级维度以对混部场景的细粒度支持：
+
+| PriorityClass | 优先级范围   | 描述                                                   |
+| ------------- | ------------ | ------------------------------------------------------ |
+| koord-prod    | [9000, 9999] | 需要提前规划资源配额，并且保证在配额内成功             |
+| koord-mid     | [7000, 7999] | 需要提前规划资源配额，并且保证在配额内成功             |
+| koord-batch   | [5000, 5999] | 需要提前规划资源配额，一般允许借用配额                 |
+| koord-free    | [3000, 3999] | 不保证资源配额，可分配的资源总量取决于集群的总闲置资源 |
+
+**弹性资源回收与超卖**
+
+<div align=center><img width="800" style="border: 0px" src="/gallery/koordinator/colocation.png"></div>
+
+Koordinator 的混部资源模型，其基本思想是利用那些已分配但未使用的资源来运行低优先级的 Pod。如图所示，有四条线：
+
+1. limit：灰色，高优先级 Pod 所请求的资源量，对应于 Kubernetes 的 Pod 请求。
+2. usage：红色，Pod 实际使用的资源量，横轴为时间线，红线为 Pod 负载随时间变化的波动曲线。
+3. short-term reservation：深蓝色，这是基于过去（较短）时期内的资源使用量，对未来一段时间内其资源使用量的估计。预留和限制的区别在于，分配的未使用（未来不会使用的资源）可以用来运行短期执行的批处理 Pod。
+4. long-term reservation：浅蓝色，与 short-term reservation 类似，但估计的历史使用期更长。从保留到限制的资源可以用于生命周期较长的 Pod，与短期的预测值相比，可用的资源较少，但更稳定。
+
+Koordinator 的差异化 SLO 提供将这部分资源量化的能力。将上图中的红线定义为 usage，蓝线到红线预留部分资源定义为 buffered，绿色覆盖部分定义为 reclaimed。为体现与原生资源类型的差异性，Koordinator 使用 Batch 优先级的概念描述该部分超卖资源，也就是 batch-cpu 和 batch-memory。
+
+节点中可超卖资源的计算公式为：
+
+> nodeBatchAllocatable = nodeAllocatable * thresholdPercent - podRequest(non-BE) - systemUsage
+
+*公式中的 thresholdPercent 为可配置参数，通过修改 ConfigMap 中的配置项可以实现对资源的灵活管理。*
+
+Pod 通过声明标准扩展资源的方式使用超卖资源：
+
+```yaml
+metadata:
+  labels:
+    # 必填，标记为低优先级 Pod
+    koordinator.sh/qosClass: "BE"
+spec:
+  containers:
+  - resources:
+      requests:
+        # 单位为千分之一核，如下表示 1 核
+        kubernetes.io/batch-cpu: "1k"
+        # 单位为字节，如下表示 1 GB
+        kubernetes.io/batch-memory: "1Gi"
+      limits:
+        kubernetes.io/batch-cpu: "1k"
+        kubernetes.io/batch-memory: "1Gi"
+```
+
+此外，Koordinator 提供了一个 ClusterColocationProfile CRD 和对应的 webhook 修改和验证新创建的 Pod，主要为 Pod 注入 ClusterColocationProfile 中声明的 Koordinator QoSClass、Koordinator Priority 等，以及将 Pod 申请的标准资源变更至扩展资源。工作流程如下：
+
+<div align=center><img width="800" style="border: 0px" src="/gallery/koordinator/clustercolocationprofile.png"></div>
+
+**弹性资源限制**
+
+Koordinator 在宿主机节点提供了弹性资源限制能力，确保低优先级 BE（BestEffort）类型 Pod 的 CPU 资源使用在合理范围内，保障节点内容器稳定运行。
+
+在 Koordinator 提供的动态资源超卖模型中，reclaimed 资源总量根据高优先级 LS（Latency Sensitive）类型 Pod 的实际资源用量而动态变化，这部分资源可以供低优先级 BE（BestEffort）类型 Pod 使用。通过动态资源超卖能力，可以将 LS 与 BE 类型容器混合部署，以此提升集群资源利用率。为了确保 BE 类型Pod 的 CPU 资源使用在合理范围内，避免 LS 类型应用的运行质量受到干扰，Koordinator  在节点侧提供了 CPU 资源弹性限制的能力。弹性资源限制功能可以在整机资源用量安全水位下，控制 BE 类型 Pod 可使用的 CPU 资源量，保障节点内容器稳定运行。
+
+如下图所示，在整机安全水位下（CPU Threshold），随着 LS 类型 Pod 资源使用量的变化（Pod（LS）.Usage），BE 类型 Pod 可用的 CPU 资源被限制在合理的范围内（CPU Restriction for BE）。限制水位的配置与动态资源超卖模型中的预留水位基本一致，以此保证 CPU 资源使用的一致性。
+
+<div align=center><img width="700" style="border: 0px" src="/gallery/koordinator/restriction.png"></div>
+
+Koordinator 支持通过 ConfigMap 配置弹性限制参数。
+
+# 实践验证
+
+*以 Koordinator 为例*
+
+> based on **v1.2.0**
+
+**使用 helm 安装**
+
+```shell
+# Firstly add koordinator charts repository if you haven't do this.
+$ helm repo add koordinator-sh https://koordinator-sh.github.io/charts/
+
+# [Optional]
+$ helm repo update
+
+# Install the latest version.
+$ helm install koordinator koordinator-sh/koordinator --version 1.2.0
+```
+
+**安装结果**
+
+```shell
+$ kubectl get all -n koordinator-system
+NAME                                     READY   STATUS    RESTARTS   AGE
+pod/koord-descheduler-68845fcc47-k72l5   1/1     Running   0          3d4h
+pod/koord-descheduler-68845fcc47-vk79v   1/1     Running   0          3d4h
+pod/koord-manager-7f68bbcf77-cbscj       1/1     Running   0          3d4h
+pod/koord-manager-7f68bbcf77-sjpw7       1/1     Running   0          3d4h
+pod/koord-scheduler-f4db87d4c-5p5j4      1/1     Running   0          3d4h
+pod/koord-scheduler-f4db87d4c-x242f      1/1     Running   0          3d4h
+pod/koordlet-nz58m                       1/1     Running   0          3d4h
+
+NAME                                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/koordinator-webhook-service   ClusterIP   10.96.178.39   <none>        443/TCP   3d4h
+
+NAME                      DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+daemonset.apps/koordlet   1         1         1       1            1           <none>          3d4h
+
+NAME                                READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/koord-descheduler   2/2     2            2           3d4h
+deployment.apps/koord-manager       2/2     2            2           3d4h
+deployment.apps/koord-scheduler     2/2     2            2           3d4h
+
+NAME                                           DESIRED   CURRENT   READY   AGE
+replicaset.apps/koord-descheduler-68845fcc47   2         2         2       3d4h
+replicaset.apps/koord-manager-7f68bbcf77       2         2         2       3d4h
+replicaset.apps/koord-scheduler-f4db87d4c      2         2         2       3d4h
+```
 
 Koordinator 由两个控制面 Koordinator Scheduler、Koordinator Manager 和一个 DaemonSet 组件 Koordlet 组成。Koordinator 在 Kubernetes 原有的能力基础上增加了混部功能，并兼容了 Kubernetes 原有的工作负载。
 
@@ -125,49 +241,7 @@ Koordlet 以 DaemonSet 的形式部署在 Kubernetes 集群中，用于支持混
 - QoS 管理器，根据资源剖析、干扰检测结果和 SLO 配置，动态调整混部节点的水位，抑制影响服务质量的 Pod
 - 资源调优，针对混部场景进行容器资源调优，优化容器的 CPU Throttle、OOM 等，提高服务运行质量
 
-**负载感知调度**
-
-负载感知调度是 ACK 调度器 Kube Scheduler 基于 Kubernetes Scheduling Framework 实现的插件。与 K8s 原生调度策略不同的是，原生调度器主要基于资源的分配率情况进行调度，而 ACK 调度器可以感知节点实际的资源负载情况。通过参考节点负载的历史统计并对新调度 Pod 进行预估，调度器会将 Pod 优先调度到负载较低的节点，实现节点负载均衡的目标，避免出现因单个节点负载过高而导致的应用程序或节点故障。
-
-如下图所示，已分配资源量（Requested）代表已申请的资源量，已使用资源量（Usage）代表真实使用的资源量，只有真实使用的资源才会被算作真实负载。面对相同的节点情况，ACK 调度器会采用更优的策略，将新创建的 Pod 分配到负载更低的节点 B。
-
-<div align=center><img width="600" style="border: 0px" src="/gallery/overcommitted/ack-kube-scheduler.png"></div>
-
-负载感知调度功能由 ACK 调度器和 ack-koordinator 组件配合完成。其中，ack-koordinator 负责节点资源利用率的采集和上报，ACK 调度器会根据利用率数据对节点进行打分排序，优先选取负载更低的节点参与调度。
-
-ACK的差异化SLO（Service Level Objectives）提供将这部分资源量化的能力。将上图中的红线定义为Usage，蓝线到红线预留部分资源定义为Buffered，绿色覆盖部分定义为Reclaimed。
-
-**动态资源超卖**
-
-<div align=center><img width="600" style="border: 0px" src="/gallery/overcommitted/ack-slo.png"></div>
-
-ACK 的差异化 SLO（Service Level Objectives）提供将这部分资源量化的能力。将上图中的红线定义为 Usage，蓝线到红线预留部分资源定义为 Buffered，绿色覆盖部分定义为 Reclaimed。为体现与原生资源类型的差异性，ack-koordinator 使用 Batch 优先级的概念描述该部分超卖资源，也就是 batch-cpu 和 batch-memory。
-
-同理，超卖资源的声明也为标准扩展资源：
-
-```yaml
-metadata:
-  labels:
-    # 必填，标记为低优先级 Pod
-    koordinator.sh/qosClass: "BE"
-spec:
-  containers:
-  - resources:
-      requests:
-        # 单位为千分之一核，如下表示 1 核
-        kubernetes.io/batch-cpu: "1k"
-        # 单位为字节，如下表示 1 GB
-        kubernetes.io/batch-memory: "1Gi"
-      limits:
-        kubernetes.io/batch-cpu: "1k"
-        kubernetes.io/batch-memory: "1Gi"
-```
-
-节点中可超卖资源的计算公式为：
-
-> nodeBatchAllocatable = nodeAllocatable * thresholdPercent - podRequest(non-BE) - systemUsage
-
-公式中的 thresholdPercent 为可配置参数，通过修改 ConfigMap 中的配置项可以实现对资源的灵活管理，例如：
+**弹性资源配置**
 
 ```yaml
 apiVersion: v1
@@ -178,33 +252,19 @@ metadata:
 data:
   colocation-config: |
     {
+      # 是否开启节点 Batch 资源的动态更新，关闭时 Batch 资源量会被重置为 0。默认值为 false
       "enable": true,
+      # Batch 资源最小更新频率，单位为秒。通常建议保持为 1 分钟
       "metricAggregateDurationSeconds": 60,
+      # 计算节点 batch-cpu 资源容量时的预留系数。默认值为 65，单位为百分比
       "cpuReclaimThresholdPercent": 60,
+      # 计算节点 batch-memory 资源容量时的预留系数。默认值为 65，单位为百分比
       "memoryReclaimThresholdPercent": 70,
+      # 计算节点 batch-memory 资源容量时的策略
+      # "usage"：默认值，表示 batch-memory 内存资源按照高优先级 Pod 的内存真实用量计算，包括了节点未申请的资源，以及已申请但未使用的资源量。
+      # "request"：表示 batch-memory 内存资源按照高优先级 Pod 的内存请求量计算，仅包括节点未申请的资源
       "memoryCalculatePolicy": "usage"
     }
-```
-
-**弹性资源限制**
-
-ack-koordinator 在宿主机节点提供了弹性资源限制能力，确保低优先级 BE（BestEffort）类型 Pod 的 CPU 资源使用在合理范围内，保障节点内容器稳定运行。
-
-在 ack-koordinator 提供的动态资源超卖模型中，Reclaimed 资源总量根据高优先级LS（Latency Sensitive）类型 Pod 的实际资源用量而动态变化，这部分资源可以供低优先级 BE（BestEffort）类型 Pod 使用。通过动态资源超卖能力，可以将 LS 与 BE 类型容器混合部署，以此提升集群资源利用率。为了确保 BE 类型Pod 的 CPU 资源使用在合理范围内，避免 LS 类型应用的运行质量受到干扰，ack-koordinator 在节点侧提供了 CPU 资源弹性限制的能力。弹性资源限制功能可以在整机资源用量安全水位下，控制 BE 类型 Pod 可使用的 CPU 资源量，保障节点内容器稳定运行。
-
-如下图所示，在整机安全水位下（CPU Threshold），随着 LS 类型 Pod 资源使用量的变化（Pod（LS）.Usage），BE 类型 Pod 可用的 CPU 资源被限制在合理的范围内（CPU Restriction for BE）。限制水位的配置与动态资源超卖模型中的预留水位基本一致，以此保证 CPU 资源使用的一致性。
-
-<div align=center><img width="600" style="border: 0px" src="/gallery/overcommitted/ack-restriction.png"></div>
-
-ack-koordinator 支持通过 ConfigMap 配置弹性限制参数：
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ack-slo-config
-  namespace: kube-system
-data:
   resource-threshold-config: |
     {
       "clusterStrategy": {
@@ -216,122 +276,132 @@ data:
     }
 ```
 
-**负载热点重调度**
+开启后动态资源后，可以看到节点已经识别到扩展资源 kubernetes.io/batch-cpu 与 kubernetes.io/batch-memory。
 
-ack-koordinator 组件提供 koord-descheduler 模块，其中 LowNodeLoad 插件负责感知负载水位并完成热点打散重调度工作。与 Kubernetes 原生的Descheduler 的插件 LowNodeUtilization 不同，LowNodeLoad 是根据节点真实利用率决策重调度，而 LowNodeUtilization 是根据资源分配率决策重调度。
+```shell
+$ kubectl describe node wnx
+Capacity:
+  cpu:                         8
+  memory:                      12057632Ki
+  kubernetes.io/batch-cpu:     4034
+  kubernetes.io/batch-memory:  4455468942
+Allocatable:
+  cpu:                         8
+  memory:                      11955232Ki
+  kubernetes.io/batch-cpu:     4034
+  kubernetes.io/batch-memory:  4455468942
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource                    Requests      Limits
+  --------                    --------      ------
+  cpu                         4100m (51%)   6500m (81%)
+  memory                      1776Mi (15%)  6740Mi (57%)
+  kubernetes.io/batch-cpu     0             0
+  kubernetes.io/batch-memory  0             0
+```
 
-koord-descheduler 模块周期性运行，每个周期内的执行过程分为以下三个阶段：
-
-1. 数据收集：获取集群内的节点和工作负载信息，以及相关的资源利用率数据
-
-2. 策略插件执行
-
-   以 LowNodeLoad 为例
-
-   1. 筛选负载热点节点
-   2. 遍历热点节点，从中筛选可以迁移的 Pod，并进行排序
-   3. 遍历每个待迁移的 Pod，检查其是否满足迁移条件，综合考虑集群容量、资源利用率水位、副本数比例等约束
-   4. 若满足条件则将 Pod 归类为待迁移副本，若不满足则继续遍历其他 Pod 和热点节点
-
-3. 容器驱逐迁移：针对待迁移的 Pod 发起 Evict 驱逐操作
-
-<div align=center><img width="800" style="border: 0px" src="/gallery/overcommitted/koord-descheduler.jpg"></div>
-
-## Crane
-
-<div align=center><img width="800" style="border: 0px" src="/gallery/overcommitted/crane-overview.png"></div>
-
-Crane 是一个基于 FinOps 的云资源分析与成本优化平台。它的愿景是在保证客户应用运行质量的前提下实现极致的降本。
-
-**负载感知调度**
-
-<div align=center><img width="800" style="border: 0px" src="/gallery/overcommitted/crane-scheduler.png"></div>
-
-Crane-scheduler 是一组基于 Kubernetes Scheduling Framework 的调度插件，依赖于 Prometheus 和 Node-exporter 收集和汇总指标数据，Crane-scheduler 由两个组件组成：
-
-- Node-annotator 定期从 Prometheus 拉取数据，并以注释的形式在节点上用时间戳标记它们
-- Dynamic plugin 直接从节点的注释中读取负载数据，过滤并基于简单的算法对候选节点进行评分
-
-Crane-scheduler 提供了一个默认值调度策略并支持用户自定义策略。默认策略依赖于以下指标：
-
-- cpu_usage_avg_5m
-- cpu_usage_max_avg_1h
-- cpu_usage_max_avg_1d
-- mem_usage_avg_5m
-- mem_usage_max_avg_1h
-- mem_usage_max_avg_1d
-
-在调度的 Filter 阶段，如果该节点的实际使用率大于上述任一指标的阈值，则该节点将被过滤。而在 Score 阶段，最终得分是这些指标值的加权和。
-
-在生产集群中，可能会频繁出现调度热点，因为创建 Pod 后节点的负载不能立即增加。因此，Crane 定义了一个额外的指标 — Hot Value，表示节点最近几次的调度频率。并且节点的最终优先级是最终得分减去 Hot Value。
-
-**弹性资源超卖**
-
-Crane 通过如下两种方式收集了节点的空闲资源量，综合后作为节点的空闲资源量，增强了资源评估的准确性：<br>*这里以 CPU 为例，同时也支持内存的空闲资源回收和计算。*
-
-1. 通过本地收集的 CPU 用量信息
-
-   > nodeCpuCannotBeReclaimed = nodeCpuUsageTotal + exclusiveCPUIdle - extResContainerCpuUsageTotal
-
-   exclusiveCPUIdle 是指被 CPU manager 策略为 exclusive 的 Pod 占用的 CPU 的空闲量，虽然这部分资源是空闲的，但是因为独占的原因，是无法被复用的，因此加上被算作已使用量；<br>*exclusive 策略是 Crane 在精细化管理 CPU 中提出的概念，该策略对应 Kubelet 的 static 策略，Pod 会独占 CPU 核心，其他任何 Pod 都无法使用*
-
-   extResContainerCpuUsageTotal 是指被作为动态资源使用的 CPU 用量，需要减去以免被二次计算
-
-2. 创建节点 CPU 使用量的 TSP，默认情况下自动创建，会根据历史预测节点 CPU 用量
-
-   ```yaml
-   apiVersion: v1
-   data:
-     spec: |
-       predictionMetrics:
-       - algorithm:
-           algorithmType: dsp
-           dsp:
-             estimators:
-               fft:
-               - highFrequencyThreshold: "0.05"
-                 lowAmplitudeThreshold: "1.0"
-                 marginFraction: "0.2"
-                 maxNumOfSpectrumItems: 20
-                 minNumOfSpectrumItems: 10
-             historyLength: 3d
-             sampleInterval: 60s
-         resourceIdentifier: cpu
-         type: ExpressionQuery
-         expressionQuery:
-           expression: 'sum(count(node_cpu_seconds_total{mode="idle",instance=~"({{.metadata.name}})(:\\d+)?"}) by (mode, cpu)) - sum(irate(node_cpu_seconds_total{mode="idle",instance=~"({{.metadata.name}})(:\\d+)?"}[5m]))'
-       predictionWindowSeconds: 3600    
-   kind: ConfigMap
-   metadata:
-     name: noderesource-tsp-template
-     namespace: default
-   ```
-
-时间序列预测是指使用过去的时间序列数据来预测未来的值。时间序列数据通常包括时间和相应的数值，例如资源用量、股票价格或气温。时间序列预测算法 DSP（Digital Signal Processing）是一种数字信号处理技术，可以用于分析和处理时间序列数据。
-
-离散傅里叶变换（DFT）就是 DSP 领域常用的一种算法。DFT 是一种将时域信号转换为频域信号的技术。通过将时域信号分解成不同的频率成分，可以更好地理解和分析信号的特征和结构。在时间序列预测中，DFT 可以用于分析和预测信号的周期性和趋势性，从而提高预测的准确性。
-
-Crane 使用在数字信号处理（Digital Signal Processing）领域中常用的的离散傅里叶变换、自相关函数等手段，识别、预测周期性的时间序列。更多参考：https://gocrane.io/docs/core-concept/timeseriees-forecasting-by-dsp/。
-
-结合预测算法和当前实际用量推算节点的剩余可用资源，并将其作为拓展资源赋予节点，Pod 可标明使用该扩展资源作为离线作业将空闲资源利用起来，以提升节点的资源利用率，部署 Pod 时声明使用 gocrane.io/\<resourceName\>:  \<value\> 扩展资源即可，例如：
+mutating webook 注入的信息是根据 ClusterColocationProfile 决定的：
 
 ```yaml
-spec: 
-   containers:
-   - image: nginx
-     imagePullPolicy: Always
-     name: extended-resource-demo-ctr
-     resources:
-       limits:
-         gocrane.io/cpu: "2"
-         gocrane.io/memory: "2000Mi"
-       requests:
-         gocrane.io/cpu: "2"
-         gocrane.io/memory: "2000Mi"
+apiVersion: config.koordinator.sh/v1alpha1
+kind: ClusterColocationProfile
+metadata:
+  name: colocation-profile-example
+spec:
+  namespaceSelector:
+    matchLabels:
+      koordinator.sh/enable-colocation: "true"
+  selector:
+    matchLabels:
+      koordinator.sh/enable-colocation: "true"
+  qosClass: BE
+  priorityClassName: koord-batch
+  koordinatorPriority: 1000
+  schedulerName: koord-scheduler
+  labels:
+    koordinator.sh/mutated: "true"
+  annotations: 
+    koordinator.sh/intercepted: "true"
+  patch:
+    spec:
+      terminationGracePeriodSeconds: 30
+```
+
+**模拟在离线服务混部**
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: online
+spec:
+  containers:
+  - name: app
+    image: ubuntu:18.04
+    command: ["/bin/bash", "-c", "tail -f /dev/null"]
+    resources:
+      limits:
+        cpu: "3"
+        memory: "3000Mi"
+      requests:
+        cpu: "3"
+        memory: "3000Mi"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: offline
+  labels:
+    koordinator.sh/enable-colocation: "true"
+spec:
+  containers:
+  - name: app
+    image: ubuntu:18.04
+    command: ["/bin/bash", "-c", "tail -f /dev/null"]
+    resources:
+      limits:
+        cpu: "3"
+        memory: "100Mi"
+      requests:
+        cpu: "3"
+        memory: "100Mi"
+```
+
+在节点剩余 4C 左右的资源时，通过声明离线服务使用超卖资源，在线服务使用标准资源，可以让服务均成功部署在节点上。
+
+```shell
+$ kubectl get pod 
+NAME        READY   STATUS    RESTARTS   AGE
+offline     1/1     Running   0          2m25s
+online      1/1     Running   0          2m23s
+
+$ kubectl describe node wnx
+Non-terminated Pods:    (18 in total)
+  Namespace    Name        CPU Requests  CPU Limits  Memory Requests  Memory Limits  Age
+  ---------    ----        ------------  ----------  ---------------  -------------  ---
+  default      offline     0 (0%)        0 (0%)      0 (0%)           0 (0%)         8s
+  default      online      3 (37%)       3 (37%)     3000Mi (25%)     3000Mi (25%)   6s
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource                    Requests      Limits
+  --------                    --------      ------
+  cpu                         7100m (88%)   9500m (118%)
+  memory                      4776Mi (40%)  9740Mi (83%)
+  kubernetes.io/batch-cpu     3k            3k
+  kubernetes.io/batch-memory  100Mi         100Mi
 ```
 
 **弹性资源限制**
 
-同样的，部署 Pod 时声明使用 gocrane.io/\<resourceName\>:  \<value\> 扩展资源即可。
+虽然离线服务的 cgroup 分组还是位于 kubepods 的 besteffort 组中（由于原本声明的标准资源被 webhook 变更为扩展资源，也就变成了 BestEffort QoS 的 Pod），但是 Koordlet 会根据扩展资源的声明规格手动维护。
 
-## Katalyst
+```shell
+$ cat /sys/fs/cgroup/cpu/kubepods.slice/kubepods-besteffort.slice/kubepods-besteffort-pod4bb9f204_6690_43cf_a871_808874ad0ed4.slice/cpu.cfs_quota_us 
+300000
+
+$ cat /sys/fs/cgroup/cpu/kubepods.slice/kubepods-besteffort.slice/kubepods-besteffort-pod4bb9f204_6690_43cf_a871_808874ad0ed4.slice/cpu.cfs_period_us 
+100000
+```
+
+
+
