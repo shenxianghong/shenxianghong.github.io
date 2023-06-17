@@ -2,7 +2,7 @@
 title: "「 Kata Containers 」Block Volume 直通"
 excerpt: "Kata Containers stable-2.4 版本中 Block Volume 直通特性与实践验证"
 cover: https://picsum.photos/0?sig=20220801
-thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
+thumbnail: /gallery/kata-containers/thumbnail.svg
 date: 2022-08-01
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Kata Containers
 ---
 
-<div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="/gallery/kata-containers/logo.svg"></div>
 
 ------
 
@@ -34,11 +34,11 @@ Kubernetes 提供了 PV （persistent volume）资源来管理存储卷，制定
 
 **当前 CSI 挂载方式**
 
-<div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/kubernetes/enhancements/8202b8a7e4f1c19d8f32b40288cc73060828fc34/keps/sig-storage/2857-runtime-assisted-pv-mounts/images/CurrentMounts.png"></div>
+<div align=center><img width="800" style="border: 0px" src="/gallery/kata-containers/CurrentMounts.png"></div>
 
 **CSI 与 Runtime 协调挂载**
 
-<div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/kubernetes/enhancements/8202b8a7e4f1c19d8f32b40288cc73060828fc34/keps/sig-storage/2857-runtime-assisted-pv-mounts/images/RuntimeAssistedMounts.png"></div>
+<div align=center><img width="800" style="border: 0px" src="/gallery/kata-containers/RuntimeAssistedMounts.png"></div>
 
 # 现阶段缺陷
 

@@ -2,7 +2,7 @@
 title: "「 Kubernetes 」源码走读 - CPU Manager"
 excerpt: "Kubelet 中 CPU Manager 模块的流程梳理"
 cover: https://picsum.photos/0?sig=20220711
-thumbnail: https://github.com/cncf/artwork/raw/master/projects/kubernetes/stacked/color/kubernetes-stacked-color.svg
+thumbnail: /gallery/kubernetes/thumbnail.svg
 date: 2022-07-11
 toc: true
 categories:
@@ -12,7 +12,7 @@ tag:
 - Kubernetes
 ---
 
-<div align=center><img width="200" style="border: 0px" src="https://github.com/cncf/artwork/raw/master/projects/kubernetes/horizontal/color/kubernetes-horizontal-color.svg"></div>
+<div align=center><img width="200" style="border: 0px" src=/gallery/kubernetes/logo.svg></div>
 
 ------
 

@@ -2,7 +2,7 @@
 title: "「 Velero 」源码走读 — Provider"
 excerpt: "Velero 中与 StorageProvider、SnapshotProvider 等维护站点资源相关的流程梳理"
 cover: https://picsum.photos/0?sig=20220220
-thumbnail: https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/stacked/199150-vmw-os-lgo-velero-final_stacked-gry.svg
+thumbnail: /gallery/velero/thumbnail.svg
 date: 2022-02-20
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Velero
 ---
 
-<div align=center><img width="170" style="border: 0px" src="https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/one-line/199150-vmw-os-lgo-velero-final_gry.svg"></div>
+<div align=center><img width="170" style="border: 0px" src="/gallery/velero/logo.svg"></div>
 
 ------
 

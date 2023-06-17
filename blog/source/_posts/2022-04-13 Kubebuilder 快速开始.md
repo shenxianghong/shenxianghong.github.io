@@ -2,7 +2,7 @@
 title: "「 Kubebuilder 」快速开始"
 excerpt: "使用 Kubebuilder 和 Code Generator 生成自定义的 K8s Operator 框架"
 cover: https://picsum.photos/0?sig=20220413
-thumbnail: https://storage.googleapis.com/kubebuilder-logos/icon-no-text.png
+thumbnail: /gallery/kubebuilder/thumbnail.svg
 date: 2022-04-13
 toc: true
 categories:
@@ -12,7 +12,7 @@ tag:
 - Kubebuilder
 ---
 
-<div align=center><img width="150" style="border: 0px" src="https://storage.googleapis.com/kubebuilder-logos/logo-single-line-01.png"></div>
+<div align=center><img width="150" style="border: 0px" src="/gallery/kubebuilder/logo.svg"></div>
 
 ------
 

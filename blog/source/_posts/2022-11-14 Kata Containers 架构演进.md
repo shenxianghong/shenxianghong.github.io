@@ -2,7 +2,7 @@
 title: "「 Kata Containers 」架构演进"
 excerpt: "Kata Containers 3.x 较 2.x 版本架构发展演进与设计初衷"
 cover: https://picsum.photos/0?sig=20221114
-thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
+thumbnail: /gallery/kata-containers/thumbnail.svg
 date: 2022-11-14
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Kata Containers
 ---
 
-<div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="/gallery/kata-containers/logo.svg"></div>
 
 ------
 
@@ -38,13 +38,13 @@ tag:
 
 ## 架构
 
-<div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/kata-containers/kata-containers/3.0.0/docs/design/architecture_3.0/images/architecture.png"></div>
+<div align=center><img width="800" style="border: 0px" src="/gallery/kata-containers/architecture.png"></div>
 
 ## 内置的 VMM
 
 ### 当前 Kata 2.x 架构
 
-<div align=center><img width="600" style="border: 0px" src="https://raw.githubusercontent.com/kata-containers/kata-containers/3.0.0/docs/design/architecture_3.0/images/not_built_in_vmm.png"></div>
+<div align=center><img width="600" style="border: 0px" src="/gallery/kata-containers/not_built_in_vmm.png"></div>
 
 如图所示，runtime 和 VMM 是独立的进程。runtime 进程 fork 出 VMM 进程并通过 RPC 进程间通信。通常，进程间交互比进程内交互开销更大且效率更低。同时，还要考虑资源维护成本。例如，在异常情况下进行资源回收时，任何进程的异常都必须被其他组件检测到，并触发相应的资源回收进程。如果有额外的过程，恢复变得更加困难。
 
@@ -52,7 +52,7 @@ tag:
 
 社区提供了 Dragonball Sandbox，通过将 VMM 的功能集成到 Rust 库中来启用内置的 VMM。可以通过使用该库来执行与 VMM 相关的功能。因为 runtime 和 VMM 在同一个进程中，所以在消息处理速度和 API 同步方面有所改善。还可以保证 runtime 和 VMM 生命周期的一致性，减少资源回收和异常处理维护的复杂度，如图所示：
 
-<div align=center><img width="600" style="border: 0px" src="https://raw.githubusercontent.com/kata-containers/kata-containers/3.0.0/docs/design/architecture_3.0/images/built_in_vmm.png"></div>
+<div align=center><img width="600" style="border: 0px" src="/gallery/kata-containers/built_in_vmm.png"></div>
 
 ## 支持异步
 
@@ -79,13 +79,13 @@ kata-runtime 由 TOKIO_RUNTIME_WORKER_THREADS 控制运行 OS 线程，默认为
 
 Kata 3.x runtime 设计了 service、runtime、hypervisor 的扩展，结合配置满足不同场景的需求。目前服务提供注册机制，支持多种服务。服务可以通过消息与 runtime 交互。此外，runtime handler 处理来自服务的消息。为了满足二进制支持多个 runtime 和 hypervisor 的需求，启动必须通过配置获取 runtime handler 类型和 hypervisor 类型。
 
-<div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/kata-containers/kata-containers/3.0.0/docs/design/architecture_3.0/images/framework.png"></div>
+<div align=center><img width="800" style="border: 0px" src="/gallery/kata-containers/framework.png"></div>
 
 ## 资源管理器
 
 在实际使用中，会有各种各样的资源，每个资源都有几个子类型。特别是对于 virtcontainers，资源的每个子类型都有不同的操作。并且可能存在依赖关系，例如 share-fs rootfs 和 share-fs volume 会使用 share-fs 资源将文件共享到 VM。目前，network、share-fs 被视为沙盒资源，rootfs、volume、cgroup 被视为容器资源。此外，社区为每个资源抽象出一个公共接口，并使用子类操作来评估不同子类型之间的差异。
 
-<div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/kata-containers/kata-containers/3.0.0/docs/design/architecture_3.0/images/resourceManager.png"></div>
+<div align=center><img width="800" style="border: 0px" src="/gallery/kata-containers/resourceManager.png"></div>
 
 # 路线图
 

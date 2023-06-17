@@ -2,7 +2,7 @@
 title: "「 Kata Containers 」架构与组件概述"
 excerpt: "Kata Containers 2.x 与 1.x 版本架构差异对比与组件功能概述"
 cover: https://picsum.photos/0?sig=20210406
-thumbnail: https://camo.githubusercontent.com/fc2b272df13c770b08a779c5f96690946039c45998b1bb439eb193b3fcd829ab/68747470733a2f2f7777772e6f70656e737461636b2e6f72672f6173736574732f6b6174612f6b6174612d766572746963616c2d6f6e2d77686974652e706e67
+thumbnail: /gallery/kata-containers/thumbnail.svg
 date: 2021-04-06
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Kata Containers
 ---
 
-<div align=center><img width="200" style="border: 0px" src="https://katacontainers.io/static/logo-a1e2d09ad097b3fc8536cb77aa615c42.svg"></div>
+<div align=center><img width="200" style="border: 0px" src="/gallery/kata-containers/logo.svg"></div>
 
 ------
 
@@ -388,7 +388,7 @@ Kata Containers 受限于 hypervisor 的功能，没有直接采用 Docker 默�
 Docker 默认采用的容器网络方案是基于 network namespace + bridge + veth pairs 的，即在 host 上创建一个 network namespace，在 docker0 网桥上连接 veth pairs 的一端，再去 network namespace 中连上另一端，打通容器和 host 之间的网络。
 这种方案得益于 namespace 技术，而许多 hypervisor 比如 QEMU 不能处理 veth interfaces。所以 Kata Containers 为 VM 创建了 TAP interfaces 来打通 VM 和 host 之间的网络。传统的 Container Engine 比如 Docker，会为容器创建 network namespace 和 veth pair，然后 Kata 会将 veth pair 的一端连上 TAP，即 macvtap 方案。
 
-<div align=center><img width="700" style="border: 0px" src="https://github.com/kata-containers/kata-containers/blob/main/docs/design/arch-images/network.png?raw=true"></div>
+<div align=center><img width="700" style="border: 0px" src="/gallery/kata-containers/networking.png"></div>
 
 Kata Containers 网络由 network namespaces、tap 和 tc 打通，创建 sandbox 之前首先创建网络命名空间，里面有 veth-pair 和 tap 两种网络接口，eth0 属于 veth-pair 类型接口，一端接入 CNI 创建的网络命名空间，一端接入宿主机；tap0_kata 属于 tap 类型接口，一端接入 cni 创建的网络命名空间，一端接入 QEMU 创建的 hypervisor，并且在 CNI 创建的网络命名空间使用 tc 策略打通 eth0 网络接口和 tap0_kata 网络接口，相当于把 eth0 和 tap0_kata 两个网络接口连成一条线。
 
@@ -480,10 +480,10 @@ kata-shim 的出现主要是考虑了 VM 内有多个容器的情况。在此之
 
 ## 整体架构
 
-<div align=center><img width="800" style="border: 0px" src="https://github.com/kata-containers/kata-containers/raw/main/docs/design/arch-images/shimv2.svg"></div>
+<div align=center><img width="800" style="border: 0px" src="/gallery/kata-containers/shimv2.svg"></div>
 
 - 蓝色区域代表的是 Kubernetes CRI 的组件；红色区域代表的是 Kata Containers 的组件；黄色区域代表的是 Kata Containers 的 VM
-- ShimV1 中 CRI 的流程只会通过 kata-proxy （非 Vsock 环境）和 VM 通信管理容器进程等
+- shimV1 中 CRI 的流程只会通过 kata-proxy （非 Vsock 环境）和 VM 通信管理容器进程等
 - runc cmdline 就是实现了 OCI 标准的命令行工具
 - 在 Kata 1.5 之后版本中 kata-runtime 得以保留，但是仅用作命令行工具判断 Kata Containers 的运行环境等，真正的 runtime 为 containerd-shim-kata-v2
 

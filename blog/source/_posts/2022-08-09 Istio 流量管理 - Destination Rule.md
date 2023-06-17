@@ -2,7 +2,7 @@
 title: "「 Istio 」流量管理 — DestinationRule"
 excerpt: "Istio 流量管理场景下的 DestinationRule 资源对象使用范例与 API 结构概览"
 cover: https://picsum.photos/0?sig=20220809
-thumbnail: https://github.com/cncf/artwork/raw/master/projects/istio/stacked/color/istio-stacked-color.svg
+thumbnail: /gallery/istio/thumbnail.svg
 date: 2022-08-09
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Istio
 ---
 
-<div align=center><img width="120" style="border: 0px" src="https://github.com/cncf/artwork/raw/master/projects/istio/horizontal/color/istio-horizontal-color.svg"></div>
+<div align=center><img width="120" style="border: 0px" src="/gallery/istio/logo.svg"></div>
 
 ------
 

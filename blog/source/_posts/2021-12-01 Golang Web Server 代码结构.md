@@ -2,7 +2,7 @@
 title: "「 Golang 」Web Server 代码结构"
 excerpt: "记一次在 Kubewebhook 项目中学到的 web 代码结构"
 cover: https://picsum.photos/0?sig=20211201
-thumbnail: https://go.dev/blog/go-brand/Go-Logo/SVG/Go-Logo_Blue.svg
+thumbnail: /gallery/golang/thumbnail.svg
 date: 2021-12-01
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Golang
 ---
 
-<div align=center><img width="100" style="border: 0px" src="https://go.dev/images/go-logo-blue.svg"></div>
+<div align=center><img width="100" style="border: 0px" src="/gallery/golang/logo.svg"></div>
 
 ------
 

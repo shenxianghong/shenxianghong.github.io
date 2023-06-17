@@ -2,7 +2,7 @@
 title: "「 Velero 」源码走读 — Backup"
 excerpt: "Velero 中与 Backup、Schedule 等备份相关的流程梳理"
 cover: https://picsum.photos/0?sig=20220127
-thumbnail: https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/stacked/199150-vmw-os-lgo-velero-final_stacked-gry.svg
+thumbnail: /gallery/velero/thumbnail.svg
 date: 2022-01-27
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Velero
 ---
 
-<div align=center><img width="170" style="border: 0px" src="https://raw.githubusercontent.com/vmware-tanzu/velero/main/assets/one-line/199150-vmw-os-lgo-velero-final_gry.svg"></div>
+<div align=center><img width="170" style="border: 0px" src="/gallery/velero/logo.svg"></div>
 
 ------
 

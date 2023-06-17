@@ -2,7 +2,7 @@
 title: "「 Virtual Kubelet 」快速开始"
 excerpt: "以 Tensile Kube Provider 实践操作为例，理解 Virtual Kubelet 的设计理念、Provider 原语以及各厂商的探索实现"
 cover: https://picsum.photos/0?sig=20221122
-thumbnail: https://github.com/cncf/artwork/raw/master/projects/virtualkubelet/stacked/color/virtualkubelet-stacked-color.svg
+thumbnail: /gallery/virtual-kubelet/thumbnail.svg
 date: 2022-11-22
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Virtual Kubelet
 ---
 
-<div align=center><img width="150" style="border: 0px" src="https://github.com/cncf/artwork/raw/master/projects/virtualkubelet/horizontal/color/virtualkubelet-horizontal-color.svg"></div>
+<div align=center><img width="150" style="border: 0px" src="/gallery/virtual-kubelet/logo.svg"></div>
 
 ------
 
@@ -27,7 +27,7 @@ Virtual Kubelet 具有可插拔架构和直接使用 Kubernetes 原语的特点�
 
 # 架构
 
-<div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/virtual-kubelet/virtual-kubelet/master/website/static/img/diagram.svg"></div>
+<div align=center><img width="800" style="border: 0px" src="/gallery/virtual-kubelet/diagram.svg"></div>
 
 **与传统 Kubelet 的区别**
 
@@ -121,7 +121,7 @@ Virtual Kubelet 项目的重点是为不符合标准节点模型的容器运行�
 
 华为 CCI Virtual Kubelet Provider 将 CCI 项目配置成任何 Kubernetes 集群中的节点，例如华为 CCE（云容器引擎）。CCE 支持原生 Kubernetes 应用和工具作为私有集群，便于轻松搭建容器运行环境。被调度到 Virtual Kubelet Provider 的 Pod 将运行在 CCI 中，便于更好的利用 CCI 的高性能。
 
-<div align=center><img width="600" style="border: 0px" src="https://raw.githubusercontent.com/virtual-kubelet/huawei-cci/master/cci-provider.svg"></div>
+<div align=center><img width="600" style="border: 0px" src="/gallery/virtual-kubelet/cci-provider.svg"></div>
 
 *参考：[Huawei CCI documentation](https://github.com/virtual-kubelet/huawei-cci/blob/master/README.md#readme)*
 
@@ -149,7 +149,7 @@ Tensile Kube Provider 由腾讯游戏提供，可将 Kubernetes 集群与其他 
 
 ### 架构设计
 
-<div align=center><img width="600" style="border: 0px" src="https://raw.githubusercontent.com/virtual-kubelet/tensile-kube/master/docs/tensile-kube.png"></div>
+<div align=center><img width="600" style="border: 0px" src="/gallery/virtual-kubelet/tensile-kube.png"></div>
 
 - virtual-node
 
@@ -185,7 +185,7 @@ Tensile Kube Provider 由腾讯游戏提供，可将 Kubernetes 集群与其他 
 
 ### 用例
 
-<div align=center><img width="800" style="border: 0px" src="https://raw.githubusercontent.com/virtual-kubelet/tensile-kube/master/docs/multi.png"></div>
+<div align=center><img width="800" style="border: 0px" src="/gallery/virtual-kubelet/multi.png"></div>
 
 *参考：[Tensile Kube documentation](https://github.com/virtual-kubelet/tensile-kube/blob/master/README.md)*
 

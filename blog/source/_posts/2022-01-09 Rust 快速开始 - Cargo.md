@@ -2,7 +2,7 @@
 title: "「 Rust 」快速开始 — Cargo"
 excerpt: "Rust 包管理工具 Cargo 的介绍与使用"
 cover: https://picsum.photos/0?sig=20220109
-thumbnail: https://www.rust-lang.org/static/images/rust-logo-blk.svg
+thumbnail: /gallery/rust/thumbnail.svg
 date: 2022-01-09
 toc: true
 categories:
@@ -11,7 +11,7 @@ tag:
 - Rust
 ---
 
-<div align=center><img width="150" style="border: 0px" src="/gallery/rust/rust-logo.png"></div>
+<div align=center><img width="150" style="border: 0px" src="/gallery/rust/logo.png"></div>
 
 ------
 
