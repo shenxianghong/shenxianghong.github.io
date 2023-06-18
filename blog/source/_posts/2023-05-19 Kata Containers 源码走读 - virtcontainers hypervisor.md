@@ -451,3 +451,70 @@ type Acrn struct {
 
 1. 根据 QEMU 实现的 hypervisor 配置项初始化对应架构下的 qemu，其中包含了 qemu-system（govmmQemu.Config）和 virtiofsd/nydusd（VirtiofsDaemon）进程的配置参数
 
+# VirtiofsDaemon
+
+*<u>src/runtime/virtcontainers/virtiofsd.go</u>*
+
+VirtiofsDaemon 是用于 host 与 guest 的文件共享的进程服务，实现包括传统的 virtiofsd 以及针对蚂蚁社区提出的 nydusd。
+
+```go
+type virtiofsd struct {
+	// Neded by tracing
+	ctx context.Context
+	// PID process ID of virtiosd process
+	PID int
+
+	// path to virtiofsd daemon
+	// [hypervisor].shared_fs
+	path string
+
+	// socketPath where daemon will serve
+	// - root 权限: /run/vc/vm/<qemuID>/vhost-fs.sock
+	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/vhost-fs.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	socketPath string
+
+	// cache size for virtiofsd
+	// [hypervisor].virtio_fs_cache
+	cache string
+
+	// sourcePath path that daemon will help to share
+	// - root 权限: /run/kata-containers/shared/sandboxes/<containerID>/shared
+	// - rootless 权限: <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/<containerID>/shared（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	sourcePath string
+
+	// extraArgs list of extra args to append to virtiofsd command
+	// [hypervisor].virtio_fs_extra_args
+	extraArgs []string
+}
+```
+
+```go
+type nydusd struct {
+	startFn         func(cmd *exec.Cmd) error // for mock testing
+	waitFn          func() error              // for mock
+	setupShareDirFn func() error              // for mock testing
+  pid             int
+  
+	// [hypervisor].shared_fs
+	path string
+  
+	// - root 权限: /run/vc/vm/<qemuID>/vhost-fs.sock
+	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/vhost-fs.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	sockPath string
+
+	// - root 权限: /run/vc/vm/<qemuID>/nydusd-api.sock
+	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/nydusd-api.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	apiSockPath string
+
+	// - root 权限: /run/kata-containers/shared/sandboxes/<containerID>/shared
+	// - rootless 权限: <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/<containerID>/shared（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	sourcePath string
+  
+	// [hypervisor].virtio_fs_extra_args
+	extraArgs []string
+
+	// [hypervisor].debug
+	debug bool
+}
+```
+
