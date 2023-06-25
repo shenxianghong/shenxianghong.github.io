@@ -493,7 +493,7 @@ type nydusd struct {
 	startFn         func(cmd *exec.Cmd) error // for mock testing
 	waitFn          func() error              // for mock
 	setupShareDirFn func() error              // for mock testing
-  pid             int
+  	pid             int
   
 	// [hypervisor].shared_fs
 	path string
