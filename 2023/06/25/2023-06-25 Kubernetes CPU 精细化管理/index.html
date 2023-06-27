@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Kubernetes 」CPU 精细化管理 - 🐾Corgi</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="🐾Corgi"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="🐾Corgi"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Kubernetes CPU 精细化管理与 NUMA 感知调度方案的探索与优化"><meta property="og:type" content="blog"><meta property="og:title" content="「 Kubernetes 」CPU 精细化管理"><meta property="og:url" content="http://shenxianghong.github.io/2023/06/25/2023-06-25%20Kubernetes%20CPU%20%E7%B2%BE%E7%BB%86%E5%8C%96%E7%AE%A1%E7%90%86/"><meta property="og:site_name" content="🐾Corgi"><meta property="og:description" content="Kubernetes CPU 精细化管理与 NUMA 感知调度方案的探索与优化"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://picsum.photos/0?sig=20230625"><meta property="article:published_time" content="2023-06-24T16:00:00.000Z"><meta property="article:modified_time" content="2023-06-26T10:00:34.705Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Kubernetes"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://picsum.photos/0?sig=20230625"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://shenxianghong.github.io/2023/06/25/2023-06-25%20Kubernetes%20CPU%20%E7%B2%BE%E7%BB%86%E5%8C%96%E7%AE%A1%E7%90%86/"},"headline":"「 Kubernetes 」CPU 精细化管理","image":[],"datePublished":"2023-06-24T16:00:00.000Z","dateModified":"2023-06-26T10:00:34.705Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"🐾Corgi","logo":{"@type":"ImageObject","url":"http://shenxianghong.github.io/img/logo.svg"}},"description":"Kubernetes CPU 精细化管理与 NUMA 感知调度方案的探索与优化"}</script><link rel="canonical" href="http://shenxianghong.github.io/2023/06/25/2023-06-25%20Kubernetes%20CPU%20%E7%B2%BE%E7%BB%86%E5%8C%96%E7%AE%A1%E7%90%86/"><link rel="alternate" href="/atom.xml" title="🐾Corgi" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/xcode.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta><title>「 Kubernetes 」CPU 精细化管理 - 🐾Corgi</title><link rel="manifest" href="/manifest.json"><meta name="application-name" content="🐾Corgi"><meta name="msapplication-TileImage" content="/img/favicon.svg"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="🐾Corgi"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="description" content="Kubernetes NUMA 感知调度方案与节点 CPU 编排的探索与优化"><meta property="og:type" content="blog"><meta property="og:title" content="「 Kubernetes 」CPU 精细化管理"><meta property="og:url" content="http://shenxianghong.github.io/2023/06/25/2023-06-25%20Kubernetes%20CPU%20%E7%B2%BE%E7%BB%86%E5%8C%96%E7%AE%A1%E7%90%86/"><meta property="og:site_name" content="🐾Corgi"><meta property="og:description" content="Kubernetes NUMA 感知调度方案与节点 CPU 编排的探索与优化"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://picsum.photos/0?sig=20230625"><meta property="article:published_time" content="2023-06-24T16:00:00.000Z"><meta property="article:modified_time" content="2023-06-27T09:58:00.791Z"><meta property="article:author" content="Shen Xianghong"><meta property="article:tag" content="Kubernetes"><meta property="twitter:card" content="summary"><meta property="twitter:image:src" content="https://picsum.photos/0?sig=20230625"><script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"http://shenxianghong.github.io/2023/06/25/2023-06-25%20Kubernetes%20CPU%20%E7%B2%BE%E7%BB%86%E5%8C%96%E7%AE%A1%E7%90%86/"},"headline":"「 Kubernetes 」CPU 精细化管理","image":[],"datePublished":"2023-06-24T16:00:00.000Z","dateModified":"2023-06-27T09:58:00.791Z","author":{"@type":"Person","name":"Shen Xianghong"},"publisher":{"@type":"Organization","name":"🐾Corgi","logo":{"@type":"ImageObject","url":"http://shenxianghong.github.io/img/logo.svg"}},"description":"Kubernetes NUMA 感知调度方案与节点 CPU 编排的探索与优化"}</script><link rel="canonical" href="http://shenxianghong.github.io/2023/06/25/2023-06-25%20Kubernetes%20CPU%20%E7%B2%BE%E7%BB%86%E5%8C%96%E7%AE%A1%E7%90%86/"><link rel="alternate" href="/atom.xml" title="🐾Corgi" type="application/atom+xml"><link rel="icon" href="/img/favicon.svg"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.0.0/css/all.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@9.12.0/styles/xcode.css"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;600&amp;family=Source+Code+Pro"><link rel="stylesheet" href="/css/default.css"><style>body>.footer,body>.navbar,body>.section{opacity:0}</style><!--!--><!--!--><!--!--><script src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" defer></script><!--!--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cookieconsent@3.1.1/build/cookieconsent.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@1.10.0/dist/css/lightgallery.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/justifiedGallery@3.8.1/dist/css/justifiedGallery.min.css"><!--!--><!--!--><style>.pace{-webkit-pointer-events:none;pointer-events:none;-webkit-user-select:none;-moz-user-select:none;user-select:none}.pace-inactive{display:none}.pace .pace-progress{background:#3273dc;position:fixed;z-index:2000;top:0;right:100%;width:100%;height:2px}</style><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!--!--><!--!--><!-- hexo injector head_end start --><script>
   (function () {
       function switchTab() {
           if (!location.hash) {
@@ -29,7 +29,7 @@
       switchTab();
       window.addEventListener('hashchange', switchTab, false);
   })();
-  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item night" id="night-nav" title="Night Mode" href="javascript:;"><i class="fas fa-moon" id="night-icon"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="https://picsum.photos/0?sig=20230625" alt="「 Kubernetes 」CPU 精细化管理"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><i class="fa fa-calendar"></i> <time dateTime="${date_xml(page.date)}" title="${date_xml(page.date)}">2023-06-25</time></span><span class="level-item"><i class="fa fa-calendar-check"></i> <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">2023-06-26</time></span><span class="level-item"><i class="far fa-folder-open"></i> <a class="link-muted" href="/categories/Scheduling-Orchestration/">Scheduling &amp; Orchestration</a><span> / </span><a class="link-muted" href="/categories/Scheduling-Orchestration/Kubernetes/">Kubernetes</a></span><span class="level-item"><i class="far fa-clock"></i> 13 minutes read (About 1968 words)</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Kubernetes 」CPU 精细化管理</h1><div class="content"><div align=center><img width="200" style="border: 0px" src="/gallery/kubernetes/logo.svg"></div>
+  </script><!-- hexo injector head_end end --><meta name="generator" content="Hexo 6.3.0"></head><body class="is-3-column"><nav class="navbar navbar-main"><div class="container navbar-container"><div class="navbar-brand justify-content-center"><a class="navbar-item navbar-logo" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a></div><div class="navbar-menu"><div class="navbar-start"><a class="navbar-item" href="/">Home</a><a class="navbar-item" href="/archives">Archives</a><a class="navbar-item" href="/categories">Categories</a><a class="navbar-item" href="/tags">Tags</a></div><div class="navbar-end"><a class="navbar-item night" id="night-nav" title="Night Mode" href="javascript:;"><i class="fas fa-moon" id="night-icon"></i></a><a class="navbar-item is-hidden-tablet catalogue" title="Catalogue" href="javascript:;"><i class="fas fa-list-ul"></i></a><a class="navbar-item search" title="Search" href="javascript:;"><i class="fas fa-search"></i></a></div></div></div></nav><section class="section"><div class="container"><div class="columns"><div class="column order-2 column-main is-8-tablet is-8-desktop is-9-widescreen"><div class="card"><div class="card-image"><span class="image is-7by3"><img class="fill" src="https://picsum.photos/0?sig=20230625" alt="「 Kubernetes 」CPU 精细化管理"></span></div><article class="card-content article" role="article"><div class="article-meta is-size-7 is-uppercase level is-mobile"><div class="level-left"><span class="level-item"><i class="fa fa-calendar"></i> <time dateTime="${date_xml(page.date)}" title="${date_xml(page.date)}">2023-06-25</time></span><span class="level-item"><i class="fa fa-calendar-check"></i> <time dateTime="${date_xml(page.updated)}" title="${date_xml(page.updated)}">2023-06-27</time></span><span class="level-item"><i class="far fa-folder-open"></i> <a class="link-muted" href="/categories/Scheduling-Orchestration/">Scheduling &amp; Orchestration</a><span> / </span><a class="link-muted" href="/categories/Scheduling-Orchestration/Kubernetes/">Kubernetes</a></span><span class="level-item"><i class="far fa-clock"></i> 32 minutes read (About 4811 words)</span></div></div><h1 class="title is-3 is-size-4-mobile">「 Kubernetes 」CPU 精细化管理</h1><div class="content"><div align=center><img width="200" style="border: 0px" src="/gallery/kubernetes/logo.svg"></div>
 
 <hr>
 <blockquote>
@@ -58,8 +58,9 @@
 <p><strong>已知限制</strong></p>
 <p>Kube-scheduler 在 NUMA 感知调度 Pod 流程之后，并不知道节点上 Topology Manager 实际为 Pod 分配的 NUMA 情况，节点上的 Topology Manager 也未必按照 scheduler-plugin 中的预选算法进行分配。 </p>
 <p>因此，KEP 中建议 Kube-scheduler 可以将分配的 NUMA ID 作为 Pod 提示透传，节点的 Topology Manager 也可以根据 Pod 中的相关提示信息考虑实际的分配策略（这部分涉及到 Topology Manager 的改动，暂未实现）。</p>
-<h2 id="节点-CPU-精细化管理"><a href="#节点-CPU-精细化管理" class="headerlink" title="节点 CPU 精细化管理"></a>节点 CPU 精细化管理</h2><div align=center><img width="600" style="border: 0px" src="/gallery/cpu-manage/cpu-assign.png"></div>
+<h2 id="节点-CPU-编排"><a href="#节点-CPU-编排" class="headerlink" title="节点 CPU 编排"></a>节点 CPU 编排</h2><div align=center><img width="600" style="border: 0px" src="/gallery/cpu-manage/cpu-assign.png"></div>
 
+<p>现阶段，在不</p>
 <p><strong>分配优先级</strong></p>
 <ol>
 <li>为了多核共享 L1 和 L2 cache，优先分配位于同一物理核心的两个逻辑核心。即图中的 0 和 16 号 CPU 分配优先级高于 0 和 1 号 CPU</li>
@@ -68,21 +69,219 @@
 <p><strong>扩展思考点</strong></p>
 <ul>
 <li>考虑到超线程性能的发挥瓶颈，对于 CPU 满载服务而言，同一物理核心的两个逻辑核心未必比来自不同物理核心的性能强，因此可以针对应用本身的业务模型，是否分配自同一个物理核心有待考量</li>
-<li>CPU 的分配优先级可以不仅仅从静态拓扑结构角度思考设计，也可以结合 CPU 的 频率、flag 等属性信息以及 CPU 真实使用率等动态实时信息，多维度的考量</li>
+<li>CPU 的分配优先级可以不仅仅从静态拓扑结构角度思考设计，也可以结合 CPU 频率、flag 等属性信息以及 CPU 真实使用率等动态实时信息，多维度的考量</li>
 <li>考虑到节点资源利用率，对于非 Guaranteed QoS 的 Pod 而言，往往也需要不同程度的 CPU 精细化管理</li>
 <li>由于集群资源动态变化，最初未满足最佳分配策略的服务，可以借助适时重分配或重调度调整至最优分配效果</li>
 <li>拓扑资源对齐不仅仅限制于 CPU 资源，往往一套完整的拓扑资源对齐方案会将 CPU、内存、GPU、网卡等硬件设备均考虑在内</li>
 </ul>
 <h1 id="社区成果"><a href="#社区成果" class="headerlink" title="社区成果"></a>社区成果</h1><h2 id="Crane"><a href="#Crane" class="headerlink" title="Crane"></a>Crane</h2><p><em><a target="_blank" rel="noopener" href="https://github.com/gocrane/crane">https://github.com/gocrane/crane</a></em></p>
+<div align=center><img width="600" style="border: 0px" src="/gallery/crane/overview.png"></div>
+
+<p>Crane 是一个基于 FinOps 的云资源分析与成本优化平台。它的愿景是在保证客户应用运行质量的前提下实现极致的降本。</p>
+<p><strong>设计概述</strong></p>
+<p><em>Crane 采用 agent 旁路的 CPU 增强</em></p>
 <div align=center><img width="600" style="border: 0px" src="/gallery/crane/topology-awareness-architecture.png"></div>
 
-<p>Crane-scheduler 和 Crane-agent 配合工作，完成拓扑感知调度与资源分配的工作。</p>
+<p>Crane-scheduler 和 Crane-agent 配合工作，完成拓扑感知调度与资源分配的工作：</p>
 <ol>
 <li>Crane-agent 从节点采集资源拓扑，包括 NUMA、socket、设备等信息，汇总到 NodeResourceTopology CRD 中</li>
 <li>Crane-scheduler 在调度时会参考节点的 NodeResourceTopology 对象获取到节点详细的资源拓扑结构，在调度到节点的同时还会为 Pod 分配拓扑资源，并将结果写到 Pod 的 annotations 中</li>
 <li>Crane-agent 在节点上 watch 到 Pod 被调度后，从 Pod 的 annotations 中获取到拓扑分配结果，并按照用户给定的 CPU 绑定策略进行 CPUset 的细粒度分配</li>
 </ol>
-</div><div class="article-licensing box"><div class="licensing-title"><p>「 Kubernetes 」CPU 精细化管理</p><p><a href="http://shenxianghong.github.io/2023/06/25/2023-06-25 Kubernetes CPU 精细化管理/">http://shenxianghong.github.io/2023/06/25/2023-06-25 Kubernetes CPU 精细化管理/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2023-06-25</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-06-26</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><hr style="height:1px;margin:1rem 0"><div class="level is-mobile is-flex"><div class="article-tags is-size-7 is-uppercase"><i class="fas fa-tags has-text-grey"></i> <a class="link-muted" rel="tag" href="/tags/Kubernetes/">Kubernetes </a></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2023/06/13/2023-06-13%20Kubernetes%20%E8%8A%82%E7%82%B9%E8%B5%84%E6%BA%90%E8%B6%85%E5%8D%96/"><span class="level-item">「 Kubernetes 」节点资源超卖</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">53</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">7</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">9</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/shenxianghong" target="_blank" rel="noopener">Follow</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Youtube" href="https://youtube.com"><i class="fab fa-youtube"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Bilibili" href="https://bilibili.com"><i class="fab fa-bilibili"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Reddit" href="https://reddit.com"><i class="fab fa-reddit"></i></a></div></div></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://google.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Google</span></span><span class="level-right"><span class="level-item tag">google.com</span></span></a></li><li><a class="level is-mobile" href="https://poe.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Poe</span></span><span class="level-right"><span class="level-item tag">poe.com</span></span></a></li></ul></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#背景"><span class="level-left"><span class="level-item">1</span><span class="level-item">背景</span></span></a></li><li><a class="level is-mobile" href="#设计思考"><span class="level-left"><span class="level-item">2</span><span class="level-item">设计思考</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#NUMA-拓扑感知调度"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">NUMA 拓扑感知调度</span></span></a></li><li><a class="level is-mobile" href="#节点-CPU-精细化管理"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">节点 CPU 精细化管理</span></span></a></li></ul></li><li><a class="level is-mobile" href="#社区成果"><span class="level-left"><span class="level-item">3</span><span class="level-item">社区成果</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#Crane"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">Crane</span></span></a></li></ul></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Container-Runtime/"><span class="level-start"><span class="level-item">Container Runtime</span></span><span class="level-end"><span class="level-item tag">18</span></span></a></li><li><a class="level is-mobile" href="/categories/Disaster-Recovery/"><span class="level-start"><span class="level-item">Disaster Recovery</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/"><span class="level-start"><span class="level-item">Programming</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li><li><a class="level is-mobile" href="/categories/Scheduling-Orchestration/"><span class="level-start"><span class="level-item">Scheduling &amp; Orchestration</span></span><span class="level-end"><span class="level-item tag">4</span></span></a><ul><li><a class="level is-mobile" href="/categories/Scheduling-Orchestration/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Service-Mesh/"><span class="level-start"><span class="level-item">Service Mesh</span></span><span class="level-end"><span class="level-item tag">10</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7"><br/>And did you get what you wanted from this life, even so?</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
+<div align=center><img width="1000" style="border: 0px" src="/gallery/crane/topology-awareness-details.png"></div>
+
+<p><strong>CPU 分配策略</strong></p>
+<p>Crane 中提供了四种 CPU 分配策略，分别如下：</p>
+<ol>
+<li>none：该策略不进行特别的 CPUset 分配，Pod 会使用节点 CPU 共享池</li>
+<li>exclusive：该策略对应 Kubelet 的 static 策略，Pod 会独占 CPU 核心，其他任何 Pod 都无法使用</li>
+<li>numa：该策略会指定 NUMA Node，Pod 会使用该 NUMA Node 上的 CPU 共享池</li>
+<li>immovable：该策略会将 Pod 固定在某些 CPU 核心上，但这些核心属于共享池，其他 Pod 仍可使用</li>
+</ol>
+<p><strong>为系统组件预留 CPU</strong></p>
+<p>在某些场景下，希望能对 Kubelet 预留的 CPU 做一些保护，使用场景包括但不限于：</p>
+<ul>
+<li>在混部场景下，不希望离线任务绑定系统预留的 CPU 核心，防止对 K8s 系统组件产生影响</li>
+<li>0 号核心在 Linux 有独特用途，比如处理网络包、内核调用、处理中断等，因此不希望任务绑定 0 号核心</li>
+</ul>
+<p>在 Crane 中，可以通过以下方式为系统组件预留 CPU：</p>
+<ol>
+<li>Kubelet 设置预留 CPU：按照<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/administer-cluster/reserve-compute-resources/#explicitly-reserved-cpu-list">官方指引</a>设置预留的 CPU 列表</li>
+<li>查看 NodeResourceTopology 对象，spec.attributes 中的 <code>go.crane.io/reserved-system-cpus</code> 存储了预留的 CPU 列表</li>
+<li>在 Pod 的 annotations 中添加 <code>topology.crane.io/exclude-reserved-cpus</code>，表明 Pod 不绑定预留的 CPU 核心</li>
+</ol>
+<h2 id="Koordinator"><a href="#Koordinator" class="headerlink" title="Koordinator"></a>Koordinator</h2><p><u><em><a target="_blank" rel="noopener" href="https://github.com/koordinator-sh/koordinator">https://github.com/koordinator-sh/koordinator</a></em></u></p>
+<div align=center><img width="700" style="border: 0px" src="/gallery/koordinator/overview.png"></div>
+
+<p>Koordinator 是一个基于 QoS 的 Kubernetes 混合工作负载调度系统，旨在提高对延迟敏感的工作负载和批处理作业的运行时效率和可靠性，简化与资源相关的配置调整的复杂性，并增加 Pod 部署密度以提高资源利用率。</p>
+<p><strong>设计概述</strong></p>
+<p><em>Koordinator 采用 Kubelet 非透明代理的 CPU 增强</em></p>
+<div align=center><img width="800" style="border: 0px" src="/gallery/koordinator/cpu-orchestration.svg"></div>
+
+<p>当 Koordlet 启动时，Koordlet 从 Kubelet 收集 NUMA 拓扑信息，包括 NUMA 拓扑、CPU 拓扑、Kubelet CPU 管理策略、Kubelet 为 Guaranteed Pod 分配的 CPU 等，并更新到节点资源拓扑 CRD。当延迟敏感的应用程序扩容时，可以为新 Pod 设置 Koordinator QoS LSE&#x2F;LSR、CPU 绑定策略和 CPU 独占策略，要求 Koord-scheduler 分配最适合的 CPU 以获得最佳性能。当 Koord-scheduler 调度 Pod 时，Koord-scheduler 会过滤满足 NUMA 拓扑对齐策略的节点，并通过评分选择最佳节点，在 Reserve 阶段分配 CPU，并在 PreBinding 时将结果记录到 Pod annotations。Koordlet 通过 hook Kubelet CRI 请求，替换通过 Koord-scheduler 调度的 CPU 配置参数到运行时，例如配置 cgroup。</p>
+<p><strong>QoS</strong></p>
+<p>Koordinator 调度系统支持的 QoS 有五种类型:</p>
+<table>
+<thead>
+<tr>
+<th>QoS</th>
+<th>特点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SYSTEM</td>
+<td>系统进程，资源受限</td>
+<td>对于 DaemonSets 等系统服务，虽然需要保证系统服务的延迟，但也需要限制节点上这些系统服务容器的资源使用，以确保其不占用过多的资源</td>
+</tr>
+<tr>
+<td>LSE(Latency Sensitive Exclusive)</td>
+<td>保留资源并组织同 QoS 的 Pod 共享资源</td>
+<td>很少使用，常见于中间件类应用，一般在独立的资源池中使用</td>
+</tr>
+<tr>
+<td>LSR(Latency Sensitive Reserved)</td>
+<td>预留资源以获得更好的确定性</td>
+<td>类似于社区的 Guaranteed，CPU 核被绑定</td>
+</tr>
+<tr>
+<td>LS(Latency Sensitive)</td>
+<td>共享资源，对突发流量有更好的弹性</td>
+<td>微服务工作负载的典型QoS级别，实现更好的资源弹性和更灵活的资源调整能力</td>
+</tr>
+<tr>
+<td>BE(Best Effort)</td>
+<td>共享不包括 LSE 的资源，资源运行质量有限，甚至在极端情况下被杀死</td>
+<td>批量作业的典型 QoS 水平，在一定时期内稳定的计算吞吐量，低成本资源</td>
+</tr>
+</tbody></table>
+<p>Koordinator 和 Kubernetes QoS 之间是有对应关系的:</p>
+<table>
+<thead>
+<tr>
+<th>Koordinator QoS</th>
+<th>Kubernetes QoS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SYSTEM</td>
+<td>—</td>
+</tr>
+<tr>
+<td>LSE</td>
+<td>Guaranteed</td>
+</tr>
+<tr>
+<td>LSR</td>
+<td>Guaranteed</td>
+</tr>
+<tr>
+<td>LS</td>
+<td>Guaranteed&#x2F;Burstable</td>
+</tr>
+<tr>
+<td>BE</td>
+<td>BestEffort</td>
+</tr>
+</tbody></table>
+<p><strong>CPU 编排基本原则</strong></p>
+<ol>
+<li>仅支持 Pod 维度的 CPU 分配机制</li>
+<li>Koordinator 将机器上的 CPU 分为 CPU Shared Pool，statically exclusive CPUs 和 BE CPU Shared Pool：<ol>
+<li>CPU Shared Pool 是一组共享 CPU 池，Burstable 和 LS Pod 中的任何容器都可以在其上运行。Guaranteed fractional CPU requests 的 Pod 也可以运行在 CPU Shared Pool 中。CPU Shared Pool 包含节点中所有未分配的 CPU，但不包括由 Guaranteed、LSE 和 LSR Pod 分配的 CPU。如果 Kubelet 保留 CPU，则 CPU Shared Pool 包括保留的 CPU</li>
+<li>statically exclusive CPUs 是指分配给 Guaranteed、LSE&#x2F;LSR Pods 使用的一组独占 CPU。当 Guaranteed、LSE 和 LSR Pod 申请 CPU 时，Koord-scheduler 将从 CPU Shared Pool 中分配</li>
+<li>BE CPU Shared Pool 是一组 BestEffort 和 BE 的 Pod 都可运行的 CPU 池。BE CPU Shared Pool 包含节点中除 Guaranteed 和 LSE Pod 分配的之外的所有 CPU</li>
+</ol>
+</li>
+</ol>
+<p><strong>Koordinator QoS CPU 编排原则</strong></p>
+<ol>
+<li>LSE&#x2F;LSR Pod 的 requests 和 limits 必须相等，CPU 值必须是 1000 的整数倍</li>
+<li>LSE Pod 分配的 CPU 是完全独占的，不得共享。如果节点是超线程架构，只保证逻辑核心维度是隔离的，但是可以通过 CPUBindPolicyFullPCPUs 策略获得更好的隔离</li>
+<li>LSR Pod 分配的 CPU 只能与 BE Pod 共享</li>
+<li>LS Pod 绑定了与 LSE&#x2F;LSR Pod 独占之外的共享 CPU 池</li>
+<li>BE Pod 绑定使用节点中除 LSE Pod 独占之外的所有 CPU </li>
+<li>如果 Kubelet 的 CPU 管理器策略为 static 策略，则已经运行的 Guaranteed Pods 等价于 LSR</li>
+<li>如果 Kubelet 的 CPU 管理器策略为 none 策略，则已经运行的 Guaranteed Pods 等价于 LS</li>
+<li>新创建但未指定 Koordinator QoS 的 Guaranteed Pod 等价于 LS</li>
+</ol>
+<div align=center><img width="800" style="border: 0px" src="/gallery/koordinator/qos-cpu-orchestration.png"></div>
+
+<p><strong>Kubelet CPU Manager 策略兼容原则</strong></p>
+<ol>
+<li>如果 Kubelet 设置 CPU Manager 策略选项 <code>full-pcpus-only=true</code> 或者 <code>distribute-cpus-across-numa=true</code>，并且节点中没有 Koordinator 定义的新 CPU 绑定策略，则遵循 Kubelet 定义的这些参数的定义</li>
+<li>如果 Kubelet 设置了 Topology Manager 策略，并且节点中没有 Koordinator 定义的新的 NUMA Topology Alignment 策略，则遵循 Kubelet 定义的这些参数的定义</li>
+</ol>
+<p><strong>接管 Kubelet CPU 管理策略</strong></p>
+<p>Kubelet 预留的 CPU 主要服务于 BestEffort 和 Burstable Pods。但 Koordinator 不会遵守该策略。Burstable Pod 应该使用 CPU Shared Pool，而 BestEffort Pods 应该使用 BE CPU Shared Pool。LSE 和 LSR Pod 不会从被 Kubelet 预留的 CPU 中分配。</p>
+<ol>
+<li>对于 Burstable 和 LS Pod<ol>
+<li>当 Koordlet 启动时，计算 CPU Shared Pool 并将共享池应用到节点中的所有 Burstable 和 LS Pod，即更新它们的 CPU cgroups, 设置 CPUset。在创建或销毁 LSE&#x2F;LSR Pod 时执行相同的逻辑</li>
+<li>Koordlet 会忽略 Kubelet 预留的 CPU，将其替换为 Koordinator 定义的 CPU Shared Pool</li>
+</ol>
+</li>
+<li>对于 BestEffort 和 BE Pod<ol>
+<li>如果 Kubelet 预留了 CPU，BestEffort Pod 会首先使用预留的 CPU</li>
+<li>Koordlet 可以使用节点中的所有 CPU，但不包括由具有整数 CPU 的 Guaranteed 和 LSE Pod 分配的 CPU。这意味着如果 Koordlet 启用 CPU Suppress 功能，则应遵循约束以保证不会影响 LSE Pod。同样，如果 Kubelet 启用了 CPU Manager static 策略，则也应排除 Guaranteed Pod</li>
+</ol>
+</li>
+<li>对于 Guaranteed Pod<ol>
+<li>如果 Pod 的 annotations 中有 Koord-scheduler 更新的 <code>scheduling.koordinator.sh/resource-status</code>，在 sandbox&#x2F;container 创建阶段，则会替换 Kubelet CRI 请求中的 CPUset</li>
+<li>Kubelet 有时会调用 CRI 中定义的 Update 方法来更新容器 cgroup 以设置新的 CPU，因此 Koordlet 和 koord-runtime-proxy 需要 hook 该方法</li>
+</ol>
+</li>
+<li>自动调整 CPU Shared Pool 大小<ol>
+<li>Koordlet 会根据 Pod 创建&#x2F;销毁等变化自动调整 CPU Shared Pool 的大小。如果 CPU Shared Pool 发生变化，Koordlet 应该更新所有使用共享池的 LS 或 Burstable Pod 的 cgroups</li>
+<li>如果 Pod 的 annotations <code>scheduling.koordinator.sh/resource-status</code> 中指定了对应的 CPU Shared Pool，Koordlet 在配置 cgroup 时只需要绑定对应共享池的 CPU 即可</li>
+</ol>
+</li>
+</ol>
+<p>接管逻辑要求 koord-runtime-proxy 添加新的扩展点并且 Koordlet 实现新的运行时插件的 hook 。当没有安装 koord-runtime-proxy 时，这些接管逻辑也将能够实现。</p>
+<p><strong>CPU 绑定策略</strong></p>
+<p>标签 <code>node.koordinator.sh/cpu-bind-policy</code> 限制了调度时如何绑定 CPU：</p>
+<ul>
+<li>None 或空值 — 不执行任何策略</li>
+<li>FullPCPUsOnly — 要求调度器必须分配完整的物理核。等效于 Kubelet CPU Manager 策略选项 full-pcpus-only&#x3D;true</li>
+<li>SpreadByPCPUs — 要求调度器必须按照物理核维度均匀的分配 CPU</li>
+</ul>
+<p><strong>NUMA 分配策略</strong></p>
+<p>标签 <code>node.koordinator.sh/numa-allocate-strategy</code> 表示在调度时如何选择满意的 NUMA 节点：</p>
+<ul>
+<li>MostAllocated — 表示从可用资源最少的 NUMA 节点分配</li>
+<li>LeastAllocated — 表示从可用资源最多的 NUMA 节点分配</li>
+<li>DistributeEvenly — 表示在 NUMA 节点上平均分配 CPU</li>
+</ul>
+<p><strong>NUMA 拓扑对齐策略</strong></p>
+<p>标签 <code>node.koordinator.sh/numa-topology-alignment-policy</code> 表示如何根据 NUMA 拓扑对齐资源分配。策略语义遵循 K8s 社区。相当于 NodeResourceTopology 中的 TopologyPolicies 字段，拓扑策略 SingleNUMANodePodLevel 和 SingleNUMANodeContainerLevel 映射到 SingleNUMANode 策略：</p>
+<ul>
+<li>None — 是默认策略，不执行任何拓扑对齐</li>
+<li>BestEffort — 表示优先选择拓扑对齐的 NUMA node，如果没有，则继续为 Pod 分配资源</li>
+<li>Restricted — 表示每个 Pod 在 NUMA 节点上请求的资源是拓扑对齐的，如果不是，Koord-scheduler 会在调度时跳过该节点</li>
+<li>SingleNUMANode — 表示一个 Pod 请求的所有资源都必须在同一个 NUMA 节点上，如果不是，Koord-scheduler 调度时会跳过该节点</li>
+</ul>
+<p><strong>NodeResourceTopology 维护</strong></p>
+<p>Koordinator 在社区提供的 NodeResourceTopology CRD 基础之上通过 annotations 和 label 扩展了更多的 CPU 管理策略与限制。</p>
+<ul>
+<li>Koordlet 负责创建&#x2F;更新 NodeResourceTopology</li>
+<li>建议 Koordlet 通过解析 <code>/var/lib/kubelet/cpu_manager_state</code> 文件来获取现有 Guaranteed Pod 的 CPU 分配信息。或者通过 Kubelet 提供的 CRI 接口和 gRPC 获取这些信息</li>
+<li>当 Koord-scheduler 分配 Pod 的 CPU 时，替换 Kubelet 状态检查点文件中的 CPU</li>
+<li>建议 Koordlet 从 <a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/">kubeletConfiguration</a> 获取 CPU Manager 策略和选项</li>
+</ul>
+<h2 id="CRI-Resource-Manager"><a href="#CRI-Resource-Manager" class="headerlink" title="CRI Resource Manager"></a>CRI Resource Manager</h2><p><em><a target="_blank" rel="noopener" href="https://github.com/intel/cri-resource-manager">https://github.com/intel/cri-resource-manager</a></em></p>
+<div align=center><img width="400" style="border: 0px" src="/gallery/cri-resource-manager/overview.png"></div>
+
+<p><strong>架构概述</strong></p>
+<p><em>CRI Resource Manager采用 Kubelet 非透明代理的 CPU 增强</em></p>
+<div align=center><img width="400" style="border: 0px" src="/gallery/cri-resource-manager/cri-resmgr.svg"></div>
+
+<p>CRI Resource Manager 是 CRI 代理，位于客户端和实际容器运行时实现（Containerd、CRI-O）之间，用于转发请求和响应。代理的主要目的是通过在转发请求之前修改请求或在处理和代理期间执行与请求相关的额外操作来应用策略以将硬件感知的资源分配策略应用于系统中运行的容器。</p>
+<p>CRI Resource Manager 可以通过加载节点静态配置文件，也可以通过 gRPC 请求 CRI Resource Manager Node Agent 组件动态配置。Node Agent 组件的主要功能是维护节点级别或者全局级别的 ConfigMap，以响应 CRI Resource Manager 的 gRPC 请求，返回策略配置：</p>
+<ul>
+<li>cri-resmgr-config.node.&lt;NODE_NAME&gt;</li>
+<li>cri-resmgr-config.group.&lt;GROUP_NAME&gt;</li>
+<li>cri-resmgr-config.default</li>
+</ul>
+</div><div class="article-licensing box"><div class="licensing-title"><p>「 Kubernetes 」CPU 精细化管理</p><p><a href="http://shenxianghong.github.io/2023/06/25/2023-06-25 Kubernetes CPU 精细化管理/">http://shenxianghong.github.io/2023/06/25/2023-06-25 Kubernetes CPU 精细化管理/</a></p></div><div class="licensing-meta level is-mobile"><div class="level-left"><div class="level-item is-narrow"><div><h6>Author</h6><p>Shen Xianghong</p></div></div><div class="level-item is-narrow"><div><h6>Posted on</h6><p>2023-06-25</p></div></div><div class="level-item is-narrow"><div><h6>Updated on</h6><p>2023-06-27</p></div></div><div class="level-item is-narrow"><div><h6>Licensed under</h6><p><a class="icons" rel="noopener" target="_blank" title="Creative Commons" href="https://creativecommons.org/"><i class="icon fab fa-creative-commons"></i></a><a class="icons" rel="noopener" target="_blank" title="Attribution" href="https://creativecommons.org/licenses/by/4.0/"><i class="icon fab fa-creative-commons-by"></i></a><a class="icons" rel="noopener" target="_blank" title="Noncommercial" href="https://creativecommons.org/licenses/by-nc/4.0/"><i class="icon fab fa-creative-commons-nc"></i></a></p></div></div></div></div></div><hr style="height:1px;margin:1rem 0"><div class="level is-mobile is-flex"><div class="article-tags is-size-7 is-uppercase"><i class="fas fa-tags has-text-grey"></i> <a class="link-muted" rel="tag" href="/tags/Kubernetes/">Kubernetes </a></div></div><!--!--></article></div><!--!--><nav class="post-navigation mt-4 level is-mobile"><div class="level-end"><a class="article-nav-next level level-item link-muted" href="/2023/06/13/2023-06-13%20Kubernetes%20%E8%8A%82%E7%82%B9%E8%B5%84%E6%BA%90%E8%B6%85%E5%8D%96/"><span class="level-item">「 Kubernetes 」节点资源超卖</span><i class="level-item fas fa-chevron-right"></i></a></div></nav><!--!--></div><div class="column column-left is-4-tablet is-4-desktop is-3-widescreen  order-1 is-sticky"><div class="card widget" data-type="profile"><div class="card-content"><nav class="level"><div class="level-item has-text-centered flex-shrink-1"><div><figure class="image is-128x128 mx-auto mb-2"><img class="avatar is-rounded" src="https://avatars.githubusercontent.com/u/35031258?v=4" alt="🐾Corgi"></figure><p class="title is-size-4 is-block" style="line-height:inherit;">🐾Corgi</p></div></div></nav><nav class="level is-mobile"><div class="level-item has-text-centered is-marginless"><div><p class="heading">Posts</p><a href="/archives"><p class="title">53</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Categories</p><a href="/categories"><p class="title">7</p></a></div></div><div class="level-item has-text-centered is-marginless"><div><p class="heading">Tags</p><a href="/tags"><p class="title">9</p></a></div></div></nav><div class="level"><a class="level-item button is-primary is-rounded" href="https://github.com/shenxianghong" target="_blank" rel="noopener">Follow</a></div><div class="level is-mobile is-multiline"><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Github" href="https://github.com"><i class="fab fa-github"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Youtube" href="https://youtube.com"><i class="fab fa-youtube"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Bilibili" href="https://bilibili.com"><i class="fab fa-bilibili"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Twitter" href="https://twitter.com"><i class="fab fa-twitter"></i></a><a class="level-item button is-transparent is-marginless" target="_blank" rel="noopener" title="Reddit" href="https://reddit.com"><i class="fab fa-reddit"></i></a></div></div></div><div class="card widget" data-type="links"><div class="card-content"><div class="menu"><h3 class="menu-label">Links</h3><ul class="menu-list"><li><a class="level is-mobile" href="https://google.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Google</span></span><span class="level-right"><span class="level-item tag">google.com</span></span></a></li><li><a class="level is-mobile" href="https://poe.com" target="_blank" rel="noopener"><span class="level-left"><span class="level-item">Poe</span></span><span class="level-right"><span class="level-item tag">poe.com</span></span></a></li></ul></div></div></div><div class="card widget" id="toc" data-type="toc"><div class="card-content"><div class="menu"><h3 class="menu-label">Catalogue</h3><ul class="menu-list"><li><a class="level is-mobile" href="#背景"><span class="level-left"><span class="level-item">1</span><span class="level-item">背景</span></span></a></li><li><a class="level is-mobile" href="#设计思考"><span class="level-left"><span class="level-item">2</span><span class="level-item">设计思考</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#NUMA-拓扑感知调度"><span class="level-left"><span class="level-item">2.1</span><span class="level-item">NUMA 拓扑感知调度</span></span></a></li><li><a class="level is-mobile" href="#节点-CPU-编排"><span class="level-left"><span class="level-item">2.2</span><span class="level-item">节点 CPU 编排</span></span></a></li></ul></li><li><a class="level is-mobile" href="#社区成果"><span class="level-left"><span class="level-item">3</span><span class="level-item">社区成果</span></span></a><ul class="menu-list"><li><a class="level is-mobile" href="#Crane"><span class="level-left"><span class="level-item">3.1</span><span class="level-item">Crane</span></span></a></li><li><a class="level is-mobile" href="#Koordinator"><span class="level-left"><span class="level-item">3.2</span><span class="level-item">Koordinator</span></span></a></li><li><a class="level is-mobile" href="#CRI-Resource-Manager"><span class="level-left"><span class="level-item">3.3</span><span class="level-item">CRI Resource Manager</span></span></a></li></ul></li></ul></div></div><style>#toc .menu-list > li > a.is-active + .menu-list { display: block; }#toc .menu-list > li > a + .menu-list { display: none; }</style><script src="/js/toc.js" defer></script></div><div class="card widget" data-type="categories"><div class="card-content"><div class="menu"><h3 class="menu-label">Categories</h3><ul class="menu-list"><li><a class="level is-mobile" href="/categories/Container-Runtime/"><span class="level-start"><span class="level-item">Container Runtime</span></span><span class="level-end"><span class="level-item tag">18</span></span></a></li><li><a class="level is-mobile" href="/categories/Disaster-Recovery/"><span class="level-start"><span class="level-item">Disaster Recovery</span></span><span class="level-end"><span class="level-item tag">11</span></span></a></li><li><a class="level is-mobile" href="/categories/Programming/"><span class="level-start"><span class="level-item">Programming</span></span><span class="level-end"><span class="level-item tag">7</span></span></a></li><li><a class="level is-mobile" href="/categories/Scheduling-Orchestration/"><span class="level-start"><span class="level-item">Scheduling &amp; Orchestration</span></span><span class="level-end"><span class="level-item tag">4</span></span></a><ul><li><a class="level is-mobile" href="/categories/Scheduling-Orchestration/Kubernetes/"><span class="level-start"><span class="level-item">Kubernetes</span></span><span class="level-end"><span class="level-item tag">4</span></span></a></li></ul></li><li><a class="level is-mobile" href="/categories/Serverless/"><span class="level-start"><span class="level-item">Serverless</span></span><span class="level-end"><span class="level-item tag">3</span></span></a></li><li><a class="level is-mobile" href="/categories/Service-Mesh/"><span class="level-start"><span class="level-item">Service Mesh</span></span><span class="level-end"><span class="level-item tag">10</span></span></a></li></ul></div></div></div></div><!--!--></div></div></section><footer class="footer"><div class="container"><div class="level"><div class="level-start"><a class="footer-logo is-block mb-2" href="/"><img src="/img/logo.svg" alt="🐾Corgi" height="28"></a><p class="is-size-7"><span>&copy; 2023 Shen Xianghong</span>  Powered by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> &amp; <a href="https://github.com/ppoffice/hexo-theme-icarus" target="_blank" rel="noopener">Icarus</a><br><span id="busuanzi_container_site_uv">Visited by <span id="busuanzi_value_site_uv">0</span> users</span></p><p class="is-size-7"><br/>And did you get what you wanted from this life, even so?</p></div><div class="level-end"><div class="field has-addons"><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Creative Commons" href="https://creativecommons.org/"><i class="fab fa-creative-commons"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Attribution 4.0 International" href="https://creativecommons.org/licenses/by/4.0/"><i class="fab fa-creative-commons-by"></i></a></p><p class="control"><a class="button is-transparent is-large" target="_blank" rel="noopener" title="Download on GitHub" href="https://github.com/ppoffice/hexo-theme-icarus"><i class="fab fa-github"></i></a></p></div></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/moment@2.22.2/min/moment-with-locales.min.js"></script><script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.4/dist/clipboard.min.js" defer></script><script>moment.locale("en");</script><script>var IcarusThemeSettings = {
             article: {
                 highlight: {
                     clipboard: true,
