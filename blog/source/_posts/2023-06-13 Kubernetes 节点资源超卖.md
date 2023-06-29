@@ -84,7 +84,7 @@ Koordinator 是一个基于 QoS 的 Kubernetes 混合工作负载调度系统，
 在集群中运行的 Pod 资源 SLO（Service Level Objectives）由两个概念组成，即优先级和 QoS
 
 - 优先级，即资源的优先级，代表了请求资源被调度的优先级。通常情况下，优先级会影响 Pod 在调度器待定队列中的相对位置
-- QoS，代表 Pod 运行时的服务质量。如cgroups cpu share、cfs 配额、LLC、内存、OOM 优先级等等
+- QoS，代表 Pod 运行时的服务质量。如 cgroups cpu share、cfs 配额、LLC、内存、OOM 优先级等等
 
 Koordinator 定义了五种类型的 QoS，用于编排调度与资源隔离场景：
 
@@ -276,7 +276,7 @@ data:
     }
 ```
 
-开启后动态资源后，可以看到节点已经识别到扩展资源 kubernetes.io/batch-cpu 与 kubernetes.io/batch-memory。
+开启后动态资源后，可以看到节点已经识别到扩展资源 `kubernetes.io/batch-cpu` 与 `kubernetes.io/batch-memory`。
 
 ```shell
 $ kubectl describe node wnx
