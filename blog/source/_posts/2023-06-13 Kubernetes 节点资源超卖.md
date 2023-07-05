@@ -421,5 +421,16 @@ $ cat /sys/fs/cgroup/cpuset/kubepods/besteffort/podcee106b7-48ff-4441-9bba-b37c0
 0-4
 ```
 
-并且，随着节点负载上升（通过容器 stress 进程模拟），节点中可用的弹性资源（Capacity 与 Allocatable）也会逐渐变少，离线服务使用的 CPU 也会相应的缩减，但是不会停止离线服务。
+并且，随着节点负载上升（通过在线服务容器 stress 进程模拟），节点中可用的弹性资源（capacity 与 allocatable）也会逐渐变少，离线服务使用的 CPU 也会相应的缩减，但是不会停止离线服务。
+
+```shell
+$ cat /sys/fs/cgroup/cpuset/kubepods/besteffort/podcee106b7-48ff-4441-9bba-b37c0e4620f9/ef02220e4d28ff6ebd8768ac55a4f73b22b80fac5321f1acbde35acebaa1a74f/cpuset.cpus
+0-4
+
+# 当在线服务资源用量提升时，离线服务使用的 CPU 被逐渐缩减
+$ cat /sys/fs/cgroup/cpuset/kubepods/besteffort/podcee106b7-48ff-4441-9bba-b37c0e4620f9/ef02220e4d28ff6ebd8768ac55a4f73b22b80fac5321f1acbde35acebaa1a74f/cpuset.cpus
+0-1
+```
+
+
 

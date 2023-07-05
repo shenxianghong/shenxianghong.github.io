@@ -1,6 +1,6 @@
 ---
 title: "「 Kubernetes 」CPU 精细化管理"
-excerpt: "Kubernetes NUMA 感知调度方案与节点 CPU 编排的探索与优化"
+excerpt: "Kubernetes NUMA 感知调度与节点 CPU 编排方案的探索与优化"
 cover: https://picsum.photos/0?sig=20230625
 thumbnail: /gallery/kubernetes/thumbnail.svg
 date: 2023-06-25
