@@ -331,8 +331,6 @@ $ crictl inspect 6577fa85ac7e6 | grep logger
 
 <div align=center><img width="800" style="border: 0px" src="/gallery/containerd/proxy-standalone.png"></div>
 
-
-
 在目前的 K8s 架构中（如图 a）Kubelet 通过调用 CRI 兼容的容器运行时创建和管理 Pod。CRI 运行时再通过调用 OCI 兼容的 low-level 运行时创建容器。
 
 Proxy 模式（如图 b）则是在客户端 Kubelet 和 CRI 运行时之间增加一个 CRI proxy 中继请求和响应，在 proxy 中劫持 Pod 以及容器的创建/更新/删除事件，对Pod spec 进行修改或者完善，将硬件感知的资源分配策略应用于容器中。
