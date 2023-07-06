@@ -172,7 +172,7 @@ Kube-scheduler 在 NUMA 感知调度 Pod 流程之后，并不知道节点上 To
 - 考虑到节点资源利用率，对于非 Guaranteed QoS 的 Pod 而言，往往也需要不同程度的 CPU 精细化管理
 - 由于集群资源动态变化，最初未满足最佳分配策略的服务，可以借助适时重分配或重调度调整至最优分配效果
 - 拓扑资源对齐不仅仅限制于 CPU 资源，往往一套完整的拓扑资源对齐方案会将 CPU、内存、GPU、网卡等硬件设备均考虑在内
-- 现阶段，在不修改 CPU Manager、Topology Manager 等原有模块逻辑的前提下，往往需要一个旁路 agent 或者 hook CRI 调用的模式来接管资源管理的能力，并且往往需要禁用原生的管理策略
+- 现阶段，在不修改 CPU Manager、Topology Manager 等原有模块逻辑的前提下，往往需要一个旁路 agent（standalone 模式）或者 hook CRI（proxy 模式）调用的模式来接管资源管理的能力，并且往往需要禁用原生的管理策略
 - 随着 NRI（Node Resource Interface）规范的完善，可以基于 NRI hook 扩展，实现资源编排
 
 # 社区成果
@@ -333,6 +333,19 @@ Koordinator 在社区提供的 NodeResourceTopology CRD 基础之上通过 annot
 - 建议 Koordlet 通过解析 `/var/lib/kubelet/cpu_manager_state` 文件来获取现有 Guaranteed Pod 的 CPU 分配信息。或者通过 Kubelet 提供的 CRI 接口和 gRPC 获取这些信息
 - 当 Koord-scheduler 分配 Pod 的 CPU 时，替换 Kubelet 状态检查点文件中的 CPU
 - 建议 Koordlet 从 [kubeletConfiguration](https://kubernetes.io/docs/reference/config-api/kubelet-config.v1beta1/) 获取 CPU Manager 策略和选项
+
+**NRI 重构设计**
+
+Koordinator 社区有计划将 CRI proxy 的增强方案以 NRI 理念重构：https://github.com/koordinator-sh/koordinator/blob/main/docs/proposals/20230608-nri-mode-resource-management.md。
+
+与 standalone 和 proxy 不同，Koodlet 将启动一个 NRI 插件从 CRI 运行时订阅 Pod/容器生命周期事件，然后 Koordlet NRI 插件将调用运行时 hook 来调整 Pod 资源或 OCI 规范。流程大致为：
+
+1. 从 CRI 运行时获取 Pod/容器生命周期事件和 OCI 格式信息
+2. 将 OCI 格式信息转换为内部协议，以重用现有的运行时 hook 插件
+3. 将运行时 hook 插件的响应转换为 OCI 规范格式
+4. 将 OCI 规范格式响应返回到 CRI 运行时
+
+<div align=center><img width="700" style="border: 0px" src="/gallery/koordinator/nri-proposal.png"></div>
 
 ## CRI Resource Manager
 

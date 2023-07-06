@@ -184,7 +184,7 @@ type handlers struct {
 
 ## Containerd
 
-<div align=center><img width="800" style="border: 0px" src="/gallery/containerd/nri-integration.png"></div>
+<div align=center><img width="700" style="border: 0px" src="/gallery/containerd/nri-integration.png"></div>
 
 Containerd 在 v1.7.0 版本中新增对 NRI 特性的支持，通过在 Containerd 配置文件的 `[plugins."io.containerd.nri.v1.nri"]` 部分中配置：
 
@@ -323,22 +323,31 @@ $ crictl inspect 6577fa85ac7e6 | grep logger
 
 # 更多价值
 
+## 节点细粒度资源管理
+
 为了满足不同业务应用场景的需求，特别是在在线任务与离线任务混布的场景下，在提高资源利用率的同时，也要保证延迟敏感服务可以得到充分的资源保证，这就需要 Kubernetes 提供更加细粒度的资源管理功能，增强容器的隔离性，减少容器之间的互相干扰。例如，CPU 编排，内存分层，缓存管理，IO 管理等。目前有很多方案，但是都有其一定的局限性。
 
 截至目前，Kubernetes 并没有提供一个非常完善的资源管理方案，很多 Kubernetes 周边的开源项目通过一些自己的方式修改 Pod 的部署和管理流程，实现资源分配的细粒度管理。例如 [cri-resource-manager](https://github.com/intel/cri-resource-manager)、[Koordinator](https://github.com/koordinator-sh/koordinator)、[Crane](https://github.com/gocrane/crane) 等项目。
 
-这些项目对 Kubernetes 创建和更新 Pod 的流程的优化可以大致分为两种模式，一种是 proxy 模式，一种是 standalone 模式。
+这些项目对 Kubernetes 创建和更新 Pod 的流程的优化可以大致分为两种模式，一种是 proxy 模式，一种是 standalone 模式：
 
-<div align=center><img width="800" style="border: 0px" src="/gallery/containerd/proxy-standalone.png"></div>
+- proxy
 
-在目前的 K8s 架构中（如图 a）Kubelet 通过调用 CRI 兼容的容器运行时创建和管理 Pod。CRI 运行时再通过调用 OCI 兼容的 low-level 运行时创建容器。
+  <div align=center><img width="800" style="border: 0px" src="/gallery/containerd/proxy.png"></div>
 
-Proxy 模式（如图 b）则是在客户端 Kubelet 和 CRI 运行时之间增加一个 CRI proxy 中继请求和响应，在 proxy 中劫持 Pod 以及容器的创建/更新/删除事件，对Pod spec 进行修改或者完善，将硬件感知的资源分配策略应用于容器中。
+  proxy 模式是在客户端 Kubelet 和 CRI 运行时之间增加一个 CRI proxy 中继请求和响应，在 proxy 中劫持 Pod 以及容器的创建/更新/删除事件，对 Pod spec 进行修改或者完善，将硬件感知的资源分配策略应用于容器中。
 
-Standalone 模式（如图 c）则是在每一个工作节点上创建一个 agent，当这个 agent 监听到在本节点的 Pod 创建或者修改事件的时候，再根据 Pod spec 中的注解等扩展信息，转换成细粒度资源配置的 spec，然后调用 CRI 运行时实现对 Pod 的更新。
+- standalone
+
+  <div align=center><img width="800" style="border: 0px" src="/gallery/containerd/standalone.png"></div>
+
+  standalone 模式是在每一个工作节点上创建一个 agent，当这个 agent 监听到在本节点的 Pod 创建或者修改事件的时候，再根据 Pod spec 中的注解等扩展信息，转换成细粒度资源配置的 spec，然后调用 CRI 运行时实现对 Pod 的更新。
 
 这两种方式在满足特定业务需求的同时也存在一定的缺点, 两种方式都需要依赖额外的组件，来捕获 Pod 的生命周期事件。proxy 模式增加了 Pod 创建管理流程的链路以及部署和维护成本，standalone 模式是在侦听到 Pod 创建以及修改的事件后，才会对 Pod 进行更新，会有一定的延迟。
+
+<div align=center><img width="800" style="border: 0px" src="/gallery/containerd/nri.png"></div>
 
 使用 NRI 可以将 Kubelet 的 Resource Manager 下沉到 CRI 运行时层进行管理。Kubelet 当前不适合处理多种需求的扩展，在 Kubelet 层增加细粒度的资源分配会导致 Kubelet 和 CRI 的界限越来越模糊。而 NRI，则是在 CRI 生命周期间做调用，更适合做资源绑定和节点的拓扑感知。并且在 CRI 内部做插件定义和迭代，可以做到上层 Kubenetes 以最小的代价来适配变化。
 
 到现在为止，已经有越来越多的节点资源细粒度管理方案开始探索使用 NRI 实现的可能性。当 NRI 成为节点细粒度资源分配管理方案后，可以进一步提高资源管理方案的标准化，提高相关组件的可复用性。参考：https://github.com/containers/nri-plugins。
+
