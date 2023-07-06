@@ -23,7 +23,7 @@ NRI（Node Resource Interface）是 Containerd 的一个子项目，允许将自
 
 NRI 提供了接口定义和基础组件，可以实现可插拔的 CRI 运行时插件，这些插件就是 NRI 插件。这些 NRI 插件是与运行时类型无关的，插件既可以应用于 Containerd，也可以应用于 CRI-O。原则上，任何 NRI 插件都应该能够和启用 NRI 的运行时正常协作。
 
-NRI 插件是一个类似守护进程的实例。插件的单个实例会处理 NRI 所有的事件和请求，使用 Unix-domain socket 来进行数据传输和通信，NRI 定义了一套基于protobuf 的协议：NRI plugin protocal，并通过 ttRPC 进行实现。这样可以通过降低每条信息的开销提高通信效率，并且可以实现有状态的 NRI 插件。
+NRI 插件是一个类似守护进程的实例。插件的单个实例会处理 NRI 所有的事件和请求，使用 socket 来进行数据传输和通信，NRI 定义了一套基于 protobuf 的协议：NRI plugin protocal，并通过 ttRPC 进行实现。这样可以通过降低每条信息的开销提高通信效率，并且可以实现有状态的 NRI 插件。
 
 # 组件
 
