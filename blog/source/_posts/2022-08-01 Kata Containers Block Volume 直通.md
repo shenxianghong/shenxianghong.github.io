@@ -1,6 +1,6 @@
 ---
 title: "「 Kata Containers 」Block Volume 直通"
-excerpt: "Kata Containers stable-2.4 版本中 Block Volume 直通特性的实践验证"
+excerpt: "Kata Containers stable-2.4 版本中 Block Volume 直通特性与实践验证"
 cover: https://picsum.photos/0?sig=20220801
 thumbnail: /gallery/kata-containers/thumbnail.svg
 date: 2022-08-01

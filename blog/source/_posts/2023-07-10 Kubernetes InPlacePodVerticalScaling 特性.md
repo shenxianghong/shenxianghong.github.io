@@ -1,6 +1,6 @@
 ---
 title: "「 Kubernetes 」InPlacePodVerticalScaling 特性"
-excerpt: "Kubernetes v1.27 版本中的 Pod 资源原地纵向弹性伸缩特性的实践验证"
+excerpt: "Kubernetes v1.27 版本中的 Pod 资源原地纵向弹性伸缩特性与实践验证"
 cover: https://picsum.photos/0?sig=20230710
 thumbnail: /gallery/kubernetes/thumbnail.svg
 date: 2023-07-10
