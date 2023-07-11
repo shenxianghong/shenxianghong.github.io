@@ -20,7 +20,7 @@ tag:
 
 Kubernetes v1.27 版本中，添加了一个 alpha 版本的 feature gates — InPlacePodVerticalScaling，该特性允许用户在不重启容器的情况下调整分配给 Pod 的 CPU 或内存资源的大小。为了实现这一点，现在允许通过 patch 修改正在运行的 Pod resources 中 CPU 和内存资源。这也意味着 Pod spec 中 resources 字段不能再作为 Pod 实际资源的指标，监控工具类服务现在必须查看 Pod status 中的新字段。
 
-提案旨在改进 CRI，用于管理运行时容器的 CPU 和内存资源配置。扩展 UpdateContainerResources CRI，使其适用于 Windows 以及除 Linux 之外的其他未来运行时。此外，扩展 CRI 的 ContainerStatus API，以允许 Kubelet 发现容器上配置的当前资源。
+[KEP-1287 提案](https://github.com/kubernetes/enhancements/tree/master/keps/sig-node/1287-in-place-update-pod-resources)旨在改进 CRI，用于管理运行时容器的 CPU 和内存资源配置。扩展 UpdateContainerResources CRI，使其适用于 Windows 以及除 Linux 之外的其他未来运行时。此外，扩展 CRI 的 ContainerStatus API，允许 Kubelet 发现容器上配置的当前资源。
 
 # 初衷
 
@@ -30,9 +30,9 @@ Kubernetes v1.27 版本中，添加了一个 alpha 版本的 feature gates — I
 - Pod 负载显着下降，分配的资源未使用
 - Pod 资源设置不正确
 
-目前，由于 Pod 容器资源是不可变的，更改资源分配需要重新创建 Pod。虽然许多无状态工作负载可以承受此类中断，但有些工作负载更为敏感，尤其是在使用少量 Pod 副本时。此外，对于有状态或批量工作负载，Pod 重启会造成严重中断，导致可用性降低或运行成本升高。
+目前，由于 Pod 容器资源是不可变的，更改资源分配需要重新创建 Pod。虽然许多无状态工作负载可以接受此类中断，但有些工作负载更为敏感，尤其是在使用少量 Pod 副本时。此外，对于有状态或批量工作负载，Pod 重启会造成严重中断，导致可用性降低或运行成本升高。
 
-因此，需要一种不重新创建 Pod 或重新启动容器的情况下更改资源的方案，即 InPlacePodVerticalScaling 特性，该特性依赖于 CRI 接口来更新 Pod 容器的 CPU 和内存的 request 与 limit。
+因此，需要一种不重新创建 Pod 或重新启动容器的情况下更改资源的方案，即 InPlacePodVerticalScaling 特性，该特性依赖于 CRI 接口来更新 Pod 容器的 CPU 和内存的 requests 与 limits。
 
 当前的 CRI 接口有一些需要解决的缺点：
 
@@ -49,7 +49,7 @@ Kubernetes v1.27 版本中，添加了一个 alpha 版本的 feature gates — I
 此外，该提案为 CRI 设定了两个目标：
 
 - 修改 UpdateContainerResources API 以允许其适用于 Windows 容器以及除 Linux 之外的其他运行时管理的容器
-- CRI 提供机制来查询容器运行时以获取当前应用于容器的 CPU 和内存资源配置
+- CRI 提供查询容器运行时机制，用于获取当前应用于容器的 CPU 和内存资源配置
 
 该提案的另一个目标是更好地定义和记录处理资源更新时容器运行时的预期行为。
 
