@@ -48,7 +48,7 @@ Kubernetes v1.27 版本中，添加了一个 alpha 版本的 feature gates — I
 
 此外，该提案为 CRI 设定了两个目标：
 
-- 修改 UpdateContainerResources API 以允许其适用于 Windows 容器以及除 Linux 之外的其他运行时管理的容器
+- 修改 UpdateContainerResources API，使其适用于 Windows 容器以及除 Linux 之外的其他运行时管理的容器
 - CRI 提供查询容器运行时机制，用于获取当前应用于容器的 CPU 和内存资源配置
 
 该提案的另一个目标是更好地定义和记录处理资源更新时容器运行时的预期行为。
@@ -61,7 +61,7 @@ Kubernetes v1.27 版本中，添加了一个 alpha 版本的 feature gates — I
 - 无需重新启动即可更改 Init 容器的资源
 - 驱逐优先级较低的 Pod 以方便调整 Pod 大小
 - 更新扩展资源或除 CPU、内存之外的任何其他资源类型
-- 支持除 none 策略之外的 CPU/内存管理器策略
+- 支持除 None 策略之外的 CPU/内存管理器策略
 
 该提案的目标并非是定义实现这些功能的详细或具体方式，实现细节留给运行时来确定，在预期行为的限制范围内即可。
 
@@ -79,7 +79,7 @@ API 的核心思想是让 Pod spec 中的容器资源 requests 和 limits 可变
 
 **容器调整策略**
 
-调整策略允许更精细地控制 Pod 中的容器如何针对 CPU 和内存资源进行调整。为了实现这一点，允许用户指定 `resizePolicy`。针对调整 CPU 和内存可以设置以下重启策略：
+`resizePolicy` 调整策略允许更精细地控制 Pod 中的容器如何针对 CPU 和内存资源进行调整。针对调整 CPU 和内存可以设置以下重启策略：
 
 - `NotRequired`：默认值，如果可能的话，在不重新启动的情况下调整容器的大小
 - `RestartContainer`：重启容器并在重启后应用新资源
@@ -92,7 +92,7 @@ NotRequired 调整大小的重新启动策略并不能保证容器不会重新�
 
 **调整状态大小**
 
-除上述内容外，Pod status 中新增一个 resize 字段 ，用于表明 Kubelet 是否已接受或拒绝针对给定资源的建议调整大小操作。当  `spec.Containers[i].Resources.Requests` 与实际 `status.ContainerStatuses[i].Resources` 不同时给出具体的原因：
+Pod status 中新增一个 resize 字段 ，用于表明 Kubelet 是否已接受或拒绝针对给定资源的建议调整大小操作。当  `spec.Containers[i].Resources.Requests` 与实际 `status.ContainerStatuses[i].Resources` 不同时给出具体的原因：
 
 - `Proposed`：表示请求调整已被确认，并且请求已被验证和记录
 
@@ -106,7 +106,7 @@ NotRequired 调整大小的重新启动策略并不能保证容器不会重新�
 
 **CRI 变化**
 
-Kubelet 调用 UpdateContainerResources API，该 API 目前采用 runtimeapi.LinuxContainerResources 参数，但该不适用于 Windows，因此，此参数更改为 runtimeapi.ContainerResources，该参数与平台无关，并将包含特定于平台的信息，通过使 API 中传递的资源参数特定于目标运行时，使 UpdateContainerResources API 适用于 Windows 以及除 Linux 之外的任何其他未来运行时。
+Kubelet 调用 UpdateContainerResources API，该 API 目前采用 runtimeapi.LinuxContainerResources 参数，但不适用于 Windows。因此，此参数更改为 runtimeapi.ContainerResources，该参数与平台无关，并将包含特定于平台的信息，通过使 API 中传递的资源参数特定于目标运行时，使 UpdateContainerResources API 适用于 Windows 以及除 Linux 之外的任何其他未来运行时。
 
 此外，ContainerStatus API 新增 runtimeapi.ContainerResources 信息，以便允许 Kubelet 从运行时查询容器的 CPU 和内存限制配置，需要运行时返回当前应用于容器的 CPU 和内存资源值。
 
