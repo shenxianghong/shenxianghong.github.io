@@ -40,7 +40,7 @@ Kubernetes v1.27 版本中，添加了一个 alpha 版本的 feature gates — I
 - CRI 机制中缺少 Kubelet 查询并发现容器运行时中配置的 CPU 和内存限制
 - 处理 UpdateContainerResources API 的预期行为并没有非常明确定义或记录
 
-**目标**
+## 目标
 
 - 允许更改容器资源 requests 和 limits，而无需重新启动容器
 - 允许用户、VPA、StatefulSet、JobController 等角色决定在 Pod 无法就地调整资源大小时如何继续
@@ -53,7 +53,7 @@ Kubernetes v1.27 版本中，添加了一个 alpha 版本的 feature gates — I
 
 该提案的另一个目标是更好地定义和记录处理资源更新时容器运行时的预期行为。
 
-**非目标**
+## 非目标
 
 提案明确非目标是避免介入未能就地资源调整大小的 Pod 的整个生命周期。这应该由发起调整大小的参与者来处理。其他确定的非目标是：
 
@@ -77,7 +77,7 @@ API 的核心思想是让 Pod spec 中的容器资源 requests 和 limits 可变
 
 新增的 allocatedResources 字段代表正在进行的调整大小操作，由节点 checkpoint 中保留的状态驱动。在考虑节点上可用资源空间时，Kube-scheduler 应使用 Spec.Containers[i].Resources 和 Status.ContainerStatuses[i].AllocatedResources 中较大的值作为标准。
 
-**容器调整策略**
+## 容器调整策略
 
 `resizePolicy` 调整策略允许更精细地控制 Pod 中的容器如何针对 CPU 和内存资源进行调整。针对调整 CPU 和内存可以设置以下重启策略：
 
@@ -90,7 +90,7 @@ NotRequired 调整大小的重新启动策略并不能保证容器不会重新�
 
 如果 Pod 的 restartPolicy 为 `Never`，则 Pod 中所有容器的调整重启策略必须被设置为 `NotRequired`，也就是说，如果无法就地调整大小，则任何就地调整大小的动作都可能导致容器停止，且无法重新启动。
 
-**调整状态大小**
+## 调整状态大小
 
 Pod status 中新增一个 resize 字段 ，用于表明 Kubelet 是否已接受或拒绝针对给定资源的建议调整大小操作。当  `spec.Containers[i].Resources.Requests` 与实际 `status.ContainerStatuses[i].Resources` 不同时给出具体的原因：
 
@@ -104,7 +104,7 @@ Pod status 中新增一个 resize 字段 ，用于表明 Kubelet 是否已接受
 
 每当 Kube-apiserver 收到调整资源的请求时，它都会自动将该字段设为 Proposed。
 
-**CRI 变化**
+## CRI 变化
 
 Kubelet 调用 UpdateContainerResources API，该 API 目前采用 runtimeapi.LinuxContainerResources 参数，但不适用于 Windows。因此，此参数更改为 runtimeapi.ContainerResources，该参数与平台无关，并将包含特定于平台的信息，通过使 API 中传递的资源参数特定于目标运行时，使 UpdateContainerResources API 适用于 Windows 以及除 Linux 之外的任何其他未来运行时。
 
