@@ -37,7 +37,7 @@ Kubernetes v1.27 版本中，添加了一个 alpha 版本的 feature gates — I
 当前的 CRI 接口有一些需要解决的缺点：
 
 - UpdateContainerResources API 接受的更改 Linux 容器资源的参数无法适用于 Windows 容器或未来可能出现的其他非 Linux 运行时
-- CRI 机制中缺少 Kubelet 查询并发现容器运行时中配置的 CPU 和内存限制
+- CRI 中缺少 Kubelet 查询并发现容器运行时中配置的 CPU 和内存限制的机制
 - 处理 UpdateContainerResources API 的预期行为并没有非常明确定义或记录
 
 ## 目标
@@ -70,29 +70,29 @@ Kubernetes v1.27 版本中，添加了一个 alpha 版本的 feature gates — I
 API 的核心思想是让 Pod spec 中的容器资源 requests 和 limits 可变，对 Pod status 进行了扩展，以显示为 Pod 及其容器分配和应用的资源。
 
 - Pod spec 中 resources 变成纯粹的声明，表示 Pod 资源的所需状态
-- Pod status 中 containerStatuses 的 `allocatedResources` 字段反映了分配给 Pod 容器的资源
+- Pod status 中 containerStatuses 的 allocatedResources 字段反映了分配给 Pod 容器的资源
 - Pod status 中 containerStatuses 的 resources 字段反映了如同容器运行时所报告的、针对正运行的容器配置的实际资源 requests 和 limits
-- Pod status 中 `resize` 解释容器上给定资源发生的情况
+- Pod status 中 resize 字段解释容器上给定资源发生的情况
 
 
-新增的 allocatedResources 字段代表正在进行的调整大小操作，由节点 checkpoint 中保留的状态驱动。在考虑节点上可用资源空间时，Kube-scheduler 应使用 Spec.Containers[i].Resources 和 Status.ContainerStatuses[i].AllocatedResources 中较大的值作为标准。
+新增的 allocatedResources 字段代表正在进行的调整大小操作。在考虑节点上可用资源空间时，Kube-scheduler 应使用 Pod spec 中的容器资源 requests 和 allocatedResources 中较大的值作为标准。
 
 ## 容器调整策略
 
-`resizePolicy` 调整策略允许更精细地控制 Pod 中的容器如何针对 CPU 和内存资源进行调整。针对调整 CPU 和内存可以设置以下重启策略：
+resizePolicy 调整策略允许更精细地控制 Pod 中的容器如何针对 CPU 和内存资源进行调整。针对调整 CPU 和内存可以设置以下重启策略：
 
 - `NotRequired`：默认值，如果可能的话，在不重新启动的情况下调整容器的大小
 - `RestartContainer`：重启容器并在重启后应用新资源
 
 NotRequired 调整大小的重新启动策略并不能保证容器不会重新启动。如果容器无法在不重新启动的情况下应用新资源，则运行时可能会选择停止容器；此外，容器的应用程序可以处理 CPU 资源的调整而不必重启， 但是调整内存可能需要应用程序重启，因此容器也必须重启。
 
-如果同时更新具有不同策略的多种资源类型，则 `RestartContainer` 策略优先于 `NotRequired` 策略。
+如果同时更新具有不同策略的多种资源类型，则 RestartContainer 策略优先于 NotRequired 策略。
 
-如果 Pod 的 restartPolicy 为 `Never`，则 Pod 中所有容器的调整重启策略必须被设置为 `NotRequired`，也就是说，如果无法就地调整大小，则任何就地调整大小的动作都可能导致容器停止，且无法重新启动。
+如果 Pod 的 restartPolicy 为 Never，则 Pod 中所有容器的调整重启策略必须被设置为 NotRequired，也就是说，如果无法就地调整大小，则任何就地调整大小的动作都可能导致容器停止，且无法重新启动。
 
 ## 调整状态大小
 
-Pod status 中新增一个 resize 字段 ，用于表明 Kubelet 是否已接受或拒绝针对给定资源的建议调整大小操作。当  `spec.Containers[i].Resources.Requests` 与实际 `status.ContainerStatuses[i].Resources` 不同时给出具体的原因：
+Pod status 中新增一个 resize 字段 ，用于表明 Kubelet 是否已接受或拒绝针对给定资源的建议调整大小操作。当 Pod spec 和 status 中 resources 不同时给出具体的原因：
 
 - `Proposed`：表示请求调整已被确认，并且请求已被验证和记录
 
@@ -106,13 +106,13 @@ Pod status 中新增一个 resize 字段 ，用于表明 Kubelet 是否已接受
 
 ## CRI 变化
 
-Kubelet 调用 UpdateContainerResources API，该 API 目前采用 runtimeapi.LinuxContainerResources 参数，但不适用于 Windows。因此，此参数更改为 runtimeapi.ContainerResources，该参数与平台无关，并将包含特定于平台的信息，通过使 API 中传递的资源参数特定于目标运行时，使 UpdateContainerResources API 适用于 Windows 以及除 Linux 之外的任何其他未来运行时。
+Kubelet 会调用 UpdateContainerResources API，该 API 目前采用 LinuxContainerResources 参数，但不适用于 Windows。因此，此参数更改为 ContainerResources，该参数与平台无关，并将包含特定于平台的信息，通过使 API 中传递的资源参数特定于目标运行时，使 UpdateContainerResources API 适用于 Windows 以及除 Linux 之外的任何其他未来运行时。
 
-此外，ContainerStatus API 新增 runtimeapi.ContainerResources 信息，以便允许 Kubelet 从运行时查询容器的 CPU 和内存限制配置，需要运行时返回当前应用于容器的 CPU 和内存资源值。
+此外，ContainerStatus API 新增 ContainerResources 信息，以便允许 Kubelet 从运行时查询容器的 CPU 和内存限制配置，需要运行时返回当前应用于容器的 CPU 和内存资源值。
 
 为了实现上述理念，涉及到如下的改动：
 
-- 新的 protobuf 消息对象 ContainerResources，它封装了 LinuxContainerResources 和 WindowsContainerResources。只需将新的特定于运行时的资源结构添加到 ContainerResources 消息中，即可轻松扩展并适应未来的运行时
+- 新的 protobuf 消息对象 ContainerResources 封装了 LinuxContainerResources 和 WindowsContainerResources。后续只需追加新运行时的资源结构，即可轻松扩展并适应未来的运行时
 
   ```go
   // ContainerResources holds resource configuration for a container.
@@ -124,7 +124,7 @@ Kubelet 调用 UpdateContainerResources API，该 API 目前采用 runtimeapi.Li
   }
   ```
 
-- ContainerStatus 消息扩展为返回 ContainerResources，如下所示。这使得 Kubelet 能够使用 ContainerStatus API 查询运行时并发现当前应用于容器的资源
+- ContainerStatus 消息对象新增 ContainerResources 字段，用于 Kubelet 使用 ContainerStatus API 查询运行时并发现当前应用于容器的资源
 
   ```go
   @@ -914,6 +912,8 @@ message ContainerStatus {
@@ -156,3 +156,355 @@ Kubelet 调用 UpdateContainerResources API，该 API 目前采用 runtimeapi.Li
   ```
 
 - Kubelet 代码对此也做了相应更改
+
+# 设计细节
+
+## Kubelet 与 Kube-apiserver 交互
+
+对于新创建的 Pod，Kube-apiserver 将设置 allocatedResources 字段以匹配每个容器的资源请求量。当 Kubelet 接纳 Pod 时，allocatedResources 中的值用于确定是否有足够的空间接纳该 Pod，Kubelet 在接纳 Pod 时不会设置 allocatedResources。
+
+当请求调整 Pod 大小时，Kubelet 会尝试更新分配给 Pod 及其容器的资源。Kubelet 首先通过计算节点中所有 Pod（正在调整大小的 Pod 除外）分配的资源总和（即 allocatedResources）来检查新的所需资源是否适合节点可分配资源。对于调整大小的 Pod，它将新的所需资源（即 Spec.Containers[i].Resources.Requests）添加到总和中。
+
+- 如果新的所需资源适合，Kubelet 通过更新 allocatedResources 字段并将 `Status.Resize` 设置为 InProgress 来接受调整大小。然后，Kubelet 调用 UpdateContainerResources API 来更新容器资源限制。成功更新所有容器后，它会更新 Pod status 中的 resources 字段，以反映新的资源值并取消设置 resize 字段
+- 如果新的所需资源不适合，Kubelet 会将 resize 字段更新为 Infeasible，并且不会对调整大小进行操作
+- 如果新的所需资源适合但目前正在使用，Kubelet 会将 resize 字段更新为 Deferred
+
+除了上述内容之外，每当接受或拒绝调整大小时，以及如果可能的话，在调整大小过程中的关键步骤上，Kubelet 都会在 Pod 上生成事件。
+
+如果多个 Pod 需要调整大小，则会按照 Kubelet 定义的顺序（例如，按到达顺序）处理它们；Kube-scheduler 可以并行地将新的 Pod 分配给节点，如果发生竞争情况，也就是 Pod 调整大小后节点没有空间，Kubelet 将通过拒绝新 Pod 来解决该问题。
+
+**Kubelet 重启容忍度**
+
+如果 Kubelet 在处理 Pod 大小调整过程中发生重启，则在重新启动时，所有 Pod 都会以其当前的 allocatedResources 值被接纳，并在添加所有现有 Pod 后处理调整大小。这可确保调整大小不会影响之前的 Pod。
+
+## Kube-scheduler 和 Kube-apiserver 交互
+
+Kube-scheduler 使用 Pod spec 中 resources 的资源 request 来调度新的 Pod，并继续 watch Pod 更新并更新其缓存。为了计算分配给 Pod 的节点资源，它必须考虑待处理的调整大小，如 resize 所述：
+
+- 对于 resize 为 InProgress 或 Infeasible 的容器，可以简单地使用 allocatedResources 
+- 对于 resize 为 Proposed 的容器，假设调整大小被接受。因此，必须使用 Pod spec 中 resources 的资源 request 和 allocatedResources 值中较大的那个
+
+## 工作流
+
+```shell
+T=0: A new pod is created
+    - `spec.containers[0].resources.requests[cpu]` = 1
+    - all status is unset
+
+T=1: apiserver defaults are applied
+    - `spec.containers[0].resources.requests[cpu]` = 1
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1
+    - `status.resize[cpu]` = unset
+
+T=2: kubelet runs the pod and updates the API
+    - `spec.containers[0].resources.requests[cpu]` = 1
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1
+    - `status.resize[cpu]` = unset
+    - `status.containerStatuses[0].resources.requests[cpu]` = 1
+
+T=3: Resize #1: cpu = 1.5 (via PUT or PATCH or /resize)
+    - apiserver validates the request (e.g. `limits` are not below
+      `requests`, ResourceQuota not exceeded, etc) and accepts the operation
+    - apiserver sets `resize[cpu]` to "Proposed"
+    - `spec.containers[0].resources.requests[cpu]` = 1.5
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1
+    - `status.resize[cpu]` = "Proposed"
+    - `status.containerStatuses[0].resources.requests[cpu]` = 1
+
+T=4: Kubelet watching the pod sees resize #1 and accepts it
+    - kubelet sends patch {
+        `resourceVersion` = `<previous value>` # enable conflict detection
+        `status.containerStatuses[0].allocatedResources[cpu]` = 1.5
+        `status.resize[cpu]` = "InProgress"'
+      }
+    - `spec.containers[0].resources.requests[cpu]` = 1.5
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1.5
+    - `status.resize[cpu]` = "InProgress"
+    - `status.containerStatuses[0].resources.requests[cpu]` = 1
+
+T=5: Resize #2: cpu = 2
+    - apiserver validates the request and accepts the operation
+    - apiserver sets `resize[cpu]` to "Proposed"
+    - `spec.containers[0].resources.requests[cpu]` = 2
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1.5
+    - `status.resize[cpu]` = "Proposed"
+    - `status.containerStatuses[0].resources.requests[cpu]` = 1
+
+T=6: Container runtime applied cpu=1.5
+    - kubelet sends patch {
+        `resourceVersion` = `<previous value>` # enable conflict detection
+        `status.containerStatuses[0].resources.requests[cpu]` = 1.5
+        `status.resize[cpu]` = unset
+      }
+    - apiserver fails the operation with a "conflict" error
+
+T=7: kubelet refreshes and sees resize #2 (cpu = 2)
+    - kubelet decides this is possible, but not right now
+    - kubelet sends patch {
+        `resourceVersion` = `<updated value>` # enable conflict detection
+        `status.containerStatuses[0].resources.requests[cpu]` = 1.5
+        `status.resize[cpu]` = "Deferred"
+      }
+    - `spec.containers[0].resources.requests[cpu]` = 2
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1.5
+    - `status.resize[cpu]` = "Deferred"
+    - `status.containerStatuses[0].resources.requests[cpu]` = 1.5
+
+T=8: Resize #3: cpu = 1.6
+    - apiserver validates the request and accepts the operation
+    - apiserver sets `resize[cpu]` to "Proposed"
+    - `spec.containers[0].resources.requests[cpu]` = 1.6
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1.5
+    - `status.resize[cpu]` = "Proposed"
+    - `status.containerStatuses[0].resources.requests[cpu]` = 1.5
+
+T=9: Kubelet watching the pod sees resize #3 and accepts it
+    - kubelet sends patch {
+        `resourceVersion` = `<previous value>` # enable conflict detection
+        `status.containerStatuses[0].allocatedResources[cpu]` = 1.6
+        `status.resize[cpu]` = "InProgress"'
+      }
+    - `spec.containers[0].resources.requests[cpu]` = 1.6
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1.6
+    - `status.resize[cpu]` = "InProgress"
+    - `status.containerStatuses[0].resources.requests[cpu]` = 1.5
+
+T=10: Container runtime applied cpu=1.6
+    - kubelet sends patch {
+        `resourceVersion` = `<previous value>` # enable conflict detection
+        `status.containerStatuses[0].resources.requests[cpu]` = 1.6
+        `status.resize[cpu]` = unset
+      }
+    - `spec.containers[0].resources.requests[cpu]` = 1.6
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1.6
+    - `status.resize[cpu]` = unset
+    - `status.containerStatuses[0].resources.requests[cpu]` = 1.6
+
+T=11: Resize #4: cpu = 100
+    - apiserver validates the request and accepts the operation
+    - apiserver sets `resize[cpu]` to "Proposed"
+    - `spec.containers[0].resources.requests[cpu]` = 100
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1.6
+    - `status.resize[cpu]` = "Proposed"
+    - `status.containerStatuses[0].resources.requests[cpu]` = 1.6
+
+T=12: Kubelet watching the pod sees resize #4
+    - this node does not have 100 CPUs, so kubelet cannot accept
+    - kubelet sends patch {
+        `resourceVersion` = `<previous value>` # enable conflict detection
+        `status.resize[cpu]` = "Infeasible"'
+      }
+    - `spec.containers[0].resources.requests[cpu]` = 100
+    - `status.containerStatuses[0].allocatedResources[cpu]` = 1.6
+    - `status.resize[cpu]` = "Infeasible"
+    - `status.containerStatuses[0].resources.requests[cpu]` = 1.6
+```
+
+**CRI 工作流**
+
+下图概述了 Kubelet 使用 UpdateContainerResources 和 ContainerStatus CRI API 设置新的容器资源限制，并更新 Pod status 以响应用户更改 Pod spec 中所需资源的情况。
+
+```shell
+   +-----------+                   +-----------+                  +-----------+
+   |           |                   |           |                  |           |
+   | apiserver |                   |  kubelet  |                  |  runtime  |
+   |           |                   |           |                  |           |
+   +-----+-----+                   +-----+-----+                  +-----+-----+
+         |                               |                              |
+         |       watch (pod update)      |                              |
+         |------------------------------>|                              |
+         |     [Containers.Resources]    |                              |
+         |                               |                              |
+         |                            (admit)                           |
+         |                               |                              |
+         |                               |  UpdateContainerResources()  |
+         |                               |----------------------------->|
+         |                               |                         (set limits)
+         |                               |<- - - - - - - - - - - - - - -|
+         |                               |                              |
+         |                               |      ContainerStatus()       |
+         |                               |----------------------------->|
+         |                               |                              |
+         |                               |     [ContainerResources]     |
+         |                               |<- - - - - - - - - - - - - - -|
+         |                               |                              |
+         |      update (pod status)      |                              |
+         |<------------------------------|                              |
+         | [ContainerStatuses.Resources] |                              |
+         |                               |                              |
+```
+
+- Kubelet 在 ContainerManager 接口中调用 UpdateContainerResources() CRI API，通过在 API 的 ContainerResources 参数中指定这些值来为容器配置新的 CPU 和内存限制。 Kubelet 在调用此 CRI API 时设置特定于目标运行时平台的 ContainerResources 参数
+- Kubelet 在 ContainerManager 接口中调用 ContainerStatus() CRI API 来获取应用于 Container 的 CPU 和内存限制。它使用 ContainerStatus.Resources 返回的值来更新 Pod 状态中该容器的 ContainerStatuses[i].Resources.Limits
+
+## 注意事项
+
+- 如果节点 CPU Manager 策略为 static，则只允许整数值的 CPU 调整大小。如果请求非整数 CPU 调整大小，则将被拒绝，并在事件流中记录错误消息
+- 所有组件在计算 Pod 使用的资源时都将使用 allocatedResources
+- 如果在调整 Pod 大小时收到其他调整大小请求，这些请求将在当前完成后处理，并且调整大小会朝着最新的期望状态进行
+- 如果应用正在占用内存页，降低内存限制可能并不能很快生效。 Kubelet 将使用控制循环来设置接近使用的内存限制，以强制回收，并仅在限制达到所需值时更新 Pod status 中的 resources
+- Pod Overhead 的影响：Kubelet 将 Pod Overhead 添加到调整大小请求中，以确定是否可以就地调整大小
+- 目前，VPA 不应该与 CPU、内存上的 HPA 一起使用。此 KEP 不会改变该限制
+
+**受影响的组件**
+
+- Pod v1 core API
+- Admission Controllers：LimitRanger 和 ResourceQuota
+- Kubelet
+- Kube-scheduler
+- 其他使用相关语义的 Kubernetes 组件
+
+# 实践验证
+
+InPlacePodVerticalScaling 特性需要开启相应的 feature gates：<br>*不开启时，仍然视为 Pod spec 中容器资源 requests 和 limits 不可变更。*
+
+```shell
+# Kube-apiserver 服务其中参数中新增 --feature-gates=InPlacePodVerticalScaling=true
+$ cat /etc/kubernetes/manifests/kube-apiserver.yaml
+    - --tls-cert-file=/etc/kubernetes/pki/apiserver.crt
+    - --tls-private-key-file=/etc/kubernetes/pki/apiserver.key
+    - --feature-gates=InPlacePodVerticalScaling=true
+    
+# Kubelet 参数中新增 featureGates
+$ cat /var/lib/kubelet/config.yaml
+syncFrequency: 0s
+volumeStatsAggPeriod: 0s
+featureGates: 
+  InPlacePodVerticalScaling: true
+```
+
+测试服务如下：
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo
+spec:
+  containers:
+    - name: demo
+      image: ubuntu:18.04
+      command: ["/bin/bash", "-c", "tail -f /dev/null"]
+      resizePolicy:
+        - resourceName: cpu
+          restartPolicy: NotRequired
+        - resourceName: memory
+          restartPolicy: RestartContainer
+      resources:
+        limits:
+          memory: "200Mi"
+          cpu: "1000m"
+        requests:
+          memory: "200Mi"
+          cpu: "1000m"
+```
+
+Pod 运行后此时的状态信息为：
+
+```yaml
+spec:
+  containers:
+  - resizePolicy:
+    - resourceName: cpu
+      restartPolicy: NotRequired
+    - resourceName: memory
+      restartPolicy: RestartContainer
+    resources:
+      limits:
+        cpu: 1
+        memory: 200Mi
+      requests:
+        cpu: 1
+        memory: 200Mi
+status:
+  containerStatuses:
+  - allocatedResources:
+      cpu: 1000m
+      memory: 200Mi
+    resources:
+      limits:
+        cpu: 1
+        memory: 200Mi
+      requests:
+        cpu: 1
+        memory: 200Mi
+```
+
+此时，将 Pod CPU 由 1C 调整为 2C：
+
+```shell
+$ kubectl patch pod demo --patch '{"spec":{"containers":[{"name":"demo", "resources":{"requests":{"cpu":"2000m"}, "limits":{"cpu":"2000m"}}}]}}'
+```
+
+可以看到，Pod resize 处于 InProgress 状态，allocatedResources 已经调整为预期规格，status 的 resources 暂未变化。在调整结束后，status 的 resources 会跟进更新，resize 字段重置为空。
+
+```yaml
+spec:
+  containers:
+  - resizePolicy:
+    - resourceName: cpu
+      restartPolicy: NotRequired
+    - resourceName: memory
+      restartPolicy: RestartContainer
+    resources:
+      limits:
+        cpu: 2
+        memory: 200Mi
+      requests:
+        cpu: 2
+        memory: 200Mi
+status:
+  containerStatuses:
+  - allocatedResources:
+      cpu: "2"
+      memory: 200Mi
+    resources:
+      limits:
+        cpu: "1"
+        memory: 200Mi
+      requests:
+        cpu: "1"
+        memory: 200Mi
+  resize: InProgress
+```
+
+调整之后，Pod cgroup 信息也跟着发生变化：
+
+```shell
+$ cat /sys/fs/cgroup/cpu/kubepods.slice/kubepods-podab959cd5_f9e3_4b34_8051_861f7caca04c.slice/cpu.cfs_period_us
+100000
+
+$ cat /sys/fs/cgroup/cpu/kubepods.slice/kubepods-podab959cd5_f9e3_4b34_8051_861f7caca04c.slice/cpu.cfs_quota_us
+200000
+```
+
+由于该 Pod QoS 为 Guaranteed，所以是无法在 Pod 创建之后更改其 QoS 的：
+
+```shell
+$ kubectl patch pod demo --patch '{"spec":{"containers":[{"name":"demo", "resources":{"requests":{"cpu":"2000m"}, "limits":{"cpu":"3000m"}}}]}}'
+The Pod "demo" is invalid: metadata: Invalid value: "Burstable": Pod QoS is immutable
+```
+
+当修改请求中，资源无法满足时，除 Pod spec 的 resources 变化外，allocatedResources、status 的 resources 以及 cgroup 等信息均未变化，resize 状态为 Infeasible，服务仍在运行。
+
+当修改的资源 restartPolicy 为 RestartContainer 时，会触发一次重启操作：
+
+```shell
+$ kubectl get pod 
+NAME   READY   STATUS    RESTARTS       AGE
+demo   1/1     Running   1 (11s ago)    9m8s
+```
+
+当请求缩小内存资源时，通过容器内部 free 看到的内存仍未变化，但是 cgroup 中已经更新：
+
+```shell
+$ kubectl exec -it demo free 
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+              total        used        free      shared  buff/cache   available
+Mem:       12057632     2150040     6937804      167128     2969788     9441392
+Swap:             0           0           0
+
+$ cat /sys/fs/cgroup/memory/kubepods.slice/kubepods-poddf0fdfe6_59d6_4ffb_9a8d_0c014c182cd0.slice/memory.limit_in_bytes
+524288000
+```
+
