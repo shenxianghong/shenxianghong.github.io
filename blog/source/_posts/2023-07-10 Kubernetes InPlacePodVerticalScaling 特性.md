@@ -510,7 +510,7 @@ $ cat /sys/fs/cgroup/memory/kubepods.slice/kubepods-poddf0fdfe6_59d6_4ffb_9a8d_0
 
 **troubleshooting**
 
-当 Kubelet CPU Manager 策略为 static 时，调整 CPU 之后，发现并未生效
+当 Kubelet CPU Manager 策略为 static 时，调整 CPU 之后，发现并未生效，并且设置非整数的 CPU 时也未报错
 
 ```shell
 $ cat /sys/fs/cgroup/cpuset/kubepods-pod243ca361_5bde_4b8d_b5f6_522961c3ae11.slice:cri-containerd:9bfaa6d8f87fdcbe22851c1fdcbcb662e0fbf025e1299f2cf4507f09da95de4b/cpuset.cpus
