@@ -478,14 +478,14 @@ $ cat /sys/fs/cgroup/cpu/kubepods.slice/kubepods-podab959cd5_f9e3_4b34_8051_861f
 200000
 ```
 
-由于该 Pod QoS 为 Guaranteed，所以是无法在 Pod 创建之后更改其 QoS 的：
+InPlacePodVerticalScaling 特性不允许修改 Pod QoS：
 
 ```shell
 $ kubectl patch pod demo --patch '{"spec":{"containers":[{"name":"demo", "resources":{"requests":{"cpu":"2000m"}, "limits":{"cpu":"3000m"}}}]}}'
 The Pod "demo" is invalid: metadata: Invalid value: "Burstable": Pod QoS is immutable
 ```
 
-当修改请求中，资源无法满足时，除 Pod spec 的 resources 变化外，allocatedResources、status 的 resources 以及 cgroup 等信息均未变化，resize 状态为 Infeasible，服务仍在运行。
+当修改请求中，资源无法满足时，除 Pod spec 的 resources 变化外，allocatedResources、status 的 resources 以及 cgroup 等信息均未变化，resize 状态为 Infeasible，服务仍在运行，当集群资源满足时会自动调整。
 
 当修改的资源 restartPolicy 为 RestartContainer 时，会触发一次重启操作：
 
@@ -506,5 +506,29 @@ Swap:             0           0           0
 
 $ cat /sys/fs/cgroup/memory/kubepods.slice/kubepods-poddf0fdfe6_59d6_4ffb_9a8d_0c014c182cd0.slice/memory.limit_in_bytes
 524288000
+```
+
+**troubleshooting**
+
+当 Kubelet CPU Manager 策略为 static 时，调整 CPU 之后，发现并未生效
+
+```shell
+$ cat /sys/fs/cgroup/cpuset/kubepods-pod243ca361_5bde_4b8d_b5f6_522961c3ae11.slice:cri-containerd:9bfaa6d8f87fdcbe22851c1fdcbcb662e0fbf025e1299f2cf4507f09da95de4b/cpuset.cpus
+3
+
+$ kubectl patch pod demo --patch '{"spec":{"containers":[{"name":"demo", "resources":{"requests":{"cpu":"3000m"}, "limits":{"cpu":"3000m"}}}]}}'
+
+# 调整 CPU 后，CPUset 未发生变化，但是 CPU 限制配额却更新了
+$ cat /sys/fs/cgroup/cpuset/kubepods-pod243ca361_5bde_4b8d_b5f6_522961c3ae11.slice:cri-containerd:9bfaa6d8f87fdcbe22851c1fdcbcb662e0fbf025e1299f2cf4507f09da95de4b/cpuset.cpus
+3
+$ cat /sys/fs/cgroup/cpu/kubepods.slice/kubepods-pod243ca361_5bde_4b8d_b5f6_522961c3ae11.slice/cpu.cfs_quota_us
+300000
+$ cat /sys/fs/cgroup/cpu/kubepods.slice/kubepods-pod243ca361_5bde_4b8d_b5f6_522961c3ae11.slice/cpu.cfs_period_us
+100000
+
+# Pod 可用 CPU 也仍然为 1，通过 stress 模拟也是一样
+$ kubectl exec -it demo nproc
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl exec [POD] -- [COMMAND] instead.
+1
 ```
 
