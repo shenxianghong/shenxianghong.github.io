@@ -23,6 +23,8 @@ tag:
 
 Kata Containers 支持的 hypervisor 有 QEMU、Cloud Hypervisor、Firecracker、ACRN 以及 DragonBall，其中 DragonBall 是 Kata Containers 3.0 为新增的 runtime-rs 组件引入的内置 hypervisor，而 runtime-rs 的整体架构区别于当前的 runtime，不在此详读 DragonBall 实现。
 
+***目前，暂时走读 QEMU 实现，后续补充其他 hypervisor。***
+
 ```go
 // qemu is an Hypervisor interface implementation for the Linux qemu hypervisor.
 type qemu struct {
@@ -43,6 +45,9 @@ type qemu struct {
 	// PCIeRootPort: [hypervisor].pcie_root_port
 	state QemuState
 
+    // path
+	// - root 权限: /run/vc/vm/<qemuID>/qmp.sock
+	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/qmp.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
 	qmpMonitorCh qmpChannel
 
 	// QEMU 进程的配置参数
@@ -375,69 +380,8 @@ type Config struct {
 	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/qemu.log（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
 	LogFile string
 
+	// 基于上述的 QEMU 配置项，构建 -name、-uuid、-machine、-cpu、-qmp、-m、-device、-rtc、-global、-pflash 等参数信息
 	qemuParams []string
-}
-```
-
-```go
-type cloudHypervisor struct {
-	console         console.Console
-	virtiofsDaemon  VirtiofsDaemon
-	APIClient       clhClient
-	ctx             context.Context
-	id              string
-	netDevices      *[]chclient.NetConfig
-	devicesIds      map[string]string
-	netDevicesFiles map[string][]*os.File
-	vmconfig        chclient.VmConfig
-	state           CloudHypervisorState
-	config          HypervisorConfig
-}
-```
-
-```go
-// firecracker is an Hypervisor interface implementation for the firecracker VMM.
-type firecracker struct {
-	console console.Console
-	ctx     context.Context
-
-	pendingDevices []firecrackerDevice // Devices to be added before the FC VM ready
-
-	firecrackerd *exec.Cmd              //Tracks the firecracker process itself
-	fcConfig     *types.FcConfig        // Parameters configured before VM starts
-	connection   *client.FirecrackerAPI //Tracks the current active connection
-
-	id               string //Unique ID per pod. Normally maps to the sandbox id
-	vmPath           string //All jailed VM assets need to be under this
-	chrootBaseDir    string //chroot base for the jailer
-	jailerRoot       string
-	socketPath       string
-	hybridSocketPath string
-	netNSPath        string
-	uid              string //UID and GID to be used for the VMM
-	gid              string
-	fcConfigPath     string
-
-	info   FirecrackerInfo
-	config HypervisorConfig
-	state  firecrackerState
-
-	jailed bool //Set to true if jailer is enabled
-}
-```
-
-```go
-// Acrn is an Hypervisor interface implementation for the Linux acrn hypervisor.
-type Acrn struct {
-	sandbox    *Sandbox
-	ctx        context.Context
-	arch       acrnArch
-	store      persistapi.PersistDriver
-	id         string
-	state      AcrnState
-	acrnConfig Config
-	config     HypervisorConfig
-	info       AcrnInfo
 }
 ```
 
@@ -445,11 +389,32 @@ type Acrn struct {
 
 **准备创建 VM 所需的配置信息**
 
-### QEMU
-
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L490)
 
 1. 根据 QEMU 实现的 hypervisor 配置项初始化对应架构下的 qemu，其中包含了 qemu-system（govmmQemu.Config）和 virtiofsd/nydusd（VirtiofsDaemon）进程的配置参数
+
+## StartVM
+
+**启动 VM**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L800)
+
+1. 以当前用户组信息创建 /run/vc/vm/\<sandboxID\> 目录（如果不存在），如果为 rootless 权限，则为 <XDG_RUNTIME_DIR>/run/vc/vm/\<sandboxID\>（XDG_RUNTIME_DIR 默认为 /run/user/\<UID\><br>*下称 vmPath*
+1. 如果启用 [hypervisor].enable_debug，则追加 qemuConfig 的 LogFile 参数为 \<vmPath\>/qemu.log
+1. 如果未启用 [hypervisor].disable_selinux，则向 /proc/thread-self/attr/exec （如果其不存在，则为 /proc/self/task/\<PID\>/attr/exec）中写入 OCI spec.Process.SelinuxLabel 中声明的内容，VM 启动之后会重新置空
+1. 如果 [hypervisor].shared_fs 为 virtiofs-fs 或者 virtio-fs-nydus，则调用 VirtiofsDaemon 的 **Start**，启动 virtiofsd 进程，回写 virtiofsd PID 至 qemustate 中
+1. 构建 QEMU 进程启动参数、执行命令的文件句柄、属性、标准输出等信息，调用 qemu-system 可执行文件路径，启动 qemu-system 进程。如果启用 [hypervisor].enable_debug 并且指定了日志文件，则读取日志文件，追加错误信息
+1. 等待 VM 启用并正常运行
+   1. 关停当前的 QMP 服务
+   1. 启动新的 QMP 服务，监听 qmp.sock，获得并校验 QEMU 版本是否大于 5.x
+   1. 调用 QMP 的 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+
+1. 如果 VM 从模板启动
+   1. 创建 QMP 服务（如果不存在），监听 qmp.sock，获得并校验 QEMU 版本是否大于 5.x，并执行 QMP 的 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+   1. 调用 QMP 的 migrate-set-capabilities 命令，设置 VM 的迁移能力为 x-ignore-shared，表示在迁移过程中忽略共享内存，避免数据的错误修改和不一致性
+   1. 调用 QMP 的 migrate-incoming 命令，用于将迁移过来的 VM 恢复到 URI 为 exec:cat \<[factory].template_path/state\> 中
+   1. 调用 QMP 的 query-migrate 命令，查询迁移进度，直至状态为完成 —  completed
+
 
 # VirtiofsDaemon
 
