@@ -400,21 +400,63 @@ type Config struct {
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L800)
 
 1. 以当前用户组信息创建 /run/vc/vm/\<sandboxID\> 目录（如果不存在），如果为 rootless 权限，则为 <XDG_RUNTIME_DIR>/run/vc/vm/\<sandboxID\>（XDG_RUNTIME_DIR 默认为 /run/user/\<UID\><br>*下称 vmPath*
-1. 如果启用 [hypervisor].enable_debug，则追加 qemuConfig 的 LogFile 参数为 \<vmPath\>/qemu.log
+
+1. 如果启用 [hypervisor].enable_debug，则设置 qemuConfig.LogFile 为 \<vmPath\>/qemu.log
+
 1. 如果未启用 [hypervisor].disable_selinux，则向 /proc/thread-self/attr/exec （如果其不存在，则为 /proc/self/task/\<PID\>/attr/exec）中写入 OCI spec.Process.SelinuxLabel 中声明的内容，VM 启动之后会重新置空
+
 1. 如果 [hypervisor].shared_fs 为 virtiofs-fs 或者 virtio-fs-nydus，则调用 VirtiofsDaemon 的 **Start**，启动 virtiofsd 进程，回写 virtiofsd PID 至 qemustate 中
-1. 构建 QEMU 进程启动参数、执行命令的文件句柄、属性、标准输出等信息，调用 qemu-system 可执行文件路径，启动 qemu-system 进程。如果启用 [hypervisor].enable_debug 并且指定了日志文件，则读取日志文件，追加错误信息
-1. 等待 VM 启用并正常运行
+
+1. 构建 QEMU 进程的启动参数、执行命令的文件句柄、属性、标准输出等信息，调用 qemu-system 可执行文件路径，启动 qemu-system 进程。如果启用 [hypervisor].enable_debug 并且配置中指定了日志文件路径，则读取日志内容，追加错误信息
+
+1. 等待 VM 处于正常运行状态
    1. 关停当前的 QMP 服务
-   1. 启动新的 QMP 服务，监听 qmp.sock，获得并校验 QEMU 版本是否大于 5.x
-   1. 调用 QMP 的 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+   1. 启动新的 QMP 服务，监听 qmp.sock，校验 QEMU 版本是否大于 5.x
+   1. 向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式，命令无报错则视为 VM 处于正常运行状态
 
 1. 如果 VM 从模板启动
-   1. 创建 QMP 服务（如果不存在），监听 qmp.sock，获得并校验 QEMU 版本是否大于 5.x，并执行 QMP 的 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
-   1. 调用 QMP 的 migrate-set-capabilities 命令，设置 VM 的迁移能力为 x-ignore-shared，表示在迁移过程中忽略共享内存，避免数据的错误修改和不一致性
-   1. 调用 QMP 的 migrate-incoming 命令，用于将迁移过来的 VM 恢复到 URI 为 exec:cat \<[factory].template_path/state\> 中
-   1. 调用 QMP 的 query-migrate 命令，查询迁移进度，直至状态为完成 —  completed
+   1. 创建 QMP 服务（如果不存在），监听 qmp.sock，校验 QEMU 版本是否大于 5.x，向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+   1. 向 QMP 服务发送 migrate-set-capabilities 命令，其中 capabilities 参数为 {"capability": "x-ignore-shared", "state": true}，表示在迁移过程中忽略共享内存，避免数据的错误修改和不一致性
+   1. 向 QMP 服务发送 migrate-incoming 命令，其中 uri 参数为 exec:cat \<[factory].template_path/state\>，用于将迁移过来的 VM 恢复到指定 uri 中
+   1. 向 QMP 服务发送 query-migrate 命令，查询迁移进度，直至完成
 
+1. 如果启用 [hypervisor].enable_virtio_mem
+
+   *如果 QMP 添加设备失败，且报错中包含 Cannot allocate memory，则需要执行 echo 1 > /proc/sys/vm/overcommit_memory 解决*
+
+   1. 默认 target 为空，share 为 false，memoryBack 为 memory-backend-ram。如果启用 [hypervisor].enable_hugepages，则 target 为 /dev/hugepages，memoryBack 为 memory-backend-file，share 为 true；否则，校验是否禁用了 [hypervisor].enable_vhost_user_store（Vhost-user-blk/scsi 依赖大页内存），如果 [hypervisor].shared_fs 为 virtiofs-fs、virtio-fs-nydus 或者指定了 [hypervisor].file_mem_backend，则 target 为 qemuConfig.Memory.Path，memoryBack 为 memory-backend-file。如果 qemuConfig.Knobs.MemShared 为 true，则 share 也为 true
+   1. 向 QEMU 维护的 bridge 设备中新增名为 virtiomem-dev 的 PCI 设备，并获得递增的地址索引
+   1. 向 QMP 服务发送 object-add 命令，其中 qom-type、mem-path 和 share 参数分别为步骤 1 的 memoryBack、target 和 share，id 参数为 virtiomem，size 参数为 [hypervisor].default_maxmemory 和 [hypervisor].default_memory 差值（取舍至接近 4 的倍数），用于向 QEMU 实例中添加一个新的对象
+   1. 向 QMP 服务发送 device_add 命令，其中 driver 参数为 virtio-mem-pci，id 参数为 virtiomem0，memdev 参数为 virtiomem，bus 和 addr 参数分别为步骤 2 返回的 bridgeID 和 bridgeAddr，用于向 QEMU 示例中添加指定的 virio-mem 设备
+
+
+## StopVM
+
+**关闭 VM**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L972)
+
+1. 创建 QMP 服务（如果不存在），监听 qmp.sock，校验 QEMU 版本是否大于 5.x，向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+2. 如果禁止 VM 关闭（agent 的 init 会返回 disableVMShutdown，用作 StopVM 的入参），则调用 **GetPids**，获得所有相关的 PIDs，kill 掉其中的 QEMU 进程（即列表中索引为 0 的 PID）；否则，则向 QMP 服务发送 quit 命令，关闭 QEMU 实例，关闭 VM
+3. 如果 [hypervisor].shared_fs 为 virtiofs-fs 或者 virtio-fs-nydus，调用 VirtiofsDaemon 的 **Stop**，关停 virtiofsd 服务
+
+## PauseVM
+
+**暂停 VM**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2038)
+
+1. 创建 QMP 服务（如果不存在），监听 qmp.sock，校验 QEMU 版本是否大于 5.x，向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+2. 向 QMP 服务发送 stop 命令，暂停 VM
+
+## ResumeVM
+
+**恢复 VM**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2045)
+
+1. 创建 QMP 服务（如果不存在），监听 qmp.sock，校验 QEMU 版本是否大于 5.x，向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+2. 向 QMP 服务发送 cont 命令，恢复 VM
 
 # VirtiofsDaemon
 
