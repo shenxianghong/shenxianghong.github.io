@@ -45,9 +45,8 @@ type qemu struct {
 	// PCIeRootPort: [hypervisor].pcie_root_port
 	state QemuState
 
-    // path
-	// - root 权限: /run/vc/vm/<qemuID>/qmp.sock
-	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/qmp.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	// path
+	// <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/qmp.sock
 	qmpMonitorCh qmpChannel
 
 	// QEMU 进程的配置参数
@@ -95,12 +94,12 @@ type Config struct {
 	Groups []uint32
 
 	// Name is the qemu guest name
-	// -name 参数，例如 sandbox-4230a13dac935c3fef99f8b15d27d493ff1de957224043354374efd50bdfeeb7
-	// sandbox-<qemuID>
+	// -name 参数
+	// sandbox-<sandboxID>
 	Name string
 
 	// UUID is the qemu process UUID.
-	// -uuid 参数，例如 -uuid 42f0c7b9-7aa9-4581-a26c-2d84b40f1190
+	// -uuid 参数
 	// 随机生成
 	UUID string
 
@@ -131,11 +130,9 @@ type Config struct {
 	Machine Machine
 
 	// QMPSockets is a slice of QMP socket description.
-	// -qmp 参数，例如 -qmp unix:/run/vc/vm/<qemuid>/qmp.sock,server=on,wait=off
+	// -qmp 参数，例如 -qmp unix:/run/vc/vm/<sandboxID>/qmp.sock,server=on,wait=off
 	// Type: unix
-	// Name: 
-	// - root 权限: /run/vc/vm/<qemuID>/qmp.sock
-	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/qmp.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	// Name: <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/qmp.sock
 	// Server: true
 	// NoWait: true
 	QMPSockets []QMPSocket
@@ -160,15 +157,13 @@ type Config struct {
 	// 
 	// =========== Console ===========
 	// - 禁用 [hypervisor].use_legacy_serial
-	//   例如 -device virtio-serial-pci,disable-modern=true,id=serial0 -device virtconsole,chardev=charconsole0,id=console0 -chardev socket,id=charconsole0,path=/run/vc/vm/<qemuID>/console.sock,server=on,wait=off
+	//   例如 -device virtio-serial-pci,disable-modern=true,id=serial0 -device virtconsole,chardev=charconsole0,id=console0 -chardev socket,id=charconsole0,path=/run/vc/vm/<sandboxID>/console.sock,server=on,wait=off
 	//   CharDevice
 	//     Driver: virtconsole
 	//     Backend: socket
 	//     DeviceID: console0
 	//     ID: charconsole0
-	//     Path: 
-	//     - root 权限: /run/vc/vm/<qemuID>/console.sock
-	//     - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/console.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	//     Path: <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/console.sock
 	//   SerialDevice
 	//     Driver: virtio-serial
 	//     ID: serial0
@@ -177,15 +172,13 @@ type Config struct {
 	//     - arm64: false
 	//     MaxPorts: 2
 	// - 启用 [hypervisor].use_legacy_serial
-	//   例如 -serial chardev:charconsole0 -chardev socket,id=charconsole0,path=/run/vc/vm/<qemuID>/console.sock,server=on,wait=off
+	//   例如 -serial chardev:charconsole0 -chardev socket,id=charconsole0,path=/run/vc/vm/<sandboxID>/console.sock,server=on,wait=off
 	//   CharDevice
 	//     Driver: serial
 	//     Backend: socket
 	//     DeviceID: console0
 	//     ID: charconsole0
-	//     Path: 
-	//     - root 权限: /run/vc/vm/<qemuID>/console.sock
-	//     - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/console.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	//     Path: <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/console.sock
 	//   LegacySerialDevice
 	//     Chardev: charconsole0
 	// 
@@ -278,7 +271,7 @@ type Config struct {
 	RTC RTC
 
 	// VGA is the qemu VGA mode.
-	// -vga 参数，例如 -vga none
+	// -vga 参数
 	// none
 	VGA string
 
@@ -326,7 +319,7 @@ type Config struct {
 	SMP SMP
 
 	// GlobalParam is the -global parameter.
-	// -global 参数，例如 -global kvm-pit.lost_tick_policy=discard
+	// -global 参数
 	// kvm-pit.lost_tick_policy=discard
 	GlobalParam string
 
@@ -369,21 +362,60 @@ type Config struct {
 	IOThreads []IOThread
 
 	// PidFile is the -pidfile parameter
-	// -pidfile 参数，例如 -pidfile /run/vc/vm/<qemuID>/pid
-	// - root 权限: /run/vc/vm/<qemuID>/pid
-	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/pid（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	// -pidfile 参数
+	// <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/pid
 	PidFile string
 
 	// LogFile is the -D parameter
-	// -D 参数，例如 -D /run/vc/vm/<qemuID>/qemu.log
-	// - root 权限: /run/vc/vm/<qemuID>/qemu.log
-	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/qemu.log（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	// -D 参数
+	// <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/qemu.log
 	LogFile string
 
 	// 基于上述的 QEMU 配置项，构建 -name、-uuid、-machine、-cpu、-qmp、-m、-device、-rtc、-global、-pflash 等参数信息
 	qemuParams []string
 }
 ```
+
+## qmpSetup
+
+**初始化 QMP 服务**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L1106)
+
+1. 如果当前 QMP 服务已经就绪，则直接返回
+2. 启动 goroutine，处理 QMP 事件，如果为 GUEST_PANICKED 事件，并且指定了 [hypervisor].guest_memory_dump_path，则转储 VM 的内存信息
+   1. 保存 sandbox 元数据信息
+      1. 创建 [hypervisor].guest_memory_dump_path/\<sandboxID\>/state 目录（如果不存在）
+      2. 将 \<storage.PersistDriver.RunStoragePath\>/\<sandboxID\> 目录下的内容拷贝至 \[hypervisor].guest_memory_dump_path/\<sandboxID\>/state 目录中
+      3. 将 hypervisor 的配置信息写入 \[hypervisor].guest_memory_dump_path/\<sandboxID\>/hypervisor.conf 文件中
+      4. 执行 qemu-system --version，获取 QEMU 的版本信息，写入 \[hypervisor].guest_memory_dump_path/\<sandboxID\>/hypervisor.version 文件中
+   2. 校验 \[hypervisor].guest_memory_dump_path/\<sandboxID\> 目录空间是否为 VM 内存（静态 + 热添加）的两倍以上
+   3. 向 QMP 服务发送 dump-guest-memory 命令，其中 protocol 参数为 file:\[hypervisor].guest_memory_dump_path/\<sandboxID\>/vmcore-\<currentTime\>.elf，paging 参数为 [hypervisor].guest_memory_dump_paging，format 参数为 elf，将 VM 中的内存内容转储到指定的文件中
+3. 启动 QMP 服务，监听 qmp.sock，校验 QEMU 版本是否大于 5.x
+4. 向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式，命令无报错则视为 VM 处于正常运行状态
+
+## hotplugDevice
+
+**VM 设备热插拔**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L1799)
+
+***block***
+
+***CPU***
+
+1. 调用 **qmpSetup**，初始化 QMP 服务
+2. 如果为热插
+   1. 判断当前 VM 的 CPU 数量与待热插的 CPU 数量之和是否超出 [hypervisor].default_maxvcpus 限制，如果超出，不报错中断，而是热插至最大数量限制
+   2. 向 QMP 服务发送 query-hotpluggable-cpus 命令，获得 host 上可热插的 CPU 信息
+
+***VFIO***
+
+***memory***
+
+***endpoint***
+
+***vhost-user***
 
 ## CreateVM
 
@@ -399,25 +431,23 @@ type Config struct {
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L800)
 
-1. 以当前用户组信息创建 /run/vc/vm/\<sandboxID\> 目录（如果不存在），如果为 rootless 权限，则为 <XDG_RUNTIME_DIR>/run/vc/vm/\<sandboxID\>（XDG_RUNTIME_DIR 默认为 /run/user/\<UID\><br>*下称 vmPath*
+1. 以当前用户组信息创建 \<storage.PersistDriver.RunVMStoragePath\>/\<sandboxID\> 目录（如果不存在）
 
-1. 如果启用 [hypervisor].enable_debug，则设置 qemuConfig.LogFile 为 \<vmPath\>/qemu.log
+1. 如果启用 [hypervisor].enable_debug，则设置 qemuConfig.LogFile 为 \<storage.PersistDriver.RunVMStoragePath\>/\<sandboxID\>/qemu.log
 
 1. 如果未启用 [hypervisor].disable_selinux，则向 /proc/thread-self/attr/exec （如果其不存在，则为 /proc/self/task/\<PID\>/attr/exec）中写入 OCI spec.Process.SelinuxLabel 中声明的内容，VM 启动之后会重新置空
 
 1. 如果 [hypervisor].shared_fs 为 virtiofs-fs 或者 virtio-fs-nydus，则调用 VirtiofsDaemon 的 **Start**，启动 virtiofsd 进程，回写 virtiofsd PID 至 qemustate 中
 
-1. 构建 QEMU 进程的启动参数、执行命令的文件句柄、属性、标准输出等信息，调用 qemu-system 可执行文件路径，启动 qemu-system 进程。如果启用 [hypervisor].enable_debug 并且配置中指定了日志文件路径，则读取日志内容，追加错误信息
+1. 构建 QEMU 进程的启动参数、执行命令的文件句柄、属性、标准输出等信息，执行 qemu-system 可执行文件，启动 qemu-system 进程。如果启用 [hypervisor].enable_debug 并且配置中指定了日志文件路径，则读取日志内容，追加错误信息
 
-1. 等待 VM 处于正常运行状态
-   1. 关停当前的 QMP 服务
-   1. 启动新的 QMP 服务，监听 qmp.sock，校验 QEMU 版本是否大于 5.x
-   1. 向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式，命令无报错则视为 VM 处于正常运行状态
+1. 关停当前的 QMP 服务，执行类似于 **qmpSetup** 的流程，初始化 QMP 服务，无报错即视为 VM 处于正常运行状态
 
 1. 如果 VM 从模板启动
-   1. 创建 QMP 服务（如果不存在），监听 qmp.sock，校验 QEMU 版本是否大于 5.x，向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+
+   1. 调用 **qmpSetup**，初始化 QMP 服务
    1. 向 QMP 服务发送 migrate-set-capabilities 命令，其中 capabilities 参数为 {"capability": "x-ignore-shared", "state": true}，表示在迁移过程中忽略共享内存，避免数据的错误修改和不一致性
-   1. 向 QMP 服务发送 migrate-incoming 命令，其中 uri 参数为 exec:cat \<[factory].template_path/state\>，用于将迁移过来的 VM 恢复到指定 uri 中
+   1. 向 QMP 服务发送 migrate-incoming 命令，其中 uri 参数为 exec:cat [factory].template_path/state，用于将迁移过来的 VM 恢复到指定 uri 中
    1. 向 QMP 服务发送 query-migrate 命令，查询迁移进度，直至完成
 
 1. 如果启用 [hypervisor].enable_virtio_mem
@@ -436,7 +466,7 @@ type Config struct {
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L972)
 
-1. 创建 QMP 服务（如果不存在），监听 qmp.sock，校验 QEMU 版本是否大于 5.x，向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+1. 调用 **qmpSetup**，初始化 QMP 服务
 2. 如果禁止 VM 关闭（agent 的 init 会返回 disableVMShutdown，用作 StopVM 的入参），则调用 **GetPids**，获得所有相关的 PIDs，kill 掉其中的 QEMU 进程（即列表中索引为 0 的 PID）；否则，则向 QMP 服务发送 quit 命令，关闭 QEMU 实例，关闭 VM
 3. 如果 [hypervisor].shared_fs 为 virtiofs-fs 或者 virtio-fs-nydus，调用 VirtiofsDaemon 的 **Stop**，关停 virtiofsd 服务
 
@@ -446,8 +476,17 @@ type Config struct {
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2038)
 
-1. 创建 QMP 服务（如果不存在），监听 qmp.sock，校验 QEMU 版本是否大于 5.x，向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+1. 调用 **qmpSetup**，初始化 QMP 服务
 2. 向 QMP 服务发送 stop 命令，暂停 VM
+
+## SaveVM
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2125)
+
+1. 调用 **qmpSetup**，初始化 QMP 服务
+1. 如果 VM 启动后作为模板，则向 QMP 服务发送 migrate-set-capabilities 命令，其中 capabilities 参数为 {"capability": "x-ignore-shared", "state": true}，表示在迁移过程中忽略共享内存，避免数据的错误修改和不一致性
+1. 向 QMP 服务发送 migrate 命令，其中 uri 参数为 exec:cat>[factory].template_path/state，将 VM 迁移到指定 uri 中
+4. 向 QMP 服务发送 query-migrate 命令，查询迁移进度，直至完成
 
 ## ResumeVM
 
@@ -455,8 +494,36 @@ type Config struct {
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2045)
 
-1. 创建 QMP 服务（如果不存在），监听 qmp.sock，校验 QEMU 版本是否大于 5.x，向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式
+1. 调用 **qmpSetup**，初始化 QMP 服务
 2. 向 QMP 服务发送 cont 命令，恢复 VM
+
+## AddDevice
+
+**向 VM 中添加设备**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2053)
+
+1. 根据不同设备类型，初始化对应的设备对象 — govmmQemu.Device，追加到 qemuConfig.Devices 中
+
+## HotplugAddDevice
+
+**热添加指定设备至 VM 中**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L1824)
+
+1. 调用 **hotplugDevice**，热添加指定设备至 VM 中
+
+## HotplugRemoveDevice
+
+**热移除 VM 中的指定设备**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L1837)
+
+1. 调用 **hotplugDevice**，热移除 VM 中的指定设备
+
+## ResizeMemory
+
+## ResizeVCPUs
 
 # VirtiofsDaemon
 
@@ -476,8 +543,7 @@ type virtiofsd struct {
 	path string
 
 	// socketPath where daemon will serve
-	// - root 权限: /run/vc/vm/<qemuID>/vhost-fs.sock
-	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/vhost-fs.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	// <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/vhost-fs.sock
 	socketPath string
 
 	// cache size for virtiofsd
@@ -485,8 +551,7 @@ type virtiofsd struct {
 	cache string
 
 	// sourcePath path that daemon will help to share
-	// - root 权限: /run/kata-containers/shared/sandboxes/<containerID>/shared
-	// - rootless 权限: <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/<containerID>/shared（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	// <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/<containerID>/shared
 	sourcePath string
 
 	// extraArgs list of extra args to append to virtiofsd command
@@ -505,16 +570,13 @@ type nydusd struct {
 	// [hypervisor].shared_fs
 	path string
   
-	// - root 权限: /run/vc/vm/<qemuID>/vhost-fs.sock
-	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/vhost-fs.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	// <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/vhost-fs.sock
 	sockPath string
 
-	// - root 权限: /run/vc/vm/<qemuID>/nydusd-api.sock
-	// - rootless 权限: <XDG_RUNTIME_DIR>/run/vc/vm/<qemuID>/nydusd-api.sock（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	// <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/nydusd-api.sock
 	apiSockPath string
 
-	// - root 权限: /run/kata-containers/shared/sandboxes/<containerID>/shared
-	// - rootless 权限: <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/<containerID>/shared（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
+	// <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/<containerID>/shared
 	sourcePath string
   
 	// [hypervisor].virtio_fs_extra_args

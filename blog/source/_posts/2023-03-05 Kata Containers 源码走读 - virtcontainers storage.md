@@ -29,7 +29,7 @@ type FS struct {
 	driverName string
     
 	// - fs：/run/vc
-	// - rootless：<XDG_RUNTIME_DIR>/run/vc（XDG_RUNTIME_DIR 默认为 /run/user/<UID>
+	// - rootless：<XDG_RUNTIME_DIR>/run/vc（XDG_RUNTIME_DIR 默认为 /run/user/<UID>）
 	// 用于保存 sandbox（sbs，其中容器信息以子目录形式保存）和 VM（vm）相关状态信息
 	storageRootPath string
 	
@@ -73,7 +73,7 @@ type RootlessFS struct {
 
 **删除 sandbox 状态信息目录**
 
-*因为 sandbox 和容器状态信息目录之间为父子目录关系，删除父目录即可*
+*因为 sandbox 和容器状态信息目录之间为父子目录关系，删除父目录即可。*
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L228)
 
@@ -83,7 +83,7 @@ type RootlessFS struct {
 
 **对 sandbox 状态信息目录上锁**
 
-*因为 sandbox 和容器状态信息目录之间为父子目录关系，对父目录上锁即可*
+*因为 sandbox 和容器状态信息目录之间为父子目录关系，对父目录上锁即可。*
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L244)
 
@@ -96,7 +96,7 @@ type RootlessFS struct {
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L282)
 
-1. 以当前用户组信息创建 \<storageRootPath\>/\<relativePath\> （relativePath 为函数传参中的待写入内容的相对路径）所在目录（如果不存在）
+1. 以当前用户组信息创建 \<storageRootPath\>/\<relativePath\>（relativePath 为函数传参中的待写入内容的相对路径）所在目录（如果不存在）
 2. 创建 \<storageRootPath\>/\<relativePath\> 文件，写入数据
 
 ## GlobalRead
@@ -105,7 +105,7 @@ type RootlessFS struct {
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/persist/fs/fs.go#L315)
 
-1. 读取 \<storageRootPath\>/\<relativePath\> 文件内容
+1. 读取 \<storageRootPath\>/\<relativePath\> 文件内容（relativePath 为函数传参中的待写入内容的相对路径）
 
 ## RunStoragePath
 

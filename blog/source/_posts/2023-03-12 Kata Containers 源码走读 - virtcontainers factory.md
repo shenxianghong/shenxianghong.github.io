@@ -88,7 +88,7 @@ type factory struct {
 
 1. 校验 VMConfig 配置的合法性，其中包括 [hypervisor].kernel 是否不为空，[hypervisor].image 和 [hypervisor].initrd 有且仅有一个。并设置 [hypervisor].default_vcpus 缺省时为 1（单位：Core），[hypervisor].default_memory 缺省时为 2048（单位：MiB）
 2. 当启用 VM template 时（即 [factory].enable_template 为 true），则初始化 template factory
-   1. 如果 fetchOnly 为 true，则校验 [factory].template_path 目录（默认为 /run/vc/vm/template）下是否存在 state 和 memory 文件
+   1. 如果 fetchOnly 为 true，则校验 [factory].template_path 目录下是否存在 state 和 memory 文件
    2. 如果 fetchOnly 为 false，则初始化 template factory
       1. 校验 [factory].template_path 目录下是否不存在 state 和 memory 文件
       2. 创建 [factory].template_path 目录，将 tmps 挂载到此目录下，大小为 [hypervisor].default_memory + 8 MiB（amd64 架构下为 8 MiB；arm64 架构下为 300 MiB），并在此目录下创建 memory 文件
