@@ -112,7 +112,7 @@ type MacvtapEndpoint struct {
 	PCIPath vcTypes.PciPath
 
 	// endpoint 设备属性信息
-    EndpointProperties NetworkInfo
+	EndpointProperties NetworkInfo
 
 	// endpoint 设备 inbound/outbound 限速标识
 	RxRateLimiter bool
@@ -140,7 +140,7 @@ type PhysicalEndpoint struct {
 	// endpoint 设备属性信息
 	IfaceName          string
 	HardAddr           string
-    EndpointProperties NetworkInfo
+	EndpointProperties NetworkInfo
 }
 ```
 
@@ -204,7 +204,7 @@ type TuntapEndpoint struct {
 	// NetPair.NetInterworkingModel 为 [runtime].internetworking_model，可选有 macvtap 和 tcfilter（默认）
 	NetPair NetworkInterfacePair
 
-    PCIPath vcTypes.PciPath
+	PCIPath vcTypes.PciPath
 
 	// endpoint 设备属性信息
 	EndpointProperties NetworkInfo

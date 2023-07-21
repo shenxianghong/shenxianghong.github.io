@@ -390,7 +390,7 @@ type Config struct {
       3. 将 hypervisor 的配置信息写入 \[hypervisor].guest_memory_dump_path/\<sandboxID\>/hypervisor.conf 文件中
       4. 执行 qemu-system --version，获取 QEMU 的版本信息，写入 \[hypervisor].guest_memory_dump_path/\<sandboxID\>/hypervisor.version 文件中
    2. 校验 \[hypervisor].guest_memory_dump_path/\<sandboxID\> 目录空间是否为 VM 内存（静态 + 热添加）的两倍以上
-   3. 向 QMP 服务发送 dump-guest-memory 命令，其中 protocol 参数为 file:\[hypervisor].guest_memory_dump_path/\<sandboxID\>/vmcore-\<currentTime\>.elf，paging 参数为 [hypervisor].guest_memory_dump_paging，format 参数为 elf，将 VM 中的内存内容转储到指定的文件中
+   3. 向 QMP 服务发送 dump-guest-memory 命令，将 VM 中的内存内容转储到 \[hypervisor].guest_memory_dump_path/\<sandboxID\>/vmcore-\<currentTime\>.elf 文件中，是否内存分页取决于 [hypervisor].guest_memory_dump_paging
 3. 启动 QMP 服务，监听 qmp.sock，校验 QEMU 版本是否大于 5.x
 4. 向 QMP 服务发送 qmp_capabilities 命令，从 capabilities negotiation 模式切换至 command 模式，命令无报错则视为 VM 处于正常运行状态
 
@@ -405,17 +405,46 @@ type Config struct {
 ***CPU***
 
 1. 调用 **qmpSetup**，初始化 QMP 服务
-2. 如果为热插
-   1. 判断当前 VM 的 CPU 数量与待热插的 CPU 数量之和是否超出 [hypervisor].default_maxvcpus 限制，如果超出，不报错中断，而是热插至最大数量限制
-   2. 向 QMP 服务发送 query-hotpluggable-cpus 命令，获得 host 上可热插的 CPU 信息
+2. 如果为热添加
+   1. 判断当前 VM 的 CPU 数量与待热添加的 CPU 数量之和是否超出 [hypervisor].default_maxvcpus 限制，如果超出，不报错中断，而是热插至最大数量限制
+   2. 向 QMP 服务发送 query-hotpluggable-cpus 命令，获得 host 上可插拔的 CPU 列表
+   3. 遍历所有可插拔的 CPU，如果 qom-path 不为空则代表 CPU 已经处于使用中，则跳过，向 QMP 服务发送 device_add 命令，为 VM 添加指定的 CPU<br>*添加失败并不会报错，而是尝试其他 CPU，直至满足数量要求或者再无可用的 CPU*
+3. 如果为热移除
+   1. 只有热添加的 CPU 才可以热移除，因此需要校验期望热移除的 CPU 数量是否小于热添加的 CPU 数量
+   2. 向 QMP 服务发送 device_del 命令，移除 VM 中最近添加的 CPU（即倒序移除）
 
 ***VFIO***
 
 ***memory***
 
+1. 检验 VM protection 是否为 noneProtection，其他 VM protection 下不支持内存热插拔特性
+2. 调用 **qmpSetup**，初始化 QMP 服务
+3. 内存设备仅支持热添加，不支持热移除
+   1. 向 QMP 服务发送 query-memory-devices 命令，查询 VM 中所有的内存设备，用于获取下一个内存设备的 slot 序号
+   2. 向 QMP 服务发送 object-add 命令，为 VM 添加一个新的对象
+   3. 向 QMP 服务发送 device_add 命令，为 VM 添加指定的内存设备
+   5. 如果 VM 内核只支持通过探测接口热添加内存（通过内存设备的 probe 属性判断），则需要额外向 QMP 服务发送 query-memory-devices 命令，查询 VM 中最近的一个内存设备，回写其地址信息
+
 ***endpoint***
 
+1. 调用 **qmpSetup**，初始化 QMP 服务
+2. 如果为热添加
+   1. 分别获取 tap 设备的向 QMP 服务发送 getfd 命令，分别获取 tap 设备的 VMFds 和 VhostFds 的信息
+   2. 向 QMP 服务发送 netdev_add 命令，为 VM 添加指定的 Net 设备
+   4. 如果 [hypervisor].machine 为 s390-ccw-virtio，则向 QMP 服务发送 device_add 命令，为 VM 添加指定的 Net CCW 设备；否则向 QMP 服务发送 device_add 命令，为 VM 添加指定的 Net PCI 设备
+3. 如果为热移除
+   1. 向 QMP 服务发送 device_del 命令，移除 VM 中指定的 Net 设备
+   2. 向 QMP 服务发送 netdev_del 命令，移除 VM 中指定的 Net 设备
+
 ***vhost-user***
+
+1. 调用 **qmpSetup**，初始化 QMP 服务
+2. 如果为热添加，仅支持 vhost-user-blk-pci 类型的设备
+   1. 向 QMP 服务发送 chardev-add 命令，为 VM 中添加一个字符设备
+   3. 向 QMP 服务发送 device_add 命令，为 VM 添加指定的 vhost-user 设备
+3. 如果为热移除
+   1. 向 QMP 服务发送 device_del 命令，移除 VM 中指定的 vhost-user 设备
+   2. 向 QMP 服务发送 chardev-remove 命令，移除 VM 中指定的字符设备
 
 ## CreateVM
 
@@ -446,18 +475,16 @@ type Config struct {
 1. 如果 VM 从模板启动
 
    1. 调用 **qmpSetup**，初始化 QMP 服务
-   1. 向 QMP 服务发送 migrate-set-capabilities 命令，其中 capabilities 参数为 {"capability": "x-ignore-shared", "state": true}，表示在迁移过程中忽略共享内存，避免数据的错误修改和不一致性
-   1. 向 QMP 服务发送 migrate-incoming 命令，其中 uri 参数为 exec:cat [factory].template_path/state，用于将迁移过来的 VM 恢复到指定 uri 中
+   1. 向 QMP 服务发送 migrate-set-capabilities 命令，设置在迁移过程中忽略共享内存，避免数据的错误修改和不一致性
+   1. 向 QMP 服务发送 migrate-incoming 命令，用于将迁移过来的 VM 恢复到 [factory].template_path/state 中
    1. 向 QMP 服务发送 query-migrate 命令，查询迁移进度，直至完成
 
 1. 如果启用 [hypervisor].enable_virtio_mem
 
    *如果 QMP 添加设备失败，且报错中包含 Cannot allocate memory，则需要执行 echo 1 > /proc/sys/vm/overcommit_memory 解决*
 
-   1. 默认 target 为空，share 为 false，memoryBack 为 memory-backend-ram。如果启用 [hypervisor].enable_hugepages，则 target 为 /dev/hugepages，memoryBack 为 memory-backend-file，share 为 true；否则，校验是否禁用了 [hypervisor].enable_vhost_user_store（Vhost-user-blk/scsi 依赖大页内存），如果 [hypervisor].shared_fs 为 virtiofs-fs、virtio-fs-nydus 或者指定了 [hypervisor].file_mem_backend，则 target 为 qemuConfig.Memory.Path，memoryBack 为 memory-backend-file。如果 qemuConfig.Knobs.MemShared 为 true，则 share 也为 true
-   1. 向 QEMU 维护的 bridge 设备中新增名为 virtiomem-dev 的 PCI 设备，并获得递增的地址索引
-   1. 向 QMP 服务发送 object-add 命令，其中 qom-type、mem-path 和 share 参数分别为步骤 1 的 memoryBack、target 和 share，id 参数为 virtiomem，size 参数为 [hypervisor].default_maxmemory 和 [hypervisor].default_memory 差值（取舍至接近 4 的倍数），用于向 QEMU 实例中添加一个新的对象
-   1. 向 QMP 服务发送 device_add 命令，其中 driver 参数为 virtio-mem-pci，id 参数为 virtiomem0，memdev 参数为 virtiomem，bus 和 addr 参数分别为步骤 2 返回的 bridgeID 和 bridgeAddr，用于向 QEMU 示例中添加指定的 virio-mem 设备
+   1. 向 QMP 服务发送 object-add 命令，为 VM 添加一个新的对象
+   1. 向 QMP 服务发送 device_add 命令，为 VM 添加指定的 virio-mem 设备
 
 
 ## StopVM
@@ -484,8 +511,8 @@ type Config struct {
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2125)
 
 1. 调用 **qmpSetup**，初始化 QMP 服务
-1. 如果 VM 启动后作为模板，则向 QMP 服务发送 migrate-set-capabilities 命令，其中 capabilities 参数为 {"capability": "x-ignore-shared", "state": true}，表示在迁移过程中忽略共享内存，避免数据的错误修改和不一致性
-1. 向 QMP 服务发送 migrate 命令，其中 uri 参数为 exec:cat>[factory].template_path/state，将 VM 迁移到指定 uri 中
+1. 如果 VM 启动后作为模板，则向 QMP 服务发送 migrate-set-capabilities 命令，设置 VM 在迁移过程中忽略共享内存，避免数据的错误修改和不一致性
+1. 向 QMP 服务发送 migrate 命令，将 VM 迁移到指定 [factory].template_path/state 中
 4. 向 QMP 服务发送 query-migrate 命令，查询迁移进度，直至完成
 
 ## ResumeVM
