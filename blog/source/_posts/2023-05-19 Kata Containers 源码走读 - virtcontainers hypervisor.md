@@ -402,49 +402,74 @@ type Config struct {
 
 ***block***
 
+*先调用 blockdev-add 命令是为了创建一个块设备，并将其配置为所需的类型、格式等。这个过程中，QEMU 会加载相应的块设备驱动程序，并为块设备分配所需的资源。然后调用 device_add 命令是为了将该块设备添加到 VM 中，使其成为 VM 的一部分。*
+
+1. 调用 **qmpSetup**，初始化 QMP 服务
+2. 如果为热添加
+   1. 如果 [hypervisor].block_device_driver 为 nvdimm，或者为 PMEM 设备，则向 QMP 服务发送 object-add 和 device_add 命令，为 VM 添加块设备；否则，向 QMP 服务发送 blockdev-add 命令，准备块设备
+   2. 如果 [hypervisor].block_device_driver 为 virtio-blk 或 virtio-blk-ccw 时，会在 bridge 中新增设备信息维护；如果为 virtio-scsi 时，设备会添加到 scsi0.0 总线中
+   3. 向 QMP 服务发送 device_add 命令，为 VM 添加块设备
+3. 如果为热移除
+   1. 如果 [hypervisor].block_device_driver 为 virtio-blk 时，移除 bridge 中维护的设备信息
+   2. 向 QMP 服务发送 device_del 和 blockdev-del 命令，移除 VM 中的指定块设备
+
 ***CPU***
 
 1. 调用 **qmpSetup**，初始化 QMP 服务
 2. 如果为热添加
    1. 判断当前 VM 的 CPU 数量与待热添加的 CPU 数量之和是否超出 [hypervisor].default_maxvcpus 限制，如果超出，不报错中断，而是热插至最大数量限制
    2. 向 QMP 服务发送 query-hotpluggable-cpus 命令，获得 host 上可插拔的 CPU 列表
-   3. 遍历所有可插拔的 CPU，如果 qom-path 不为空则代表 CPU 已经处于使用中，则跳过，向 QMP 服务发送 device_add 命令，为 VM 添加指定的 CPU<br>*添加失败并不会报错，而是尝试其他 CPU，直至满足数量要求或者再无可用的 CPU*
+   3. 遍历所有可插拔的 CPU，向 QMP 服务发送 device_add 命令，为 VM 添加未被使用的 CPU（如果 CPU 的 qom-path 不为空，则代表其正在使用中）<br>*添加失败并不会报错，而是尝试其他 CPU，直至满足数量要求或者再无可用的 CPU*
 3. 如果为热移除
-   1. 只有热添加的 CPU 才可以热移除，因此需要校验期望热移除的 CPU 数量是否小于热添加的 CPU 数量
+   1. 只有热添加的 CPU 才可以热移除，因此需要校验期望热移除的 CPU 数量是否小于当前热添加的 CPU 数量
    2. 向 QMP 服务发送 device_del 命令，移除 VM 中最近添加的 CPU（即倒序移除）
 
 ***VFIO***
 
+*[hypervisor].hotplug_vfio_on_root_bus 决定是否允许 VFIO 设备在 root 总线上热插拔，默认为 true。VFIO 是一种用于虚拟化环境中的设备直通技术，它允许将物理设备直接分配给 VM，从而提高 VM 的性能和可靠性。然而，在桥接设备上进行 VFIO 设备的热插拔存在一些限制，特别是对于具有大型 PCI 条的设备。因此，通过将该选项设置为 true，可以在 root 总线上启用 VFIO 设备的热插拔，从而解决这些限制问题*
+
+1. 调用 **qmpSetup**，初始化 QMP 服务
+2. 如果为热添加
+   1. 如果启用 [hypervisor].hotplug_vfio_on_root_bus，则后续的设备添加操作会作用在 root 总线上，否则会作用在 bridge 上
+   2. 向 QMP 服务发送 device_add 命令，为 VM 添加 VFIO-CCW、VFIO-PCI 或 VFIO-AP 设备
+3. 如果为热移除
+   1. 如果未启用 [hypervisor].hotplug_vfio_on_root_bus，则移除 bridge 中维护的设备信息
+   2. 向 QMP 服务发送 device_del 命令，移除 VM 中的指定 VFIO 设备
+
 ***memory***
 
-1. 检验 VM protection 是否为 noneProtection，其他 VM protection 下不支持内存热插拔特性
+*先调用 object-add 命令是为了创建一个内存设备对象，并为其分配内存，以便后续使用。而后调用  device_add 命令是为了将该内存设备对象添加到 VM 中，使其成为 VM 的一部分，从而实现内存的热添加。*
+
+1. 检验 VM protection 模式是否为 noneProtection，其他 VM protection 模式下均不支持内存热插拔特性
 2. 调用 **qmpSetup**，初始化 QMP 服务
-3. 内存设备仅支持热添加，不支持热移除
-   1. 向 QMP 服务发送 query-memory-devices 命令，查询 VM 中所有的内存设备，用于获取下一个内存设备的 slot 序号
-   2. 向 QMP 服务发送 object-add 命令，为 VM 添加一个新的对象
-   3. 向 QMP 服务发送 device_add 命令，为 VM 添加指定的内存设备
+3. 仅支持热添加内存，不支持热移除
+   1. 向 QMP 服务发送 query-memory-devices 命令，查询 VM 中所有的内存设备，用于生成下一个内存设备的 slot 序号
+   2. 向 QMP 服务发送 object-add 和 device_add 命令，为 VM 添加内存设备
    5. 如果 VM 内核只支持通过探测接口热添加内存（通过内存设备的 probe 属性判断），则需要额外向 QMP 服务发送 query-memory-devices 命令，查询 VM 中最近的一个内存设备，回写其地址信息
 
 ***endpoint***
 
+*netdev_add 添加的是网络前端设备，而 device_add 添加的是一个完整的设备，其中包括前端设备和后端设备。在添加网络设备时，通常需要先添加一个网络前端设备，然后再将它连接到一个网络后端设备上。*
+
 1. 调用 **qmpSetup**，初始化 QMP 服务
 2. 如果为热添加
-   1. 分别获取 tap 设备的向 QMP 服务发送 getfd 命令，分别获取 tap 设备的 VMFds 和 VhostFds 的信息
-   2. 向 QMP 服务发送 netdev_add 命令，为 VM 添加指定的 Net 设备
-   4. 如果 [hypervisor].machine 为 s390-ccw-virtio，则向 QMP 服务发送 device_add 命令，为 VM 添加指定的 Net CCW 设备；否则向 QMP 服务发送 device_add 命令，为 VM 添加指定的 Net PCI 设备
+   1. 向 QMP 服务发送 getfd 命令，分别获取 tap 设备的 VMFds 和 VhostFds 的信息
+   2. bridge 中新增设备信息维护
+   3. 向 QMP 服务发送 netdev_add 和 device_add 命令，为 VM 添加 PCI 或 CCW 类型（[hypervisor].machine 为 s390-ccw-virtio 时）的网络设备
 3. 如果为热移除
-   1. 向 QMP 服务发送 device_del 命令，移除 VM 中指定的 Net 设备
-   2. 向 QMP 服务发送 netdev_del 命令，移除 VM 中指定的 Net 设备
+   1. 移除 bridge 中维护的设备信息
+   2. 向 QMP 服务发送 device_del 和 netdev_del 命令，移除 VM 中指定的网络设备
+
 
 ***vhost-user***
 
+*vhost-user 设备需要与 host 的网络堆栈进行通信，而 host 网络堆栈使用字符设备来管理网络连接。因此，要创建一个 vhost-user 设备，需要先创建一个字符设备，然后将其与 vhost-user 设备连接。*
+
 1. 调用 **qmpSetup**，初始化 QMP 服务
 2. 如果为热添加，仅支持 vhost-user-blk-pci 类型的设备
-   1. 向 QMP 服务发送 chardev-add 命令，为 VM 中添加一个字符设备
-   3. 向 QMP 服务发送 device_add 命令，为 VM 添加指定的 vhost-user 设备
+   1. 向 QMP 服务发送 chardev-add 和 device_add 命令，为 VM 添加指定的 vhost-user 设备
 3. 如果为热移除
-   1. 向 QMP 服务发送 device_del 命令，移除 VM 中指定的 vhost-user 设备
-   2. 向 QMP 服务发送 chardev-remove 命令，移除 VM 中指定的字符设备
+   1. 向 QMP 服务发送 device_del 和 chardev-remove 命令，移除 VM 中指定的 vhost-user 设备
 
 ## CreateVM
 
@@ -461,30 +486,21 @@ type Config struct {
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L800)
 
 1. 以当前用户组信息创建 \<storage.PersistDriver.RunVMStoragePath\>/\<sandboxID\> 目录（如果不存在）
-
 1. 如果启用 [hypervisor].enable_debug，则设置 qemuConfig.LogFile 为 \<storage.PersistDriver.RunVMStoragePath\>/\<sandboxID\>/qemu.log
-
 1. 如果未启用 [hypervisor].disable_selinux，则向 /proc/thread-self/attr/exec （如果其不存在，则为 /proc/self/task/\<PID\>/attr/exec）中写入 OCI spec.Process.SelinuxLabel 中声明的内容，VM 启动之后会重新置空
-
 1. 如果 [hypervisor].shared_fs 为 virtiofs-fs 或者 virtio-fs-nydus，则调用 VirtiofsDaemon 的 **Start**，启动 virtiofsd 进程，回写 virtiofsd PID 至 qemustate 中
-
 1. 构建 QEMU 进程的启动参数、执行命令的文件句柄、属性、标准输出等信息，执行 qemu-system 可执行文件，启动 qemu-system 进程。如果启用 [hypervisor].enable_debug 并且配置中指定了日志文件路径，则读取日志内容，追加错误信息
-
 1. 关停当前的 QMP 服务，执行类似于 **qmpSetup** 的流程，初始化 QMP 服务，无报错即视为 VM 处于正常运行状态
-
 1. 如果 VM 从模板启动
 
    1. 调用 **qmpSetup**，初始化 QMP 服务
    1. 向 QMP 服务发送 migrate-set-capabilities 命令，设置在迁移过程中忽略共享内存，避免数据的错误修改和不一致性
    1. 向 QMP 服务发送 migrate-incoming 命令，用于将迁移过来的 VM 恢复到 [factory].template_path/state 中
    1. 向 QMP 服务发送 query-migrate 命令，查询迁移进度，直至完成
-
 1. 如果启用 [hypervisor].enable_virtio_mem
+   1. virtio-mem 设备后续会添加至 VM 的 root 总线中，获取地址和 bridge 等信息，后续执行 QMP 命令时传递
+   1. 则向 QMP 服务发送 object-add 和 device_add 命令，为 VM 添加指定的 virio-mem 设备<br>*如果 QMP 添加设备失败，且报错中包含 Cannot allocate memory，则需要执行 echo 1 > /proc/sys/vm/overcommit_memory 解决*
 
-   *如果 QMP 添加设备失败，且报错中包含 Cannot allocate memory，则需要执行 echo 1 > /proc/sys/vm/overcommit_memory 解决*
-
-   1. 向 QMP 服务发送 object-add 命令，为 VM 添加一个新的对象
-   1. 向 QMP 服务发送 device_add 命令，为 VM 添加指定的 virio-mem 设备
 
 
 ## StopVM
