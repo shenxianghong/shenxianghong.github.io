@@ -376,6 +376,8 @@ type Config struct {
 }
 ```
 
+Hypervisor 中声明的 **HypervisorConfig**、**setConfig**、**GetVirtioFsPid**，**fromGrpc**、**toGrpc**，**Save** 和 **Load** 均为参数获取与赋值，无复杂逻辑，不作详述。
+
 ## qmpSetup
 
 **初始化 QMP 服务**
@@ -417,7 +419,7 @@ type Config struct {
 
 1. 调用 **qmpSetup**，初始化 QMP 服务
 2. 如果为热添加
-   1. 判断当前 VM 的 CPU 数量与待热添加的 CPU 数量之和是否超出 [hypervisor].default_maxvcpus 限制，如果超出，不报错中断，而是热插至最大数量限制
+   1. 如果当前 VM 的 CPU 数量与待热添加的 CPU 数量之和超出 [hypervisor].default_maxvcpus 限制，并不会不报错中断，而是热插至最大数量限制
    2. 向 QMP 服务发送 query-hotpluggable-cpus 命令，获得 host 上可插拔的 CPU 列表
    3. 遍历所有可插拔的 CPU，向 QMP 服务发送 device_add 命令，为 VM 添加未被使用的 CPU（如果 CPU 的 qom-path 不为空，则代表其正在使用中）<br>*添加失败并不会报错，而是尝试其他 CPU，直至满足数量要求或者再无可用的 CPU*
 3. 如果为热移除
@@ -566,7 +568,105 @@ type Config struct {
 
 ## ResizeMemory
 
+**调整 VM 内存规格**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2200)
+
+1. 调用 **GetTotalMemoryMB**，获取 VM 当前的内存
+2. 调用 **qmpSetup**，初始化 QMP 服务
+3. 如果启用 [hypervisor].enable_virtio_mem，向 QMP 服务发送 qom-set 命令，设置 virtiomem0 设备的 requested-size 属性值为待热添加的内存量（即期望的 VM 内存与 [hypervisor].default_memory 的差值），直接返回<br>*virtio-mem 只需要将用于 host 和 guest 内存共享的 virtiomem0 设备内存扩大至预期大小即可，不需要返回内存设备对象，也不会调用 agent 通知内存上线*
+4. 调用 **HotplugAddDevice** 或者 **HotplugRemoveDevice**，为 VM 调整内存规格，取决于 VM 当前内存是否大于预期 VM 内存大小<br>*如果期望的 VM 内存超出了 [hypervisor].default_maxmemory 限制，也不会报错中断，而是热插至最大数量限制*
+
 ## ResizeVCPUs
+
+**调整 VM CPU 规格**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2440)
+
+1. 调用 **HotplugAddDevice** 或者 **HotplugRemoveDevice**，为 VM 调整 CPU 规格，取决于 VM 当前 CPU 是否大于预期 VM CPU 大小
+
+## GetTotalMemoryMB
+
+**获取 VM 总内存**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2185)
+
+1. 返回 [hypervisor].default_memory 和已热添加内存之和
+
+## GetVMConsole
+
+**获取 VM console 地址**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2113)
+
+1. 返回 \<storage.PersistDriver.RunVMStoragePath\>/\<sandboxID\>/console.sock
+
+## Disconnect
+
+**断开 QMP 连接**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2178)
+
+1. channel 关闭，重置 QMP 对象
+
+## Capabilities
+
+**设置 hypervisor 支持的特性**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L195)
+
+1. 设置 hypervisor 的支持特性包括：块设备支持、设备多队列和文件系统共享
+
+## GetThreadIDs
+
+**获取 VM 中 CPU 的 threadID 信息**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2408)
+
+1. 调用 **qmpSetup**，初始化 QMP 服务
+2. 向 QMP 服务发送 query-cpus-fast 命令，获取 VM 中所有 CPU 详细信息
+3. 遍历所有 CPU，返回其 CPU ID 和 threadID 的映射关系
+
+## Cleanup
+
+**hypervisor 相关资源清理**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2473)
+
+1. 关闭 QEMU 所有相关的文件句柄
+
+## GetPids
+
+**获取 hypervisor 相关的 PID**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2487)
+
+1. 读取 \<storage.PersistDriver.RunVMStoragePath\>/\<sandboxID\>/pid 文件内容，如果 virtiofsd 服务的 PID 不为空，则一并返回
+
+## Check
+
+**VM 状态检查**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2620)
+
+1. 调用 **qmpSetup**，初始化 QMP 服务
+2. 向 QMP 服务发送 query-status 命令，查询并校验 VM 状态消息是否为 internal-error 或 guest-panicked
+
+## GenerateSocket
+
+**生成 host 和 guest 通信的 socket 地址**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2640)
+
+1. 
+
+## IsRateLimiterBuiltin
+
+**hypervisor 是否原生支持限速特性**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2644)
+
+1. QEMU 未内置支持限速功能
 
 # VirtiofsDaemon
 
