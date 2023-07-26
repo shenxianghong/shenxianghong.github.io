@@ -6,7 +6,7 @@
   <link href="http://shenxianghong.github.io/atom.xml" rel="self"/>
   
   <link href="http://shenxianghong.github.io/"/>
-  <updated>2023-07-13T05:42:11.557Z</updated>
+  <updated>2023-07-26T08:18:09.409Z</updated>
   <id>http://shenxianghong.github.io/</id>
   
   <author>
@@ -15,6 +15,27 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>「 Kata Containers 」源码走读 — virtcontainers/agent</title>
+    <link href="http://shenxianghong.github.io/2023/07/26/2023-07-26%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20virtcontainers%20agent/"/>
+    <id>http://shenxianghong.github.io/2023/07/26/2023-07-26%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20virtcontainers%20agent/</id>
+    <published>2023-07-25T16:00:00.000Z</published>
+    <updated>2023-07-26T08:18:09.409Z</updated>
+    
+    <content type="html"><![CDATA[<div align=center><img width="200" style="border: 0px" src="/gallery/kata-containers/logo.svg"></div><hr><blockquote><p>based on <strong>3.0.0</strong></p></blockquote>]]></content>
+    
+    
+    <summary type="html">virtcontainers 中与 Kata-agent 组件相关的流程梳理</summary>
+    
+    
+    
+    <category term="Container Runtime" scheme="http://shenxianghong.github.io/categories/Container-Runtime/"/>
+    
+    
+    <category term="Kata Containers" scheme="http://shenxianghong.github.io/tags/Kata-Containers/"/>
+    
+  </entry>
   
   <entry>
     <title>「 Kubernetes 」InPlacePodVerticalScaling 特性</title>
@@ -213,8 +234,8 @@
   
   <entry>
     <title>「 Kata Containers 」源码走读 — virtcontainers/resource controller</title>
-    <link href="http://shenxianghong.github.io/2023/04/09/2023-04-09%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20virtcontainers%20resource%20controller%20-%20%E5%89%AF%E6%9C%AC/"/>
-    <id>http://shenxianghong.github.io/2023/04/09/2023-04-09%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20virtcontainers%20resource%20controller%20-%20%E5%89%AF%E6%9C%AC/</id>
+    <link href="http://shenxianghong.github.io/2023/04/09/2023-04-09%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20virtcontainers%20resource%20controller/"/>
+    <id>http://shenxianghong.github.io/2023/04/09/2023-04-09%20Kata%20Containers%20%E6%BA%90%E7%A0%81%E8%B5%B0%E8%AF%BB%20-%20virtcontainers%20resource%20controller/</id>
     <published>2023-04-08T16:00:00.000Z</published>
     <updated>2023-06-19T01:18:07.272Z</updated>
     
