@@ -43,7 +43,7 @@ type kataAgent struct {
 	// [agent].kernel_modules
 	kmodules    []string
 
-    // [agent].dial_timeout
+	// [agent].dial_timeout
 	dialTimout uint32
 
 	// 固定为 true
