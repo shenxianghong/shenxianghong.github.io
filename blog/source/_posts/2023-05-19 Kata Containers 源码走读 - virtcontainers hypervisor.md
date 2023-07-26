@@ -23,7 +23,7 @@ tag:
 
 Kata Containers 支持的 hypervisor 有 QEMU、Cloud Hypervisor、Firecracker、ACRN 以及 DragonBall，其中 DragonBall 是 Kata Containers 3.0 为新增的 runtime-rs 组件引入的内置 hypervisor，而 runtime-rs 的整体架构区别于当前的 runtime，不在此详读 DragonBall 实现。
 
-***目前，暂时走读 QEMU 实现，后续补充其他 hypervisor。***
+***目前，暂时走读 QEMU 实现，后续补充其他 hypervisor 实现。***
 
 ```go
 // qemu is an Hypervisor interface implementation for the Linux qemu hypervisor.
@@ -615,7 +615,7 @@ Hypervisor 中声明的 **HypervisorConfig**、**setConfig**、**GetVirtioFsPid*
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L195)
 
-1. 设置 hypervisor 的支持特性包括：块设备支持、设备多队列和文件系统共享
+1. 设置 hypervisor 默认支持特性包括：块设备支持、设备多队列和文件系统共享
 
 ## GetThreadIDs
 
@@ -650,7 +650,7 @@ Hypervisor 中声明的 **HypervisorConfig**、**setConfig**、**GetVirtioFsPid*
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2620)
 
 1. 调用 **qmpSetup**，初始化 QMP 服务
-2. 向 QMP 服务发送 query-status 命令，查询并校验 VM 状态消息是否为 internal-error 或 guest-panicked
+2. 向 QMP 服务发送 query-status 命令，查询并校验 VM 状态是否为 internal-error 或 guest-panicked
 
 ## GenerateSocket
 
@@ -658,7 +658,9 @@ Hypervisor 中声明的 **HypervisorConfig**、**setConfig**、**GetVirtioFsPid*
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2640)
 
-1. 
+1. 获取 /dev/vhost-vsock 设备的文件句柄
+2. 获取一个从 0x3（contextID 中 1 和 2 是内部预留的） 到 0xFFFFFFFF（2^32 - 1）范围内可用的 contextID
+3. 返回包含 vhost-vsock 设备的文件句柄、可用的 contextID 以及端口为 1024 的 VSock 对象
 
 ## IsRateLimiterBuiltin
 
@@ -666,19 +668,27 @@ Hypervisor 中声明的 **HypervisorConfig**、**setConfig**、**GetVirtioFsPid*
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L2644)
 
-1. QEMU 未内置支持限速功能
+1. 返回 false，QEMU 未内置支持限速功能
 
 # VirtiofsDaemon
 
 *<u>src/runtime/virtcontainers/virtiofsd.go</u>*
 
-VirtiofsDaemon 是用于 host 与 guest 的文件共享的进程服务，实现包括传统的 virtiofsd 以及针对蚂蚁社区提出的 nydusd。
+VirtiofsDaemon 是用于 host 与 guest 的文件共享的进程服务，实现包括 virtiofsd 以及蚂蚁社区提出的 nydusd。
+
+***目前，暂时走读 virtiofsd 实现，后续补充其他 virtiofsd 实现。***
 
 ```go
+// virtiofsd 进程启动参数中还有
+// --syslog：用于将日志发送至系统日志中
+// -o no_posix_lock：禁用 POSIX 锁定机制，从而提高文件系统的性能。但是，这也可能会导致在多个进程同时对同一个文件进行写操作时出现数据损坏的风险
 type virtiofsd struct {
 	// Neded by tracing
 	ctx context.Context
+
 	// PID process ID of virtiosd process
+	// --fd 参数，例如 --fd=3
+	// --fd 参数从 3 开始，0 为 stdin、1 为 stdout、2 为 stderr，具体取决于从 socketPath 中读取的 socket 文件句柄个数
 	PID int
 
 	// path to virtiofsd daemon
@@ -690,10 +700,12 @@ type virtiofsd struct {
 	socketPath string
 
 	// cache size for virtiofsd
+	// -o 参数，例如 -o cache=auto
 	// [hypervisor].virtio_fs_cache
 	cache string
 
 	// sourcePath path that daemon will help to share
+	// -o 参数，例如 -o source=/run/kata-containers/shared/sandboxes/<sandboxID>/shared
 	// <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/<containerID>/shared
 	sourcePath string
 
@@ -703,30 +715,31 @@ type virtiofsd struct {
 }
 ```
 
-```go
-type nydusd struct {
-	startFn         func(cmd *exec.Cmd) error // for mock testing
-	waitFn          func() error              // for mock
-	setupShareDirFn func() error              // for mock testing
-  	pid             int
-  
-	// [hypervisor].shared_fs
-	path string
-  
-	// <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/vhost-fs.sock
-	sockPath string
+## Start
 
-	// <storage.PersistDriver.RunVMStoragePath>/<sandboxID>/nydusd-api.sock
-	apiSockPath string
+**启动 virtiofsd 服务**
 
-	// <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/<containerID>/shared
-	sourcePath string
-  
-	// [hypervisor].virtio_fs_extra_args
-	extraArgs []string
+1. 检验 virtiofsd 服务相关参数是否为空以及 <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/\<containerID\>/shared 路径是否存在
+2. 获取 <storage.PersistDriver.RunVMStoragePath>/\<sandboxID\>/vhost-fs.sock 的文件句柄，并将其权限设置为 root<br>*这里区别于 QEMU 进程，QEMU 可以以非 root 运行，而 virtiofsd 暂不支持，参考 https://github.com/kata-containers/kata-containers/issues/2542*
+3. 执行 virtiofsd 可执行文件，启动 virtiofsd 进程
+4. 启动 goroutine，如果 virtiofsd 程序退出，则调用 Hypervisor 的 **StopVM**，执行清理操作
+5. 返回 virtiofsd 进程 PID
 
-	// [hypervisor].debug
-	debug bool
-}
-```
+## Stop
 
+**关停 virtiofsd 服务**
+
+1. kill 掉 virtiofsd 服务进程
+2. 移除 <storage.PersistDriver.RunVMStoragePath>/\<sandboxID\>/vhost-fs.sock 文件
+
+## Mount
+
+**将 rafs 格式文件挂载至 virtiofs 挂载点**
+
+*virtiofsd 场景下暂未实现。*
+
+## Umount
+
+**移除 virtiofs 挂载点下的 rafs 挂载文件**
+
+*virtiofsd 场景下暂未实现。*
