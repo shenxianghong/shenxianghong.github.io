@@ -512,7 +512,7 @@ Hypervisor 中声明的 **HypervisorConfig**、**setConfig**、**GetVirtioFsPid*
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L972)
 
 1. 调用 **qmpSetup**，初始化 QMP 服务
-2. 如果禁止 VM 关闭（agent 的 init 会返回 disableVMShutdown，用作 StopVM 的入参），则调用 **GetPids**，获得所有相关的 PIDs，kill 掉其中的 QEMU 进程（即列表中索引为 0 的 PID）；否则，则向 QMP 服务发送 quit 命令，关闭 QEMU 实例，关闭 VM
+2. 如果 disableVMShutdown 为 true（调用 agent 的 **init** 时会返回 disableVMShutdown，用作 StopVM 的入参），则调用 **GetPids**，获得所有相关的 PIDs，kill 掉其中的 QEMU 进程（即列表中索引为 0 的 PID）；否则，则向 QMP 服务发送 quit 命令，关闭 QEMU 实例，关闭 VM
 3. 如果 [hypervisor].shared_fs 为 virtiofs-fs 或者 virtio-fs-nydus，调用 VirtiofsDaemon 的 **Stop**，关停 virtiofsd 服务
 
 ## PauseVM
