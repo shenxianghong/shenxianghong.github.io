@@ -611,11 +611,11 @@ Hypervisor 中声明的 **HypervisorConfig**、**setConfig**、**GetVirtioFsPid*
 
 ## Capabilities
 
-**设置 hypervisor 支持的特性**
+**获取 hypervisor 支持的特性**
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/qemu.go#L195)
 
-1. 设置 hypervisor 默认支持特性包括：块设备支持、设备多队列和文件系统共享
+1. 设置并返回 hypervisor 默认支持特性，包括块设备、设备多队列和文件系统共享特性支持
 
 ## GetThreadIDs
 
