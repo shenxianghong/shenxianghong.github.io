@@ -97,11 +97,7 @@ agent 中声明的 **longLiveConn**、**getAgentURL**、**setAgentURL**、**reus
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L449)
 
-1. 调用 Hypervisor 的 **GenerateSocket**，生成用于 host 和 guest 通信的 socket 地址
-2. 调用 Hypervisor 的 **AddDevice**，根据生成的 socket 的类型，为 VM 添加对应类型的设备（例如 vhost-vsock 或 virtio-vsock）
-3. 调用 Hypervisor 的 **Capabilities**，检验 hypervisor 是否支持文件系统共享特性
-   1. 创建 <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/\<containerID\>/shared 目录
-   2. 调用 Hypervisor 的 **AddDevice**，为 VM 添加 filesystem 类型的设备，其中，挂载标签为 kataShared，挂载源为 <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/\<containerID\>/shared
+1. 调用 **configure**，指定共享目录为 <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/\<containerID\>/shared
 
 ## exec
 
@@ -109,7 +105,7 @@ agent 中声明的 **longLiveConn**、**getAgentURL**、**setAgentURL**、**reus
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L533)
 
-1. 请求 agent server 的 grpc.AgentService 接口的 ExecProcess 方法，进入指定容器执行命令<br>*期间涉及到 types.Cmd 和 grpc.Process 的转换，两者都包含要在容器中运行的命令的主要信息，包括工作目录、用户、主组、参数和环境变量等。*
+1. 请求 agent server 的 grpc.AgentService 接口的 ExecProcess 方法，进入指定容器执行命令<br>*期间涉及到 types.Cmd 和 grpc.Process 的转换，两者都包含要在容器中运行的命令的主要信息，包括工作目录、用户、主组、参数和环境变量等*
 
 ## startSandbox
 
@@ -121,16 +117,16 @@ agent 中声明的 **longLiveConn**、**getAgentURL**、**setAgentURL**、**reus
 2. 读取 sandbox OCI spec 中挂载点为 /etc/resolv.conf 的挂载源文件内容（即位于 host 上用于挂载到容器中的 DNS 配置文件）
 3. 调用 agent 的 **check**，检测 agent server 的存活性
 4. 调用 Network 的 **Endpoints**，获取 sandbox 中所有网卡，进而调用 Endpoint 的 **Properties**，获取网卡属性等信息，构建 RPC 通信所需的网卡接口、路由和 ARP neighbor 信息
-   1. 请求 agent server 的 grpc.AgentService 接口的 UpdateInterface 方法，更新 VM 中网卡信息
+   1. 调用 **updateInterface**，更新 VM 的网卡信息
    2. 请求 agent server 的 grpc.AgentService 接口的 UpdateRoutes 方法，更新 VM 中路由信息 
    3. 请求 agent server 的 grpc.AgentService 接口的 AddARPNeighbors 方法，更新 VM 中 ARP neighbor 信息
 5. 调用 Hypervisor 的 **Capabilities**，检验 hypervisor 是否支持文件系统共享特性
    1. 如果 [hypervisor].shared_fs 为 virtio-fs 或者 virtio-fs-nydus
-      1. 当 [hypervisor].virtio_fs_cache 不为 none 且 [hypervisor].virtio_fs_cache_size 不为 0 时，挂载参数中会追加 dax<br>*如果 virtio-fs 使用 auto 或者 always，则可以使用选项 dax 挂载 guest 目录，从而允许它直接映射来自 host 的内容。 当设置为 none 时，挂载选项不应包含 dax，以免 virtio-fs 守护进程因无效地址引用而崩溃。*
+      1. 当 [hypervisor].virtio_fs_cache 不为 none 且 [hypervisor].virtio_fs_cache_size 不为 0 时，挂载参数中会追加 dax<br>*如果 virtio-fs 使用 auto 或者 always，则可以使用选项 dax 挂载 guest 目录，从而允许它直接映射来自 host 的内容。 当设置为 none 时，挂载选项不应包含 dax，以免 virtio-fs 守护进程因无效地址引用而崩溃*
       2. 生成一个类型为 virtiofs、挂载源为 kataShared、挂载点为 <XDG_RUNTIME_DIR>/run/kata-containers/shared/containers/（当 [hypervisor].shared_fs 为 virtio-fs-nydus 时， 为 <XDG_RUNTIME_DIR>/run/kata-containers/shared/）以及含上述挂载参数的 virtio-fs 挂载信息
    2. 如果 [hypervisor].shared_fs 为 virtio-9p，则生成一个类型为 9p、挂载源为 kataShared，挂载点为 <XDG_RUNTIME_DIR>/run/kata-containers/shared/containers/、挂载参数为 msize=\<[hypervisor].msize_9p\> 的 9p 挂载信息
 6. 如果 shmSize 大于 0，则生成一个类型为 tmpfs、挂载源为 shm、挂载点为 <XDG_RUNTIME_DIR>/run/kata-containers/sandbox/shm、挂载参数为 size=\<shmSize\>,noexec,nosuid,nodev,mode=1777 的 ephemeral 挂载信息<br>*shmSize 为 sandbox OCI spec 中 destination 为 /dev/shm，type 为 bind 的挂载点的 source 大小*
-7. 请求 agent server 的 grpc.AgentService 接口的 CreateSandbox 方法，启动 sandbox 中的所有容器<br>*其中参数包含 [hypervisor].guest_hook_path，表示 VM 中 hook 脚本路径，hook 必须按照其 hook 类型存储在 guest_hook_path 的子目录中，例如 guest_hook_path/{prestart,poststart,poststop}。Kata agent 将扫描这些目录查找可执行文件，按字母顺序将其添加到容器的生命周期中，并在 VM 运行时命名空间中执行。*
+7. 请求 agent server 的 grpc.AgentService 接口的 CreateSandbox 方法，启动 sandbox 中的所有容器<br>*其中参数包含 [hypervisor].guest_hook_path，表示 VM 中 hook 脚本路径，hook 必须按照其 hook 类型存储在 guest_hook_path 的子目录中，例如 guest_hook_path/{prestart,poststart,poststop}。Kata agent 将扫描这些目录查找可执行文件，按字母顺序将其添加到容器的生命周期中，并在 VM 运行时命名空间中执行*
 
 ## stopSandbox
 
@@ -146,7 +142,24 @@ agent 中声明的 **longLiveConn**、**getAgentURL**、**setAgentURL**、**reus
 
 [source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L1151)
 
-1. 调用 FilesystemSharer 的 **ShareRootFilesystem**，创建 VM 中容器 rootfs 的共享挂载
+1. 调用 fsShare 的 **ShareRootFilesystem**，创建容器 rootfs 的共享挂载
+2. 针对容器中每一个共享挂载信息
+   1. 忽略挂载源为系统类别的，例如 /proc 或者 /sys
+   2. 如果待挂载的是块设备类型，则调用 devManager 的 **AttachDevice**，attach 设备，而不会作为共享挂载
+   3. 忽略挂载类型不为 bind 的挂载信息
+   4. 忽略挂载点为 /dev/shm 的挂载信息<br>*将 /dev/shm 作为一个绑定挂载传递到容器中不是一个合理的方式，因为它不需要从 host 的 9p 挂载中传递。相反，需要在容器内部分配内存来处理 /dev/shm*
+   5. 忽略挂载点为 /dev 或者 /dev/ 目录层级下的设备文件、目录等非常规文件
+   6. 调用 fsShare 的 **ShareFile**，将位于 host 的挂载点文件共享至 guest 中
+   7. 如果挂载源为 Kubernetes ConfigMap 或者 Secret 资源（路径中会包含 kubernetes.io~configmap 和 kubernetes.io~secret 特征）并且调用 Hypervisor 的 **Capabilities**，判断 hypervisor 支持文件系统共享特性，则创建 <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/\<containerID\>/mounts/watchable 目录，并生成一个类型为 bind、挂载源为 \<guestPath\>（即步骤 6 返回的位于 guest 中的文件路径），挂载点为 <XDG_RUNTIME_DIR>/run/kata-containers/shared/containers/watchable/\<base guestPath\> 的 watchable-bind 挂载信息，并替换原挂载源为 watchable-bind 的挂载点<br>*virtiofs 不支持 inotify 机制，因此这是一种解决方案，用于让 virtiofs 可以间接感知到 Kubernetes ConfigMap 和 Secret 文件的变化。具体来说，是将这两种资源文件重新挂载，并将原本的 OCI spec 中声明的挂载源替换成新的挂载点*
+
+3. 针对容器中每一个临时挂载信息（即 ephemeral），生成一个类型为 tmpfs、挂载源为 tmpfs、挂载点为 <XDG_RUNTIME_DIR>/run/kata-containers/sandbox/ephemeral/\<base source\>、挂载参数为 fsgid=\<gid\> 的 ephemeral 挂载信息<br>*如果卷的 gid 不是根组（默认组），这意味着在该本地卷上设置了特定的  fsGroup，那么它应该传递给 guest*
+4. 针对容器中每一个本地挂载信息（即 local，用于 VM 中多容器的文件共享），解析 /proc/mounts 文件内容，获取文件系统类型为 hugetlbfs 的挂载参数，用于进一步解析大页大小，生成一个类型为 hugetlbfs、挂载源为 nodev、挂载点为 <XDG_RUNTIME_DIR>/run/kata-containers/sandbox/ephemeral/\<base source\>、挂载参数为 pagesize=\<pagesize\>,size=\<size\> 的 ephemeral 挂载信息
+5. 针对容器中每一个本地挂载信息（即 local，用于 VM 中多容器的文件共享），生成一个类型为 local、挂载源为 local、挂载点为 <XDG_RUNTIME_DIR>/run/kata-containers/shared/containers/\<sandboxID\>/rootfs/local/\<base source\>、挂载参数为 mode=0777,fsgid=\<gid\> 的 local 挂载信息
+6. 修正容器 OCI spec 中的信息，更新和忽略其中的挂载点信息<br>*更新和忽略的信息均来自步骤 2，其中如果步骤 2-7 有变更，则需要更新；如果步骤 2-6 调用返回为 nil，则需要忽略*
+7. 针对容器的每一个设备信息，调用 devManager 的 **GetDeviceByID**，获取设备对象，进一步根据其设备类型（例如 block、vhost-user-blk-pci 和 vfio），调用 device 的 **GetDeviceInfo**，获取设备信息
+8. 针对容器的每一个块设备信息（步骤 2-2 未做处理），将设备的挂载源更新为 /run/kata-containers/sandbox/storage/\<source\>，更新至 OCI spec 中
+9. 校验当禁用 [runtime].disable_guest_seccomp 时，Kata agent 是否支持 seccomp 特性
+10. 请求 agent server 的 grpc.AgentService 接口的 CreateContainer 方法，聚合上述的挂载点、设备、OCI spec 等信息创建容器
 
 ## startContainer
 
@@ -238,21 +251,79 @@ agent 中声明的 **longLiveConn**、**getAgentURL**、**setAgentURL**、**reus
 
 ## memHotplugByProbe
 
+**通过探针接口通知 guest 内核有关内存热插拔事件**
+
+*用于热添加内存之后，通知内存上线之前*
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L1706)
+
+1. 请求 agent server 的 grpc.AgentService 接口的 MemHotplugByProbe 方法，通知内存热插拔事件<br>*内存热插拔是分批的，因此通知事件也是分批执行的，其中会根据内存分片大小涉及到内存偏移量*
+
 ## statsContainer
+
+**获取容器详情**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L1741)
+
+1. 请求 agent server 的 grpc.AgentService 接口的 StatsContainer 方法，获取容器的详情信息，其中主要关注 hugetlb、blkio、CPU、memory 和 pid 等 cgroup 相关的信息
 
 ## pauseContainer
 
+**暂停容器**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L1688)
+
+1. 请求 agent server 的 grpc.AgentService 接口的 PauseContainer 方法，暂停容器
+
 ## resumeContainer
+
+**恢复容器**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L1697)
+
+1. 请求 agent server 的 grpc.AgentService 接口的 ResumeContainer 方法，恢复容器
 
 ## configure
 
+**设置 agent 配置信息**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L400)
+
+1. 调用 Hypervisor 的 **GenerateSocket**，生成用于 host 和 guest 通信的 socket 地址
+2. 调用 Hypervisor 的 **AddDevice**，根据生成的 socket 的类型，为 VM 添加对应类型的设备（例如 vhost-vsock 或 virtio-vsock）
+3. 调用 Hypervisor 的 **Capabilities**，检验 hypervisor 是否支持文件系统共享特性，创建指定共享目录，调用 Hypervisor 的 **AddDevice**，为 VM 添加 filesystem 类型的设备，其中，挂载标签为 kataShared，挂载源为此共享目录，例如 <XDG_RUNTIME_DIR>/run/kata-containers/shared/sandboxes/\<containerID\>/shared
+
 ## configureFromGrpc
+
+**设置 agent 配置信息**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L445)
+
+1. 调用 Hypervisor 的 **GenerateSocket**，生成用于 host 和 guest 通信的 socket 地址
 
 ## reseedRNG
 
+**重置随机数生成器**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L1873)
+
+1. 请求 agent server 的 grpc.AgentService 接口的 ReseedRandomDev 方法，使用新的种子值重置 guest 的随机数生成器
+
 ## updateInterface
 
+**更新网卡信息**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L557)
+
+1. 请求 agent server 的 grpc.AgentService 接口的 UpdateInterface 方法，更新 VM 中网卡信息
+
 ## listInterfaces
+
+**获取所有网卡信息**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L631)
+
+1. 请求 agent server 的 grpc.AgentService 接口的 ListInterfaces 方法，获取 VM 中所有的网卡信息
 
 ## updateRoutes
 

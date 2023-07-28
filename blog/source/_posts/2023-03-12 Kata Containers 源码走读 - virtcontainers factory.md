@@ -200,7 +200,7 @@ type factory struct {
 2. 调用 **Config**，获取 baseConfig 信息，校验两个配置信息是否并不冲突
 3. 调用 **GetBaseVM**，获取 base VM
 4. 调用 hypervisor 的 **ResumeVM**，将 VM 从暂停状态恢复
-5. 借助 /dev/urandom 重新生成随机熵，调用 agent 的 **reseedRNG**，为 guest 内存重新生成随机数
+5. 借助 /dev/urandom 重新生成随机熵，调用 agent 的 **reseedRNG**，重置 guest 随机数生成器
 6. 为了补齐 VM 的暂停时间，调用 agent 的 **setGuestDateTime**，同步 host 时间至 guest 中
 7. 如果 base VM 中的 CPU 数量小于期望配置中的 CPU 数量，则调用 hypervisor 的 **HotplugAddDevice**，热添加差值 CPU；内存同理
 8. 当有 CPU 或内存的热添加动作后，调用 agent 的 **onlineCPUMem**，通知 agent 上线资源
