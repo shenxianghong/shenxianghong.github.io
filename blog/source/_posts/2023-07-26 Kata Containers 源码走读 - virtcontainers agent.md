@@ -327,7 +327,19 @@ agent 中声明的 **longLiveConn**、**getAgentURL**、**setAgentURL**、**reus
 
 ## updateRoutes
 
+**更新路由信息**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L584)
+
+1. 请求 agent server 的 grpc.AgentService 接口的 UpdateRoutes 方法，更新 VM 中路由信息
+
 ## listRoutes
+
+**获取所有路由信息**
+
+[source code](https://github.com/kata-containers/kata-containers/blob/3.0.0/src/runtime/virtcontainers/kata_agent.go#L644)
+
+1. 请求 agent server 的 grpc.AgentService 接口的 ListRoutes 方法，获取 VM 中所有的路由信息
 
 ## getGuestDetails
 
